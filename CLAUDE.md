@@ -26,6 +26,19 @@
 5. ✅ Added state persistence via cookies
 6. ✅ Integrated user authentication and sign-out functionality
 
+### Task 3: Implement shadcn/ui Authentication Pages
+
+**Objective:** Replace basic auth pages with modern shadcn/ui login-03 component design featuring muted background and professional styling.
+
+### Requirements Implemented:
+1. ✅ Installed shadcn/ui login-03 component
+2. ✅ Updated auth-pages layout with muted background and center alignment
+3. ✅ Redesigned sign-in page with Card-based layout
+4. ✅ Redesigned sign-up page with enhanced UX and success state
+5. ✅ Redesigned forgot-password page with clear instructions
+6. ✅ Updated SmtpMessage component to match new design
+7. ✅ Preserved all existing authentication logic and actions
+
 ### Key Changes Made:
 
 #### 1. Layout Restructuring
@@ -79,11 +92,20 @@ All references to `/protected` were updated to `/dashboard`:
 #### 6. Sidebar Implementation Details (Task 2)
 - **App Name**: "Mase Docs" with "Document Generation" tagline in header
 - **Main Navigation**: Dashboard, Mase Checker, Mase Generator (Settings & Billing moved to dropdown)
-- **User Dropdown**: User email display, Billing, Settings, Reset Password, Sign Out
+- **User Dropdown**: User email display, Billing, Settings, Theme, Sign Out
 - **Mobile Responsive**: Uses offcanvas mode on mobile devices
 - **State Persistence**: Sidebar open/closed state saved in `sidebar:state` cookie
 - **Keyboard Shortcut**: Cmd/Ctrl + B to toggle sidebar
 - **Authentication Integration**: Fetches user data from Supabase and handles sign-out
+
+#### 7. Authentication Pages Redesign (Task 3)
+- **Layout**: Full-screen muted background (`bg-muted/50`) with centered content
+- **Design System**: Card-based layout with consistent typography and spacing
+- **Sign-In Page**: Professional welcome message with "Mase Docs" branding
+- **Sign-Up Page**: Enhanced UX with success state handling and clear CTAs
+- **Forgot Password**: Streamlined flow with helpful instructions
+- **SmtpMessage**: Redesigned as Card component with better visual hierarchy
+- **Responsive**: Optimized for all screen sizes with max-width constraints
 
 ### Issues Resolved:
 
@@ -100,6 +122,16 @@ All references to `/protected` were updated to `/dashboard`:
 - Fixed CSS variables and state management
 - Removed duplicate function definitions
 - Updated dashboard layout to use `SidebarProvider` and `SidebarInset`
+
+#### Task 3 - Password Reset Flow Security Issue
+**Issue:** Users were automatically logged in when clicking reset password email links, instead of just being able to reset their password.
+**Cause:** Standard auth callback was exchanging code for session automatically.
+**Solution:**
+- Created separate `/auth/reset-callback` route for password reset flow
+- Created public `/reset-password` page that doesn't require authentication
+- Modified forgot password action to use new callback
+- After password reset, user is signed out and redirected to sign-in page
+- Preserved dashboard reset password flow for already authenticated users
 
 ### Final Status:
 ✅ All dashboard pages are accessible and working
@@ -125,7 +157,8 @@ npm run build  # Build for production
 - **State Management**: Sidebar state persisted via cookies for better UX
 - **Responsive Design**: Automatic mobile detection with offcanvas behavior
 - **Dependencies Added**: 
-  - `@radix-ui/react-dialog`, `@radix-ui/react-separator`, `@radix-ui/react-tooltip`
+  - Task 2: `@radix-ui/react-dialog`, `@radix-ui/react-separator`, `@radix-ui/react-tooltip`
+  - Task 3: `@radix-ui/react-label` (updated version)
   - Updated `@radix-ui/react-slot` and `class-variance-authority`
 
 ### Current File Structure:
@@ -140,8 +173,20 @@ components/
 │   ├── tooltip.tsx            # Tooltip component
 │   └── card.tsx               # Card component
 app/
+├── (public)/
+│   ├── (auth-pages)/           # Authentication pages with muted background
+│   │   ├── layout.tsx         # Auth layout with centered design
+│   │   ├── sign-in/page.tsx   # Modern sign-in with Card layout
+│   │   ├── sign-up/page.tsx   # Enhanced sign-up with success states
+│   │   ├── forgot-password/   # Streamlined forgot password flow
+│   │   └── smtp-message.tsx   # Redesigned info component
+│   └── reset-password/        # Public password reset page
+├── auth/
+│   ├── callback/              # Standard auth callback
+│   └── reset-callback/        # Special callback for password reset
 ├── dashboard/
 │   ├── layout.tsx             # Updated with SidebarProvider
+│   ├── reset-password/        # Dashboard password change (authenticated)
 │   └── [all pages...]         # Dashboard pages
 └── globals.css                # Updated with sidebar CSS variables
 ```
