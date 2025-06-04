@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTheme } from "next-themes"
 import {
   ChevronUp,
   Home,
@@ -12,6 +13,10 @@ import {
   Settings,
   LogOut,
   RefreshCw,
+  Palette,
+  Sun,
+  Moon,
+  Laptop,
 } from "lucide-react"
 
 import {
@@ -24,13 +29,15 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { createClient } from "@/utils/supabase/client"
@@ -58,9 +65,10 @@ const mainNavItems = [
 export function AppSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
   const [user, setUser] = React.useState<any>(null)
   const [loading, setLoading] = React.useState(true)
-  const { open, state, isMobile } = useSidebar()
+  const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
     const fetchUser = async () => {
@@ -70,7 +78,20 @@ export function AppSidebar() {
       setLoading(false)
     }
     fetchUser()
+    setMounted(true)
   }, [])
+
+  const getThemeIcon = () => {
+    if (!mounted) return <Palette className="mr-2 size-4" />
+    switch (theme) {
+      case "light":
+        return <Sun className="mr-2 size-4" />
+      case "dark":
+        return <Moon className="mr-2 size-4" />
+      default:
+        return <Laptop className="mr-2 size-4" />
+    }
+  }
 
   const handleSignOut = async () => {
     const supabase = createClient()
@@ -79,7 +100,7 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -162,12 +183,35 @@ export function AppSidebar() {
                     Settings
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/reset-password" className="cursor-pointer">
-                    <RefreshCw className="mr-2 size-4" />
-                    Reset Password
-                  </Link>
-                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="cursor-pointer">
+                    {getThemeIcon()}
+                    Theme
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem 
+                      onClick={() => setTheme("light")} 
+                      className="cursor-pointer"
+                    >
+                      <Sun className="mr-2 size-4" />
+                      Light
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => setTheme("dark")} 
+                      className="cursor-pointer"
+                    >
+                      <Moon className="mr-2 size-4" />
+                      Dark
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => setTheme("system")} 
+                      className="cursor-pointer"
+                    >
+                      <Laptop className="mr-2 size-4" />
+                      System
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                   <LogOut className="mr-2 size-4" />
