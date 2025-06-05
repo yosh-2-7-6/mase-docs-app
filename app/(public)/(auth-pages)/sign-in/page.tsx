@@ -16,7 +16,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
   const searchParams = await props.searchParams;
   return (
     <div className="flex flex-col gap-6">
-      <Card>
+      <Card className="w-[400px]">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Welcome back</CardTitle>
           <CardDescription>
@@ -24,9 +24,7 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
-            <div className="grid gap-6">
-              <div className="grid gap-6">
+          <form className="grid gap-6">
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -63,18 +61,16 @@ export default async function Login(props: { searchParams: Promise<Message> }) {
                   Sign in
                 </SubmitButton>
                 <FormMessage message={searchParams} />
-              </div>
               <div className="text-center text-sm">
                 Don&apos;t have an account?{" "}
                 <Link href="/sign-up" className="underline underline-offset-4">
                   Sign up
                 </Link>
-              </div>
             </div>
           </form>
         </CardContent>
       </Card>
-      <div className="text-balance text-center text-xs text-muted-foreground">
+      <div className="w-[400px] text-center text-xs text-muted-foreground">
         By continuing, you agree to our Terms of Service and Privacy Policy.
       </div>
     </div>

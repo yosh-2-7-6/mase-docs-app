@@ -88,10 +88,8 @@ export default async function ResetPassword(props: {
   }
 
   return (
-    <div className="min-h-screen bg-muted/50 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="flex flex-col gap-6">
-          <Card>
+    <div className="flex flex-col gap-6">
+          <Card className="w-[400px]">
             <CardHeader className="text-center">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4 mx-auto">
                 <Shield className="w-6 h-6 text-primary" />
@@ -102,12 +100,12 @@ export default async function ResetPassword(props: {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form>
-                <div className="grid gap-6">
+              <form className="grid gap-6">
                   <input type="hidden" name="code" value={code} />
-                  <div className="grid gap-6">
                     <div className="grid gap-2">
-                      <Label htmlFor="password">New Password</Label>
+                      <div className="flex items-center">
+                        <Label htmlFor="password">New Password</Label>
+                      </div>
                       <Input
                         id="password"
                         name="password"
@@ -118,7 +116,9 @@ export default async function ResetPassword(props: {
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <div className="flex items-center">
+                        <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      </div>
                       <Input
                         id="confirmPassword"
                         name="confirmPassword"
@@ -140,21 +140,17 @@ export default async function ResetPassword(props: {
                         message={error ? { error } : { message: message! }} 
                       />
                     )}
-                  </div>
                   <div className="text-center text-sm">
                     Remember your password?{" "}
                     <Link href="/sign-in" className="underline underline-offset-4">
                       Sign in
                     </Link>
-                  </div>
                 </div>
               </form>
             </CardContent>
           </Card>
-          <div className="text-balance text-center text-xs text-muted-foreground">
-            Your password will be updated and you'll need to sign in again.
-          </div>
-        </div>
+      <div className="w-[400px] text-center text-xs text-muted-foreground">
+        Your password will be updated and you'll need to sign in again.
       </div>
     </div>
   );

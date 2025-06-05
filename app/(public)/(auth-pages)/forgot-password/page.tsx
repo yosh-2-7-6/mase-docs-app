@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { SmtpMessage } from "../smtp-message";
 
 export default async function ForgotPassword(props: {
   searchParams: Promise<Message>;
@@ -19,7 +18,7 @@ export default async function ForgotPassword(props: {
   const searchParams = await props.searchParams;
   return (
     <div className="flex flex-col gap-6">
-      <Card>
+      <Card className="w-[400px]">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Reset your password</CardTitle>
           <CardDescription>
@@ -27,11 +26,11 @@ export default async function ForgotPassword(props: {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
-            <div className="grid gap-6">
-              <div className="grid gap-6">
+          <form className="grid gap-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
+                  <div className="flex items-center">
+                    <Label htmlFor="email">Email</Label>
+                  </div>
                   <Input
                     id="email"
                     name="email"
@@ -48,19 +47,16 @@ export default async function ForgotPassword(props: {
                   Send reset link
                 </SubmitButton>
                 <FormMessage message={searchParams} />
-              </div>
               <div className="text-center text-sm">
                 Remember your password?{" "}
                 <Link href="/sign-in" className="underline underline-offset-4">
                   Sign in
                 </Link>
-              </div>
             </div>
           </form>
         </CardContent>
       </Card>
-      <SmtpMessage />
-      <div className="text-balance text-center text-xs text-muted-foreground">
+      <div className="w-[400px] text-center text-xs text-muted-foreground">
         Check your spam folder if you don't receive the email within a few minutes.
       </div>
     </div>

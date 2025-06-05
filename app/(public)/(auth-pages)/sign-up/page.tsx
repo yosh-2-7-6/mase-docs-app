@@ -11,7 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import Link from "next/link";
-import { SmtpMessage } from "../smtp-message";
 
 export default async function Signup(props: {
   searchParams: Promise<Message>;
@@ -21,7 +20,7 @@ export default async function Signup(props: {
   if ("message" in searchParams) {
     return (
       <div className="flex flex-col gap-6">
-        <Card>
+        <Card className="w-[400px]">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Account Created</CardTitle>
             <CardDescription>
@@ -43,7 +42,7 @@ export default async function Signup(props: {
 
   return (
     <div className="flex flex-col gap-6">
-      <Card>
+      <Card className="w-[400px]">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Create an account</CardTitle>
           <CardDescription>
@@ -51,9 +50,7 @@ export default async function Signup(props: {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
-            <div className="grid gap-6">
-              <div className="grid gap-6">
+          <form className="grid gap-6">
                 <div className="grid gap-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -65,7 +62,9 @@ export default async function Signup(props: {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="password">Password</Label>
+                  <div className="flex items-center">
+                    <Label htmlFor="password">Password</Label>
+                  </div>
                   <Input 
                     id="password" 
                     name="password"
@@ -83,19 +82,16 @@ export default async function Signup(props: {
                   Create account
                 </SubmitButton>
                 <FormMessage message={searchParams} />
-              </div>
               <div className="text-center text-sm">
                 Already have an account?{" "}
                 <Link href="/sign-in" className="underline underline-offset-4">
                   Sign in
                 </Link>
-              </div>
             </div>
           </form>
         </CardContent>
       </Card>
-      <SmtpMessage />
-      <div className="text-balance text-center text-xs text-muted-foreground">
+      <div className="w-[400px] text-center text-xs text-muted-foreground">
         By creating an account, you agree to our Terms of Service and Privacy Policy.
       </div>
     </div>
