@@ -253,3 +253,37 @@ app/
 - `/components/header-auth.tsx`
 - `/components/tutorial/` (entire directory)
 - `/app/(public)/(auth-pages)/smtp-message.tsx`
+
+## Project Overview: MASE DOCS
+
+### Business Context
+MASE DOCS is a SaaS solution designed for professionals and companies who are or want to be MASE certified (Manuel d'Amélioration Sécurité des Entreprises) while staying focused on their core business and improving productivity.
+
+### Core Modules
+
+#### MASE CHECKER
+An automated audit module that:
+- Automatically audits HSE (Health, Safety, Environment) documentation using AI
+- Detects regulatory gaps and non-conformities against the MASE framework
+- Generates personalized audit reports
+- Provides compliance scores (by document/axis/global)
+- Proposes prioritized action plans
+
+#### MASE GENERATOR
+A document generation module that:
+- Automatically generates MASE-compliant documents (e.g., HSE policy, HSE action plans, management review, DUER templates, etc.)
+- Works in two main contexts:
+  1. **Post-audit**: After an automated audit (performed by MASE CHECKER), analyzing existing documents and generating/updating necessary ones
+  2. **From scratch**: Generating all required documents from zero, with or without client data
+
+### Technical Implementation Status
+- **Framework**: Next.js 14 with App Router
+- **Authentication**: Supabase Auth
+- **UI**: shadcn/ui components with Tailwind CSS
+- **Structure**: Dashboard layout with sidebar navigation
+- **Routes**: 
+  - `/dashboard` - Main dashboard
+  - `/dashboard/mase-checker` - MASE CHECKER module
+  - `/dashboard/mase-generator` - MASE GENERATOR module
+  - `/dashboard/settings` - User settings
+  - `/dashboard/billing` - Billing management
