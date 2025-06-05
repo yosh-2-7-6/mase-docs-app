@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { MaseStateManager } from "@/utils/mase-state";
 import { 
   FileText, 
   Wand2, 
@@ -19,7 +20,8 @@ import {
   Shield,
   Users,
   Wrench,
-  RefreshCw
+  RefreshCw,
+  X
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +43,7 @@ interface DocumentTemplate {
   axis: string;
   required: boolean;
   estimatedTime: string;
+  auditScore?: number; // Score de l'audit si disponible
 }
 
 interface GenerationConfig {
@@ -112,8 +115,9 @@ export default function MaseGeneratorPage() {
     activities: 'Construction et rénovation de bâtiments commerciaux et résidentiels'
   });
 
-  // Mock audit history (normalement récupéré depuis l'historique MASE CHECKER)
-  const [hasAuditHistory] = useState(false); // Changez à true pour tester
+  // État de l'historique d'audit (récupéré depuis MASE CHECKER)
+  const [hasAuditHistory, setHasAuditHistory] = useState(false);
+  const [latestAudit, setLatestAudit] = useState<any>(null);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -121,9 +125,96 @@ export default function MaseGeneratorPage() {
   const [selectedDocument, setSelectedDocument] = useState<GeneratedDocument | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
+  // Vérifier l'historique d'audit au chargement et lors de la navigation
+  useEffect(() => {
+    const checkAuditHistory = () => {
+      const hasCompleted = MaseStateManager.hasCompletedAudit();
+      const latest = MaseStateManager.getLatestAudit();
+      
+      setHasAuditHistory(hasCompleted);
+      setLatestAudit(latest);
+
+      // Vérifier si on vient directement de MASE CHECKER
+      const navigationMode = MaseStateManager.getNavigationMode();
+      if (navigationMode === 'post-audit-direct' && hasCompleted) {
+        // Aller directement à l'étape 2 avec le mode post-audit
+        handleModeSelection('post-audit');
+        // Nettoyer le mode de navigation
+        MaseStateManager.clearNavigationMode();
+      }
+    };
+
+    // Vérifier au chargement
+    checkAuditHistory();
+
+    // Vérifier aussi quand la fenêtre reprend le focus (navigation entre pages)
+    const handleFocus = () => checkAuditHistory();
+    window.addEventListener('focus', handleFocus);
+    
+    // Vérifier périodiquement (toutes les 2 secondes) pour détecter les changements
+    const interval = setInterval(checkAuditHistory, 2000);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+    };
+  }, []);
+
   // Step 1: Mode Selection
   const handleModeSelection = (mode: GenerationConfig['mode']) => {
-    setConfig({ ...config, mode });
+    let selectedDocs = config.selectedDocs;
+    
+    // Si mode post-audit, présélectionner les documents à améliorer (<75%)
+    if (mode === 'post-audit' && latestAudit && latestAudit.analysisResults) {
+      // Trouver tous les documents avec un score < 75%
+      const lowScoreDocIds = latestAudit.analysisResults
+        .filter((result: any) => result.score < 75)
+        .map((result: any) => {
+          // Mapper les noms de documents aux IDs de templates
+          // Améliorer la logique de matching pour être plus flexible
+          const normalizedResultName = result.documentName.toLowerCase().trim();
+          const template = DOCUMENT_TEMPLATES.find(t => {
+            const normalizedTemplateName = t.name.toLowerCase().trim();
+            // Vérifier une correspondance exacte ou partielle
+            return normalizedTemplateName === normalizedResultName ||
+                   normalizedTemplateName.includes(normalizedResultName) ||
+                   normalizedResultName.includes(normalizedTemplateName) ||
+                   // Vérifier aussi les mots clés importants
+                   (normalizedResultName.includes('politique') && normalizedTemplateName.includes('politique')) ||
+                   (normalizedResultName.includes('organigramme') && normalizedTemplateName.includes('organigramme')) ||
+                   (normalizedResultName.includes('formation') && normalizedTemplateName.includes('formation')) ||
+                   (normalizedResultName.includes('habilitation') && normalizedTemplateName.includes('habilitation')) ||
+                   (normalizedResultName.includes('check') && normalizedTemplateName.includes('check')) ||
+                   (normalizedResultName.includes('consigne') && normalizedTemplateName.includes('consigne')) ||
+                   (normalizedResultName.includes('fiche') && normalizedTemplateName.includes('fiche')) ||
+                   (normalizedResultName.includes('rex') && normalizedTemplateName.includes('rex')) ||
+                   (normalizedResultName.includes('tableau') && normalizedTemplateName.includes('tableau')) ||
+                   (normalizedResultName.includes('indicateur') && normalizedTemplateName.includes('tableau'));
+          });
+          return template?.id;
+        })
+        .filter(Boolean);
+      
+      // Ajouter aussi les documents manquants
+      const missingDocIds = latestAudit.missingDocuments
+        .map((docName: string) => {
+          const normalizedDocName = docName.toLowerCase().trim();
+          const template = DOCUMENT_TEMPLATES.find(t => {
+            const normalizedTemplateName = t.name.toLowerCase().trim();
+            return normalizedTemplateName === normalizedDocName ||
+                   normalizedTemplateName.includes(normalizedDocName) ||
+                   normalizedDocName.includes(normalizedTemplateName);
+          });
+          return template?.id;
+        })
+        .filter(Boolean);
+      
+      // Combiner et dédupliquer
+      const allDocIds = [...new Set([...lowScoreDocIds, ...missingDocIds])];
+      selectedDocs = allDocIds;
+    }
+    
+    setConfig({ ...config, mode, selectedDocs });
     setCurrentStep('selection');
   };
 
@@ -248,7 +339,7 @@ export default function MaseGeneratorPage() {
   // Download individual document
   const downloadDocument = (doc: GeneratedDocument) => {
     const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId);
-    const instructions = config.personalizedInstructions[doc.templateId];
+    const instructions = config.personalizedInstructions && config.personalizedInstructions[doc.templateId];
     
     const content = `${doc.name}
 
@@ -289,7 +380,8 @@ Date de génération: ${new Date().toLocaleDateString()}`;
     setConfig({
       mode: 'complete',
       selectedDocs: [],
-      companyInfo: { name: '', sector: '', size: '', activities: '' },
+      generationType: 'standard',
+      personalizedInstructions: {},
       styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null }
     });
     setGeneratedDocuments([]);
@@ -298,14 +390,21 @@ Date de génération: ${new Date().toLocaleDateString()}`;
 
   const getStepNumber = () => {
     const steps = ['mode', 'selection', 'config', 'info', 'personalization', 'generation', 'results'];
-    return steps.indexOf(currentStep) + 1;
+    const currentIndex = steps.indexOf(currentStep);
+    
+    // Si on est à l'étape de personnalisation ou après, et qu'on n'est pas en mode personnalisé,
+    // on ajuste le numéro pour garder la cohérence 1-6
+    if (config.generationType !== 'personalized' && currentIndex >= 4) {
+      // On saute l'étape de personnalisation dans le comptage
+      return currentIndex; // sera 5 pour generation, 6 pour results
+    }
+    
+    return currentIndex + 1;
   };
   
   const getTotalSteps = () => {
-    if (config.generationType === 'personalized' && currentStep === 'personalization') {
-      return 7; // Inclut l'étape de personnalisation
-    }
-    return config.generationType === 'personalized' ? 7 : 6; // Sans personnalisation
+    // Toujours 6 étapes au total, que ce soit standard ou personnalisé
+    return 6;
   };
 
   return (
@@ -363,6 +462,34 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                       <p className="text-sm text-muted-foreground mb-4">
                         Générez les documents manquants identifiés lors de votre audit automatique
                       </p>
+                      {latestAudit && (
+                        <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800 relative">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute top-1 right-1 h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-100 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              MaseStateManager.clearHistory();
+                              setHasAuditHistory(false);
+                              setLatestAudit(null);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <p className="text-xs text-green-700 dark:text-green-300 font-medium">
+                            Dernier audit: {new Date(latestAudit.date).toLocaleDateString()}
+                          </p>
+                          <p className="text-xs text-green-600 dark:text-green-400">
+                            Score global: {latestAudit.globalScore}% • {latestAudit.documentsAnalyzed} documents analysés
+                          </p>
+                          {latestAudit.missingDocuments.length > 0 && (
+                            <p className="text-xs text-green-600 dark:text-green-400">
+                              {latestAudit.missingDocuments.length} document(s) à améliorer
+                            </p>
+                          )}
+                        </div>
+                      )}
                       <Badge>Recommandé</Badge>
                     </CardContent>
                   </Card>
@@ -445,6 +572,18 @@ Date de génération: ${new Date().toLocaleDateString()}`;
               </div>
             </CardHeader>
             <CardContent>
+              {config.mode === 'post-audit' && latestAudit && (
+                <Alert className="mb-4">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <AlertTitle>Documents présélectionnés</AlertTitle>
+                  <AlertDescription>
+                    Basé sur votre audit du {new Date(latestAudit.date).toLocaleDateString()}, 
+                    nous avons présélectionné {config.selectedDocs.length} document(s) à améliorer.
+                    Vous pouvez ajuster cette sélection selon vos besoins.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               <Tabs defaultValue="by-axis">
                 <TabsList>
                   <TabsTrigger value="by-axis">Par axe MASE</TabsTrigger>
@@ -456,6 +595,33 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                     const axisDocs = DOCUMENT_TEMPLATES.filter(doc => doc.axis === axis);
                     const selectedAxisDocs = axisDocs.filter(doc => config.selectedDocs.includes(doc.id));
                     
+                    // Enrichir les documents avec les scores d'audit s'ils existent
+                    const enrichedAxisDocs = axisDocs.map(doc => {
+                      if (config.mode === 'post-audit' && latestAudit) {
+                        // Trouver le score correspondant dans les résultats d'audit
+                        const normalizedDocName = doc.name.toLowerCase().trim();
+                        const auditResult = latestAudit.analysisResults?.find((result: any) => {
+                          const normalizedResultName = result.documentName.toLowerCase().trim();
+                          return normalizedDocName === normalizedResultName ||
+                                 normalizedDocName.includes(normalizedResultName) ||
+                                 normalizedResultName.includes(normalizedDocName) ||
+                                 // Vérifier les mots clés importants
+                                 (normalizedResultName.includes('politique') && normalizedDocName.includes('politique')) ||
+                                 (normalizedResultName.includes('organigramme') && normalizedDocName.includes('organigramme')) ||
+                                 (normalizedResultName.includes('formation') && normalizedDocName.includes('formation')) ||
+                                 (normalizedResultName.includes('habilitation') && normalizedDocName.includes('habilitation')) ||
+                                 (normalizedResultName.includes('check') && normalizedDocName.includes('check')) ||
+                                 (normalizedResultName.includes('consigne') && normalizedDocName.includes('consigne')) ||
+                                 (normalizedResultName.includes('fiche') && normalizedDocName.includes('fiche')) ||
+                                 (normalizedResultName.includes('rex') && normalizedDocName.includes('rex')) ||
+                                 (normalizedResultName.includes('tableau') && normalizedDocName.includes('tableau')) ||
+                                 (normalizedResultName.includes('indicateur') && normalizedDocName.includes('tableau'));
+                        });
+                        return { ...doc, auditScore: auditResult?.score };
+                      }
+                      return doc;
+                    });
+                    
                     return (
                       <Card key={axisIndex}>
                         <CardHeader>
@@ -464,6 +630,11 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                               <CardTitle className="text-lg">Axe {axisIndex + 1}: {axis}</CardTitle>
                               <CardDescription>
                                 {selectedAxisDocs.length}/{axisDocs.length} documents sélectionnés
+                                {config.mode === 'post-audit' && (
+                                  <span className="ml-2 text-blue-600 dark:text-blue-400">
+                                    • Scores d'audit affichés
+                                  </span>
+                                )}
                               </CardDescription>
                             </div>
                             <Button 
@@ -477,29 +648,53 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                         </CardHeader>
                         <CardContent>
                           <div className="grid gap-3 sm:grid-cols-1 lg:grid-cols-2">
-                            {axisDocs.map((doc) => (
-                              <div 
-                                key={doc.id}
-                                className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                                onClick={() => toggleDocumentSelection(doc.id)}
-                              >
-                                <Checkbox 
-                                  checked={config.selectedDocs.includes(doc.id)}
-                                  onChange={() => toggleDocumentSelection(doc.id)}
-                                />
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2">
-                                    <p className="font-medium text-sm">{doc.name}</p>
-                                    {doc.required && <Badge variant="destructive" className="text-xs">Obligatoire</Badge>}
-                                  </div>
-                                  <p className="text-xs text-muted-foreground">{doc.description}</p>
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <Clock className="h-3 w-3 text-muted-foreground" />
-                                    <span className="text-xs text-muted-foreground">{doc.estimatedTime}</span>
+                            {enrichedAxisDocs.map((doc) => {
+                              const needsImprovement = doc.auditScore !== undefined && doc.auditScore < 75;
+                              return (
+                                <div 
+                                  key={doc.id}
+                                  className={`flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer ${
+                                    needsImprovement ? 'border-amber-500 bg-amber-50 dark:bg-amber-950' : ''
+                                  }`}
+                                  onClick={() => toggleDocumentSelection(doc.id)}
+                                >
+                                  <Checkbox 
+                                    checked={config.selectedDocs.includes(doc.id)}
+                                    onChange={() => toggleDocumentSelection(doc.id)}
+                                  />
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <p className="font-medium text-sm">{doc.name}</p>
+                                      {doc.required && <Badge variant="destructive" className="text-xs">Obligatoire</Badge>}
+                                      {doc.auditScore !== undefined && (
+                                        <Badge 
+                                          variant={doc.auditScore >= 80 ? "default" : doc.auditScore >= 60 ? "secondary" : "destructive"}
+                                          className="text-xs"
+                                        >
+                                          {doc.auditScore}%
+                                        </Badge>
+                                      )}
+                                      {needsImprovement && (
+                                        <Badge variant="outline" className="text-xs border-amber-500 text-amber-700 dark:text-amber-300">
+                                          Recommandé
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">{doc.description}</p>
+                                    {needsImprovement && (
+                                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                                        <Shield className="h-3 w-3 inline mr-1" />
+                                        Amélioration recommandée (score faible)
+                                      </p>
+                                    )}
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <Clock className="h-3 w-3 text-muted-foreground" />
+                                      <span className="text-xs text-muted-foreground">{doc.estimatedTime}</span>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </CardContent>
                       </Card>
@@ -509,29 +704,78 @@ Date de génération: ${new Date().toLocaleDateString()}`;
 
                 <TabsContent value="all-docs">
                   <div className="grid gap-3 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-                    {DOCUMENT_TEMPLATES.map((doc) => (
-                      <div 
-                        key={doc.id}
-                        className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                        onClick={() => toggleDocumentSelection(doc.id)}
-                      >
-                        <Checkbox 
-                          checked={config.selectedDocs.includes(doc.id)}
-                          onChange={() => toggleDocumentSelection(doc.id)}
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-sm">{doc.name}</p>
-                            {doc.required && <Badge variant="destructive" className="text-xs">Obligatoire</Badge>}
-                          </div>
-                          <p className="text-xs text-muted-foreground mb-1">{doc.description}</p>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">{doc.estimatedTime}</span>
+                    {DOCUMENT_TEMPLATES.map((doc) => {
+                      // Enrichir le document avec le score d'audit s'il existe
+                      let enrichedDoc = doc;
+                      if (config.mode === 'post-audit' && latestAudit) {
+                        const normalizedDocName = doc.name.toLowerCase().trim();
+                        const auditResult = latestAudit.analysisResults?.find((result: any) => {
+                          const normalizedResultName = result.documentName.toLowerCase().trim();
+                          return normalizedDocName === normalizedResultName ||
+                                 normalizedDocName.includes(normalizedResultName) ||
+                                 normalizedResultName.includes(normalizedDocName) ||
+                                 // Vérifier les mots clés importants
+                                 (normalizedResultName.includes('politique') && normalizedDocName.includes('politique')) ||
+                                 (normalizedResultName.includes('organigramme') && normalizedDocName.includes('organigramme')) ||
+                                 (normalizedResultName.includes('formation') && normalizedDocName.includes('formation')) ||
+                                 (normalizedResultName.includes('habilitation') && normalizedDocName.includes('habilitation')) ||
+                                 (normalizedResultName.includes('check') && normalizedDocName.includes('check')) ||
+                                 (normalizedResultName.includes('consigne') && normalizedDocName.includes('consigne')) ||
+                                 (normalizedResultName.includes('fiche') && normalizedDocName.includes('fiche')) ||
+                                 (normalizedResultName.includes('rex') && normalizedDocName.includes('rex')) ||
+                                 (normalizedResultName.includes('tableau') && normalizedDocName.includes('tableau')) ||
+                                 (normalizedResultName.includes('indicateur') && normalizedDocName.includes('tableau'));
+                        });
+                        enrichedDoc = { ...doc, auditScore: auditResult?.score };
+                      }
+                      
+                      const needsImprovement = enrichedDoc.auditScore !== undefined && enrichedDoc.auditScore < 75;
+                      
+                      return (
+                        <div 
+                          key={doc.id}
+                          className={`flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer ${
+                            needsImprovement ? 'border-amber-500 bg-amber-50 dark:bg-amber-950' : ''
+                          }`}
+                          onClick={() => toggleDocumentSelection(doc.id)}
+                        >
+                          <Checkbox 
+                            checked={config.selectedDocs.includes(doc.id)}
+                            onChange={() => toggleDocumentSelection(doc.id)}
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-sm">{enrichedDoc.name}</p>
+                              {enrichedDoc.required && <Badge variant="destructive" className="text-xs">Obligatoire</Badge>}
+                              {enrichedDoc.auditScore !== undefined && (
+                                <Badge 
+                                  variant={enrichedDoc.auditScore >= 80 ? "default" : enrichedDoc.auditScore >= 60 ? "secondary" : "destructive"}
+                                  className="text-xs"
+                                >
+                                  {enrichedDoc.auditScore}%
+                                </Badge>
+                              )}
+                              {needsImprovement && (
+                                <Badge variant="outline" className="text-xs border-amber-500 text-amber-700 dark:text-amber-300">
+                                  Recommandé
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mb-1">{enrichedDoc.description}</p>
+                            {needsImprovement && (
+                              <p className="text-xs text-amber-600 dark:text-amber-400 mb-1">
+                                <Shield className="h-3 w-3 inline mr-1" />
+                                Amélioration recommandée (score faible)
+                              </p>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-xs text-muted-foreground">{enrichedDoc.estimatedTime}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </TabsContent>
               </Tabs>
@@ -903,11 +1147,11 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                           <Textarea
                             id={`instructions-${docId}`}
                             placeholder={`Exemple: "Inclure nos procédures spécifiques au travail en hauteur, mentionner notre certification ISO 45001, adapter au contexte ${companyProfile.sector.toLowerCase()}..."`}
-                            value={config.personalizedInstructions[docId] || ''}
+                            value={(config.personalizedInstructions && config.personalizedInstructions[docId]) || ''}
                             onChange={(e) => setConfig({
                               ...config,
                               personalizedInstructions: {
-                                ...config.personalizedInstructions,
+                                ...(config.personalizedInstructions || {}),
                                 [docId]: e.target.value
                               }
                             })}
@@ -916,9 +1160,9 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                           />
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
                             <span>
-                              {config.personalizedInstructions[docId]?.length || 0} caractères
+                              {(config.personalizedInstructions && config.personalizedInstructions[docId]?.length) || 0} caractères
                             </span>
-                            {!config.personalizedInstructions[docId] && (
+                            {!(config.personalizedInstructions && config.personalizedInstructions[docId]) && (
                               <span className="text-amber-600">Optionnel - document généré avec contenu standard si vide</span>
                             )}
                           </div>
@@ -1013,6 +1257,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                     Tout exporter
                   </Button>
                   <Button variant="outline" onClick={resetGenerator}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
                     Nouvelle génération
                   </Button>
                 </div>
@@ -1101,7 +1346,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                     <p className="text-sm text-muted-foreground">Secteur: {companyProfile.sector} • {companyProfile.size} salariés</p>
                   </div>
                   
-                  {config.personalizedInstructions[selectedDocument.templateId] && (
+                  {(config.personalizedInstructions && config.personalizedInstructions[selectedDocument.templateId]) && (
                     <div>
                       <h4 className="font-semibold">Instructions personnalisées appliquées:</h4>
                       <p className="text-sm text-muted-foreground italic border-l-2 border-primary pl-3">
