@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MaseStateManager } from "@/utils/mase-state";
+import { UserProfileManager } from "@/utils/user-profile";
 import { 
   FileText, 
   Wand2, 
@@ -107,12 +108,12 @@ export default function MaseGeneratorPage() {
     styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null }
   });
   
-  // Mock company profile (normalement récupéré depuis /settings)
-  const [companyProfile] = useState<CompanyProfile>({
-    name: 'ACME Corporation',
-    sector: 'BTP',
-    size: '51-250',
-    activities: 'Construction et rénovation de bâtiments commerciaux et résidentiels'
+  // Profil entreprise (récupéré depuis /settings)
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile>({
+    name: 'Mon Entreprise',
+    sector: 'Non défini',
+    size: 'Non défini',
+    activities: 'Non défini'
   });
 
   // État de l'historique d'audit (récupéré depuis MASE CHECKER)
@@ -125,7 +126,7 @@ export default function MaseGeneratorPage() {
   const [selectedDocument, setSelectedDocument] = useState<GeneratedDocument | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
-  // Vérifier l'historique d'audit au chargement et lors de la navigation
+  // Vérifier l'historique d'audit et charger le profil utilisateur au chargement
   useEffect(() => {
     const checkAuditHistory = () => {
       const hasCompleted = MaseStateManager.hasCompletedAudit();
@@ -138,21 +139,37 @@ export default function MaseGeneratorPage() {
       const navigationMode = MaseStateManager.getNavigationMode();
       if (navigationMode === 'post-audit-direct' && hasCompleted) {
         // Aller directement à l'étape 2 avec le mode post-audit
-        handleModeSelection('post-audit');
-        // Nettoyer le mode de navigation
-        MaseStateManager.clearNavigationMode();
+        // On va utiliser un setTimeout pour s'assurer que handleModeSelection est définie
+        setTimeout(() => {
+          handleModeSelection('post-audit');
+          // Nettoyer le mode de navigation
+          MaseStateManager.clearNavigationMode();
+        }, 100);
       }
     };
 
-    // Vérifier au chargement
+    const loadUserProfile = () => {
+      // Charger le profil utilisateur depuis les paramètres
+      const profile = UserProfileManager.getCompanyProfileForGenerator();
+      setCompanyProfile(profile);
+    };
+
+    // Charger les données au démarrage
     checkAuditHistory();
+    loadUserProfile();
 
     // Vérifier aussi quand la fenêtre reprend le focus (navigation entre pages)
-    const handleFocus = () => checkAuditHistory();
+    const handleFocus = () => {
+      checkAuditHistory();
+      loadUserProfile(); // Recharger le profil aussi
+    };
     window.addEventListener('focus', handleFocus);
     
     // Vérifier périodiquement (toutes les 2 secondes) pour détecter les changements
-    const interval = setInterval(checkAuditHistory, 2000);
+    const interval = setInterval(() => {
+      checkAuditHistory();
+      loadUserProfile();
+    }, 2000);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
