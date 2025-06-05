@@ -164,11 +164,11 @@ export default function MaseGeneratorPage() {
   const handleModeSelection = (mode: GenerationConfig['mode']) => {
     let selectedDocs = config.selectedDocs;
     
-    // Si mode post-audit, présélectionner les documents à améliorer (<75%)
+    // Si mode post-audit, présélectionner les documents à améliorer (<80%)
     if (mode === 'post-audit' && latestAudit && latestAudit.analysisResults) {
-      // Trouver tous les documents avec un score < 75%
+      // Trouver tous les documents avec un score < 80%
       const lowScoreDocIds = latestAudit.analysisResults
-        .filter((result: any) => result.score < 75)
+        .filter((result: any) => result.score < 80)
         .map((result: any) => {
           // Mapper les noms de documents aux IDs de templates
           // Améliorer la logique de matching pour être plus flexible
@@ -210,7 +210,8 @@ export default function MaseGeneratorPage() {
         .filter(Boolean);
       
       // Combiner et dédupliquer
-      const allDocIds = [...new Set([...lowScoreDocIds, ...missingDocIds])];
+      const combined = [...lowScoreDocIds, ...missingDocIds];
+      const allDocIds = Array.from(new Set(combined));
       selectedDocs = allDocIds;
     }
     
@@ -474,6 +475,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                               setHasAuditHistory(false);
                               setLatestAudit(null);
                             }}
+                            title="Supprimer l'historique d'audit"
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -488,6 +490,17 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                               {latestAudit.missingDocuments.length} document(s) à améliorer
                             </p>
                           )}
+                          <button 
+                            className="text-xs text-blue-600 dark:text-blue-400 mt-1 underline hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Set view mode and navigate to MASE CHECKER results
+                              MaseStateManager.setViewMode('view-results');
+                              router.push('/dashboard/mase-checker');
+                            }}
+                          >
+                            💡 Cliquer pour voir les détails
+                          </button>
                         </div>
                       )}
                       <Badge>Recommandé</Badge>
@@ -578,7 +591,9 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                   <AlertTitle>Documents présélectionnés</AlertTitle>
                   <AlertDescription>
                     Basé sur votre audit du {new Date(latestAudit.date).toLocaleDateString()}, 
-                    nous avons présélectionné {config.selectedDocs.length} document(s) à améliorer.
+                    nous avons présélectionné {config.selectedDocs.length} document(s) à améliorer ({
+                      latestAudit.analysisResults?.filter((result: any) => result.score < 80).length || 0
+                    } document(s) audité(s) {'< 80%'}).
                     Vous pouvez ajuster cette sélection selon vos besoins.
                   </AlertDescription>
                 </Alert>
@@ -649,11 +664,11 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                         <CardContent>
                           <div className="grid gap-3 sm:grid-cols-1 lg:grid-cols-2">
                             {enrichedAxisDocs.map((doc) => {
-                              const needsImprovement = doc.auditScore !== undefined && doc.auditScore < 75;
+                              const needsImprovement = doc.auditScore !== undefined && doc.auditScore < 80;
                               return (
                                 <div 
                                   key={doc.id}
-                                  className={`flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer ${
+                                  className={`relative flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer ${
                                     needsImprovement ? 'border-amber-500 bg-amber-50 dark:bg-amber-950' : ''
                                   }`}
                                   onClick={() => toggleDocumentSelection(doc.id)}
@@ -662,23 +677,10 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                                     checked={config.selectedDocs.includes(doc.id)}
                                     onChange={() => toggleDocumentSelection(doc.id)}
                                   />
-                                  <div className="flex-1">
+                                  <div className="flex-1 pr-20">
                                     <div className="flex items-center gap-2">
                                       <p className="font-medium text-sm">{doc.name}</p>
                                       {doc.required && <Badge variant="destructive" className="text-xs">Obligatoire</Badge>}
-                                      {doc.auditScore !== undefined && (
-                                        <Badge 
-                                          variant={doc.auditScore >= 80 ? "default" : doc.auditScore >= 60 ? "secondary" : "destructive"}
-                                          className="text-xs"
-                                        >
-                                          {doc.auditScore}%
-                                        </Badge>
-                                      )}
-                                      {needsImprovement && (
-                                        <Badge variant="outline" className="text-xs border-amber-500 text-amber-700 dark:text-amber-300">
-                                          Recommandé
-                                        </Badge>
-                                      )}
                                     </div>
                                     <p className="text-xs text-muted-foreground">{doc.description}</p>
                                     {needsImprovement && (
@@ -691,6 +693,29 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                                       <Clock className="h-3 w-3 text-muted-foreground" />
                                       <span className="text-xs text-muted-foreground">{doc.estimatedTime}</span>
                                     </div>
+                                  </div>
+                                  {/* Labels en haut à droite */}
+                                  <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                                    {doc.auditScore !== undefined && (
+                                      <Badge 
+                                        variant={doc.auditScore >= 80 ? "default" : doc.auditScore >= 60 ? "secondary" : "destructive"}
+                                        className={`text-xs ${
+                                          doc.auditScore >= 80 
+                                            ? 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700' 
+                                            : doc.auditScore >= 60 
+                                            ? 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700'
+                                            : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-200 dark:border-red-700'
+                                        }`}
+                                        title="Score d'audit"
+                                      >
+                                        {doc.auditScore}%
+                                      </Badge>
+                                    )}
+                                    {needsImprovement && (
+                                      <Badge variant="outline" className="text-xs border-amber-500 text-amber-700 dark:text-amber-300">
+                                        Génération Recommandée
+                                      </Badge>
+                                    )}
                                   </div>
                                 </div>
                               );
@@ -729,12 +754,12 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                         enrichedDoc = { ...doc, auditScore: auditResult?.score };
                       }
                       
-                      const needsImprovement = enrichedDoc.auditScore !== undefined && enrichedDoc.auditScore < 75;
+                      const needsImprovement = enrichedDoc.auditScore !== undefined && enrichedDoc.auditScore < 80;
                       
                       return (
                         <div 
                           key={doc.id}
-                          className={`flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer ${
+                          className={`relative flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer ${
                             needsImprovement ? 'border-amber-500 bg-amber-50 dark:bg-amber-950' : ''
                           }`}
                           onClick={() => toggleDocumentSelection(doc.id)}
@@ -743,23 +768,10 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                             checked={config.selectedDocs.includes(doc.id)}
                             onChange={() => toggleDocumentSelection(doc.id)}
                           />
-                          <div className="flex-1">
+                          <div className="flex-1 pr-20">
                             <div className="flex items-center gap-2">
                               <p className="font-medium text-sm">{enrichedDoc.name}</p>
                               {enrichedDoc.required && <Badge variant="destructive" className="text-xs">Obligatoire</Badge>}
-                              {enrichedDoc.auditScore !== undefined && (
-                                <Badge 
-                                  variant={enrichedDoc.auditScore >= 80 ? "default" : enrichedDoc.auditScore >= 60 ? "secondary" : "destructive"}
-                                  className="text-xs"
-                                >
-                                  {enrichedDoc.auditScore}%
-                                </Badge>
-                              )}
-                              {needsImprovement && (
-                                <Badge variant="outline" className="text-xs border-amber-500 text-amber-700 dark:text-amber-300">
-                                  Recommandé
-                                </Badge>
-                              )}
                             </div>
                             <p className="text-xs text-muted-foreground mb-1">{enrichedDoc.description}</p>
                             {needsImprovement && (
@@ -772,6 +784,29 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                               <Clock className="h-3 w-3 text-muted-foreground" />
                               <span className="text-xs text-muted-foreground">{enrichedDoc.estimatedTime}</span>
                             </div>
+                          </div>
+                          {/* Labels en haut à droite */}
+                          <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                            {enrichedDoc.auditScore !== undefined && (
+                              <Badge 
+                                variant={enrichedDoc.auditScore >= 80 ? "default" : enrichedDoc.auditScore >= 60 ? "secondary" : "destructive"}
+                                className={`text-xs ${
+                                  enrichedDoc.auditScore >= 80 
+                                    ? 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700' 
+                                    : enrichedDoc.auditScore >= 60 
+                                    ? 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700'
+                                    : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-200 dark:border-red-700'
+                                }`}
+                                title="Score d'audit"
+                              >
+                                {enrichedDoc.auditScore}%
+                              </Badge>
+                            )}
+                            {needsImprovement && (
+                              <Badge variant="outline" className="text-xs border-amber-500 text-amber-700 dark:text-amber-300">
+                                Génération Recommandée
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       );

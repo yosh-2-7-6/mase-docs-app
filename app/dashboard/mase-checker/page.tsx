@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Upload, FileText, AlertCircle, CheckCircle2, X, Eye, Download, Wand2, RefreshCw, ArrowLeft, ArrowRight, Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { MaseStateManager } from "@/utils/mase-state";
@@ -63,6 +63,53 @@ export default function MaseCheckerPage() {
   const [analysisResults, setAnalysisResults] = useState<AnalysisResult[]>([]);
   const [axisScores, setAxisScores] = useState<AxisScore[]>([]);
   const [globalScore, setGlobalScore] = useState(0);
+
+  // Check for existing audit on load
+  useEffect(() => {
+    const checkExistingAudit = () => {
+      // Check if we're in view-results mode from navigation
+      const viewMode = MaseStateManager.getViewMode();
+      if (viewMode === 'view-results') {
+        // Clear the view mode and load results directly
+        MaseStateManager.clearViewMode();
+        loadExistingAuditResults();
+        return;
+      }
+
+      // For direct navigation, only load existing results if they exist
+      if (MaseStateManager.hasCompletedAudit()) {
+        loadExistingAuditResults();
+      }
+    };
+
+    checkExistingAudit();
+  }, []);
+
+  // Load existing audit results and go directly to results
+  const loadExistingAuditResults = () => {
+    const latestAudit = MaseStateManager.getLatestAudit();
+    if (latestAudit && latestAudit.completed) {
+      // Restore the analysis results from storage
+      if (latestAudit.analysisResults) {
+        setAnalysisResults(latestAudit.analysisResults);
+      }
+      setAxisScores(latestAudit.axisScores);
+      setGlobalScore(latestAudit.globalScore);
+      
+      // Create mock documents based on analysis results
+      const mockDocs: Document[] = latestAudit.analysisResults?.map((result, index) => ({
+        id: result.documentId,
+        name: result.documentName,
+        size: '1.2 MB', // Mock size
+        type: 'application/pdf',
+        uploadDate: new Date(latestAudit.date)
+      })) || [];
+      
+      setDocuments(mockDocs);
+      setAnalysisComplete(true);
+      setCurrentStep('results');
+    }
+  };
 
   // Handle drag events
   const handleDrag = (e: React.DragEvent) => {
@@ -148,9 +195,9 @@ export default function MaseCheckerPage() {
     const mockResults: AnalysisResult[] = documents.map((doc, index) => {
       // Use a recognizable MASE document name for the mock
       const mockName = mockDocumentNames[index % mockDocumentNames.length];
-      // Generate a score, with 50% chance of being below 75%
+      // Generate a score, with 50% chance of being below 80%
       const score = Math.random() < 0.5 
-        ? Math.floor(Math.random() * 15) + 60  // 60-74% (needs improvement)
+        ? Math.floor(Math.random() * 20) + 60  // 60-79% (needs improvement)
         : Math.floor(Math.random() * 20) + 80; // 80-99% (good)
       
       return {
@@ -202,7 +249,7 @@ export default function MaseCheckerPage() {
       documentsAnalyzed: documents.length,
       globalScore: totalScore,
       axisScores: axisData,
-      missingDocuments: mockResults.filter(r => r.score < 70).map(r => r.documentName),
+      missingDocuments: mockResults.filter(r => r.score < 80).map(r => r.documentName),
       completed: true,
       analysisResults: mockResults // Ajouter les résultats détaillés pour MASE GENERATOR
     };
@@ -572,6 +619,8 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                   variant="outline"
                   size="sm"
                   onClick={() => {
+                    // Clear audit history and reset everything
+                    MaseStateManager.clearHistory();
                     setCurrentStep('upload');
                     setAnalysisComplete(false);
                     setDocuments([]);
@@ -742,14 +791,6 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                   Actions recommandées pour améliorer la conformité de cet axe MASE
                 </DialogDescription>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAxisPlan(false)}
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Retour
-              </Button>
             </div>
           </DialogHeader>
           
@@ -791,17 +832,33 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                       </CardContent>
                     </Card>
 
-                    {/* Actions prioritaires */}
+                    {/* Actions prioritaires avec bouton génération */}
                     {axisData.actions.length > 0 && (
                       <Card>
                         <CardHeader>
-                          <CardTitle className="flex items-center gap-2">
-                            <AlertCircle className="h-5 w-5 text-amber-600" />
-                            Actions prioritaires
-                          </CardTitle>
-                          <CardDescription>
-                            Documents nécessitant des améliorations (score {'< 80%'})
-                          </CardDescription>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="flex items-center gap-2">
+                                <AlertCircle className="h-5 w-5 text-amber-600" />
+                                Actions prioritaires
+                              </CardTitle>
+                              <CardDescription>
+                                Documents nécessitant des améliorations (score {'< 80%'})
+                              </CardDescription>
+                            </div>
+                            <Button 
+                              variant="default"
+                              onClick={() => {
+                                // Passer en mode post-audit et aller directement à l'étape 2
+                                MaseStateManager.setNavigationMode('post-audit-direct');
+                                setShowAxisPlan(false);
+                                router.push('/dashboard/mase-generator');
+                              }}
+                            >
+                              <Wand2 className="h-4 w-4 mr-2" />
+                              Générer documents conformes
+                            </Button>
+                          </div>
                         </CardHeader>
                         <CardContent>
                           <div className="space-y-4">
@@ -879,32 +936,6 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                       </Card>
                     )}
 
-                    {/* Call to action pour MASE Generator */}
-                    {axisData.actions.length > 0 && (
-                      <Alert>
-                        <Wand2 className="h-4 w-4" />
-                        <AlertTitle>Améliorer automatiquement cet axe</AlertTitle>
-                        <AlertDescription>
-                          <div className="flex flex-col sm:flex-row gap-3 mt-3">
-                            <span className="flex-1">
-                              MASE Generator peut créer ou améliorer automatiquement les documents de cet axe selon le référentiel MASE.
-                            </span>
-                            <Button 
-                              size="sm"
-                              onClick={() => {
-                                // Passer en mode post-audit et aller directement à l'étape 2
-                                MaseStateManager.setNavigationMode('post-audit-direct');
-                                setShowAxisPlan(false);
-                                router.push('/dashboard/mase-generator');
-                              }}
-                            >
-                              <Wand2 className="h-4 w-4 mr-2" />
-                              Générer les documents
-                            </Button>
-                          </div>
-                        </AlertDescription>
-                      </Alert>
-                    )}
                   </>
                 );
               })()}

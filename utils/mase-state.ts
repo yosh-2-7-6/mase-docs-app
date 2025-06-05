@@ -24,6 +24,7 @@ export interface MaseAuditResult {
 
 const STORAGE_KEY = 'mase_audit_history';
 const NAVIGATION_KEY = 'mase_navigation_mode';
+const VIEW_MODE_KEY = 'mase_view_mode';
 
 export class MaseStateManager {
   // Sauvegarder les résultats d'audit
@@ -108,6 +109,36 @@ export class MaseStateManager {
       localStorage.removeItem(NAVIGATION_KEY);
     } catch (error) {
       console.warn('Impossible d\'effacer le mode de navigation:', error);
+    }
+  }
+
+  // Gérer le mode de vue pour accéder aux résultats depuis n'importe où
+  static setViewMode(mode: 'view-results' | null): void {
+    try {
+      if (mode) {
+        localStorage.setItem(VIEW_MODE_KEY, mode);
+      } else {
+        localStorage.removeItem(VIEW_MODE_KEY);
+      }
+    } catch (error) {
+      console.warn('Impossible de définir le mode de vue:', error);
+    }
+  }
+
+  static getViewMode(): string | null {
+    try {
+      return localStorage.getItem(VIEW_MODE_KEY);
+    } catch (error) {
+      console.warn('Impossible de récupérer le mode de vue:', error);
+      return null;
+    }
+  }
+
+  static clearViewMode(): void {
+    try {
+      localStorage.removeItem(VIEW_MODE_KEY);
+    } catch (error) {
+      console.warn('Impossible d\'effacer le mode de vue:', error);
     }
   }
 }
