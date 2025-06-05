@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { 
   FileText, 
   Wand2, 
@@ -43,19 +44,22 @@ interface DocumentTemplate {
 }
 
 interface GenerationConfig {
-  mode: 'post-audit' | 'with-docs' | 'complete';
+  mode: 'post-audit' | 'complete';
   selectedDocs: string[];
-  companyInfo: {
-    name: string;
-    sector: string;
-    size: string;
-    activities: string;
-  };
+  generationType: 'standard' | 'personalized';
+  personalizedInstructions: { [docId: string]: string };
   styling: {
     template: string;
     primaryColor: string;
     logo: File | null;
   };
+}
+
+interface CompanyProfile {
+  name: string;
+  sector: string;
+  size: string;
+  activities: string;
 }
 
 interface GeneratedDocument {
@@ -90,13 +94,27 @@ const DOCUMENT_TEMPLATES: DocumentTemplate[] = [
 ];
 
 export default function MaseGeneratorPage() {
-  const [currentStep, setCurrentStep] = useState<'mode' | 'selection' | 'config' | 'info' | 'generation' | 'results'>('mode');
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState<'mode' | 'selection' | 'config' | 'info' | 'personalization' | 'generation' | 'results'>('mode');
   const [config, setConfig] = useState<GenerationConfig>({
     mode: 'complete',
     selectedDocs: [],
-    companyInfo: { name: '', sector: '', size: '', activities: '' },
+    generationType: 'standard',
+    personalizedInstructions: {},
     styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null }
   });
+  
+  // Mock company profile (normalement récupéré depuis /settings)
+  const [companyProfile] = useState<CompanyProfile>({
+    name: 'ACME Corporation',
+    sector: 'BTP',
+    size: '51-250',
+    activities: 'Construction et rénovation de bâtiments commerciaux et résidentiels'
+  });
+
+  // Mock audit history (normalement récupéré depuis l'historique MASE CHECKER)
+  const [hasAuditHistory] = useState(false); // Changez à true pour tester
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generatedDocuments, setGeneratedDocuments] = useState<GeneratedDocument[]>([]);
@@ -170,12 +188,6 @@ export default function MaseGeneratorPage() {
         ...config,
         styling: { ...config.styling, [stylePath]: value }
       });
-    } else if (field.startsWith('companyInfo.')) {
-      const infoPath = field.split('.')[1];
-      setConfig({
-        ...config,
-        companyInfo: { ...config.companyInfo, [infoPath]: value }
-      });
     }
   };
 
@@ -236,14 +248,18 @@ export default function MaseGeneratorPage() {
   // Download individual document
   const downloadDocument = (doc: GeneratedDocument) => {
     const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId);
+    const instructions = config.personalizedInstructions[doc.templateId];
+    
     const content = `${doc.name}
 
-Entreprise: ${config.companyInfo.name}
-Secteur: ${config.companyInfo.sector}
+Entreprise: ${companyProfile.name}
+Secteur: ${companyProfile.sector}
+Taille: ${companyProfile.size} salariés
 
 ${doc.content}
 
 Ce document a été généré automatiquement selon les exigences du référentiel MASE 2024.
+${config.generationType === 'personalized' ? 'Génération personnalisée avec instructions spécifiques.' : 'Génération standard.'}
 
 Il inclut toutes les sections requises:
 • Objectifs et politique
@@ -252,7 +268,8 @@ Il inclut toutes les sections requises:
 • Indicateurs de performance
 • Modalités de révision
 
-Axe MASE: ${template?.axis}
+${instructions ? `Instructions personnalisées appliquées:\n${instructions}\n\n` : ''}Axe MASE: ${template?.axis}
+Modèle utilisé: ${config.styling.template}
 Date de génération: ${new Date().toLocaleDateString()}`;
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
@@ -280,8 +297,15 @@ Date de génération: ${new Date().toLocaleDateString()}`;
   };
 
   const getStepNumber = () => {
-    const steps = ['mode', 'selection', 'config', 'info', 'generation', 'results'];
+    const steps = ['mode', 'selection', 'config', 'info', 'personalization', 'generation', 'results'];
     return steps.indexOf(currentStep) + 1;
+  };
+  
+  const getTotalSteps = () => {
+    if (config.generationType === 'personalized' && currentStep === 'personalization') {
+      return 7; // Inclut l'étape de personnalisation
+    }
+    return config.generationType === 'personalized' ? 7 : 6; // Sans personnalisation
   };
 
   return (
@@ -297,17 +321,18 @@ Date de génération: ${new Date().toLocaleDateString()}`;
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium">Étape {getStepNumber()}/6</span>
+            <span className="text-sm font-medium">Étape {getStepNumber()}/{getTotalSteps()}</span>
             <Badge variant="outline">
               {currentStep === 'mode' && 'Sélection du mode'}
               {currentStep === 'selection' && 'Choix des documents'}
               {currentStep === 'config' && 'Configuration'}
-              {currentStep === 'info' && 'Informations entreprise'}
+              {currentStep === 'info' && 'Récapitulatif'}
+              {currentStep === 'personalization' && 'Personnalisation SSE'}
               {currentStep === 'generation' && 'Génération en cours'}
               {currentStep === 'results' && 'Résultats'}
             </Badge>
           </div>
-          <Progress value={(getStepNumber() / 6) * 100} className="h-2" />
+          <Progress value={(getStepNumber() / getTotalSteps()) * 100} className="h-2" />
         </CardContent>
       </Card>
 
@@ -322,42 +347,50 @@ Date de génération: ${new Date().toLocaleDateString()}`;
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-3">
-                <Card 
-                  className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
-                  onClick={() => handleModeSelection('post-audit')}
-                >
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <Search className="h-5 w-5" />
-                      Après audit MASE CHECKER
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Générez les documents manquants identifiés lors de votre audit automatique
-                    </p>
-                    <Badge>Recommandé</Badge>
-                  </CardContent>
-                </Card>
-
-                <Card 
-                  className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
-                  onClick={() => handleModeSelection('with-docs')}
-                >
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                      <FileText className="h-5 w-5" />
-                      Avec documents existants
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Analysez vos documents actuels et générez les améliorations nécessaires
-                    </p>
-                    <Badge variant="secondary">Optimisation</Badge>
-                  </CardContent>
-                </Card>
+              <div className="grid gap-4 md:grid-cols-2 max-w-4xl mx-auto">
+                {hasAuditHistory ? (
+                  <Card 
+                    className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
+                    onClick={() => handleModeSelection('post-audit')}
+                  >
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Search className="h-5 w-5" />
+                        Après audit MASE CHECKER
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Générez les documents manquants identifiés lors de votre audit automatique
+                      </p>
+                      <Badge>Recommandé</Badge>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="border-2 border-dashed border-muted-foreground/25 opacity-60">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg text-muted-foreground">
+                        <Search className="h-5 w-5" />
+                        Après audit MASE CHECKER
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Effectuez d'abord un audit avec MASE CHECKER pour utiliser ce mode
+                      </p>
+                      <div className="flex gap-2">
+                        <Badge variant="secondary">Non disponible</Badge>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => router.push('/dashboard/mase-checker')}
+                        >
+                          Faire un audit
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 <Card 
                   className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
@@ -371,7 +404,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Créez tous vos documents MASE depuis zéro
+                      Créez tous vos documents MASE depuis zéro selon vos besoins
                     </p>
                     <Badge variant="outline">Nouveau projet</Badge>
                   </CardContent>
@@ -585,59 +618,44 @@ Date de génération: ${new Date().toLocaleDateString()}`;
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building className="h-5 w-5" />
-                  Informations entreprise
+                  Informations de votre entreprise
                 </CardTitle>
                 <CardDescription>
-                  Ces informations seront utilisées pour personnaliser vos documents
+                  Données récupérées depuis vos paramètres de profil
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="company-name">Nom de l'entreprise *</Label>
-                  <Input
-                    id="company-name"
-                    value={config.companyInfo.name}
-                    onChange={(e) => handleConfigChange('companyInfo.name', e.target.value)}
-                    placeholder="ACME Corporation"
-                  />
+                <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+                  <div>
+                    <Label className="text-sm font-medium">Nom de l'entreprise</Label>
+                    <p className="text-sm text-muted-foreground">{companyProfile.name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Secteur d'activité</Label>
+                    <p className="text-sm text-muted-foreground">{companyProfile.sector}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Taille</Label>
+                    <p className="text-sm text-muted-foreground">{companyProfile.size} salariés</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Activités principales</Label>
+                    <p className="text-sm text-muted-foreground">{companyProfile.activities}</p>
+                  </div>
                 </div>
-
-                <div>
-                  <Label htmlFor="sector">Secteur d'activité *</Label>
-                  <Input
-                    id="sector"
-                    value={config.companyInfo.sector}
-                    onChange={(e) => handleConfigChange('companyInfo.sector', e.target.value)}
-                    placeholder="BTP, Industrie, Services..."
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="size">Taille de l'entreprise</Label>
-                  <select 
-                    id="size"
-                    className="w-full mt-1 p-2 border rounded-md"
-                    value={config.companyInfo.size}
-                    onChange={(e) => handleConfigChange('companyInfo.size', e.target.value)}
-                  >
-                    <option value="">Sélectionner...</option>
-                    <option value="1-10">1-10 salariés</option>
-                    <option value="11-50">11-50 salariés</option>
-                    <option value="51-250">51-250 salariés</option>
-                    <option value="250+">Plus de 250 salariés</option>
-                  </select>
-                </div>
-
-                <div>
-                  <Label htmlFor="activities">Activités principales</Label>
-                  <Textarea
-                    id="activities"
-                    value={config.companyInfo.activities}
-                    onChange={(e) => handleConfigChange('companyInfo.activities', e.target.value)}
-                    placeholder="Décrivez brièvement vos activités principales..."
-                    rows={3}
-                  />
-                </div>
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    Pour modifier ces informations, rendez-vous dans{' '}
+                    <Button 
+                      variant="link" 
+                      className="p-0 h-auto font-normal"
+                      onClick={() => router.push('/dashboard/settings')}
+                    >
+                      Paramètres → Profile
+                    </Button>
+                  </AlertDescription>
+                </Alert>
               </CardContent>
             </Card>
           </div>
@@ -647,10 +665,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Button>
-            <Button 
-              onClick={() => setCurrentStep('info')}
-              disabled={!config.companyInfo.name || !config.companyInfo.sector}
-            >
+            <Button onClick={() => setCurrentStep('info')}>
               Continuer
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
@@ -658,7 +673,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
         </div>
       )}
 
-      {/* Step 4: Additional Info */}
+      {/* Step 4: Récapitulatif et choix du type de génération */}
       {currentStep === 'info' && (
         <div className="space-y-6">
           <Card>
@@ -668,7 +683,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                 Récapitulatif de votre génération
               </CardTitle>
               <CardDescription>
-                Vérifiez les paramètres avant de lancer la génération
+                Vérifiez les paramètres et choisissez le type de génération
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -678,14 +693,13 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                     <h4 className="font-semibold mb-2">Mode de génération</h4>
                     <Badge>
                       {config.mode === 'post-audit' && 'Après audit MASE CHECKER'}
-                      {config.mode === 'with-docs' && 'Avec documents existants'}
                       {config.mode === 'complete' && 'Génération complète'}
                     </Badge>
                   </div>
 
                   <div>
                     <h4 className="font-semibold mb-2">Documents sélectionnés</h4>
-                    <div className="space-y-1">
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
                       {config.selectedDocs.map(docId => {
                         const doc = DOCUMENT_TEMPLATES.find(d => d.id === docId);
                         return (
@@ -703,9 +717,9 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                   <div>
                     <h4 className="font-semibold mb-2">Entreprise</h4>
                     <div className="text-sm space-y-1">
-                      <p><strong>Nom:</strong> {config.companyInfo.name}</p>
-                      <p><strong>Secteur:</strong> {config.companyInfo.sector}</p>
-                      {config.companyInfo.size && <p><strong>Taille:</strong> {config.companyInfo.size}</p>}
+                      <p><strong>Nom:</strong> {companyProfile.name}</p>
+                      <p><strong>Secteur:</strong> {companyProfile.sector}</p>
+                      <p><strong>Taille:</strong> {companyProfile.size} salariés</p>
                     </div>
                   </div>
 
@@ -725,15 +739,101 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <Alert className="mt-6">
-                <Info className="h-4 w-4" />
-                <AlertTitle>Temps estimé de génération</AlertTitle>
-                <AlertDescription>
-                  La génération de vos {config.selectedDocs.length} documents prendra environ{' '}
-                  {Math.ceil(config.selectedDocs.length * 1.5)} minutes.
-                </AlertDescription>
-              </Alert>
+          {/* Choix du type de génération */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Type de génération</CardTitle>
+              <CardDescription>
+                Choisissez le niveau de personnalisation pour vos documents
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card 
+                  className={`cursor-pointer transition-all border-2 ${
+                    config.generationType === 'standard' 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  onClick={() => setConfig({ ...config, generationType: 'standard' })}
+                >
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Wand2 className="h-5 w-5" />
+                      Génération standard
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Documents conformes aux exigences MASE avec vos informations d'entreprise
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span>Conformité référentiel MASE</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span>Personnalisation automatique</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span>Génération rapide</span>
+                      </div>
+                    </div>
+                    <Alert className="mt-4">
+                      <Info className="h-4 w-4" />
+                      <AlertDescription>
+                        Temps estimé: ~{Math.ceil(config.selectedDocs.length * 1)} minute(s)
+                      </AlertDescription>
+                    </Alert>
+                  </CardContent>
+                </Card>
+
+                <Card 
+                  className={`cursor-pointer transition-all border-2 ${
+                    config.generationType === 'personalized' 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                  onClick={() => setConfig({ ...config, generationType: 'personalized' })}
+                >
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Génération personnalisée
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Documents ultra-personnalisés avec vos instructions SSE spécifiques
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span>Conformité référentiel MASE</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span>Instructions SSE sur mesure</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span>Contenu adapté à vos spécificités</span>
+                      </div>
+                    </div>
+                    <Alert className="mt-4">
+                      <Info className="h-4 w-4" />
+                      <AlertDescription>
+                        Temps estimé: ~{Math.ceil(config.selectedDocs.length * 2)} minute(s)
+                      </AlertDescription>
+                    </Alert>
+                  </CardContent>
+                </Card>
+              </div>
             </CardContent>
           </Card>
 
@@ -742,15 +842,109 @@ Date de génération: ${new Date().toLocaleDateString()}`;
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Button>
+            
+            {config.generationType === 'standard' ? (
+              <Button onClick={startGeneration}>
+                <Wand2 className="h-4 w-4 mr-2" />
+                Lancer la génération standard
+              </Button>
+            ) : (
+              <Button onClick={() => setCurrentStep('personalization')}>
+                Personnaliser les documents
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Step 5: Personnalisation SSE */}
+      {currentStep === 'personalization' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                Instructions SSE personnalisées
+              </CardTitle>
+              <CardDescription>
+                Donnez des instructions spécifiques pour personnaliser chaque document selon vos besoins SSE
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Alert className="mb-6">
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Ces instructions permettront à l'IA de personnaliser le contenu de chaque document en respectant vos spécificités métier et vos contraintes SSE.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="space-y-6">
+                {config.selectedDocs.map((docId) => {
+                  const doc = DOCUMENT_TEMPLATES.find(d => d.id === docId);
+                  return (
+                    <Card key={docId} className="border-l-4 border-l-primary">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle className="text-lg">{doc?.name}</CardTitle>
+                            <CardDescription className="mt-1">
+                              {doc?.description} • Axe MASE: {doc?.axis}
+                            </CardDescription>
+                          </div>
+                          <Badge variant="outline">{doc?.estimatedTime}</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <Label htmlFor={`instructions-${docId}`}>
+                            Instructions spécifiques pour ce document
+                          </Label>
+                          <Textarea
+                            id={`instructions-${docId}`}
+                            placeholder={`Exemple: "Inclure nos procédures spécifiques au travail en hauteur, mentionner notre certification ISO 45001, adapter au contexte ${companyProfile.sector.toLowerCase()}..."`}
+                            value={config.personalizedInstructions[docId] || ''}
+                            onChange={(e) => setConfig({
+                              ...config,
+                              personalizedInstructions: {
+                                ...config.personalizedInstructions,
+                                [docId]: e.target.value
+                              }
+                            })}
+                            rows={4}
+                            className="resize-none"
+                          />
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>
+                              {config.personalizedInstructions[docId]?.length || 0} caractères
+                            </span>
+                            {!config.personalizedInstructions[docId] && (
+                              <span className="text-amber-600">Optionnel - document généré avec contenu standard si vide</span>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={() => setCurrentStep('info')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
+            </Button>
             <Button onClick={startGeneration}>
               <Wand2 className="h-4 w-4 mr-2" />
-              Lancer la génération
+              Lancer la génération personnalisée
             </Button>
           </div>
         </div>
       )}
 
-      {/* Step 5: Generation */}
+      {/* Step 6: Generation */}
       {currentStep === 'generation' && (
         <div className="space-y-6">
           <Card>
@@ -810,7 +1004,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                     Documents générés avec succès
                   </CardTitle>
                   <CardDescription>
-                    {generatedDocuments.length} documents MASE ont été créés pour {config.companyInfo.name}
+                    {generatedDocuments.length} documents MASE ont été créés pour {companyProfile.name}
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
@@ -903,15 +1097,29 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                 <h3 className="font-bold text-lg mb-4">{selectedDocument.name}</h3>
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold">Entreprise: {config.companyInfo.name}</h4>
-                    <p className="text-sm text-muted-foreground">Secteur: {config.companyInfo.sector}</p>
+                    <h4 className="font-semibold">Entreprise: {companyProfile.name}</h4>
+                    <p className="text-sm text-muted-foreground">Secteur: {companyProfile.sector} • {companyProfile.size} salariés</p>
                   </div>
+                  
+                  {config.personalizedInstructions[selectedDocument.templateId] && (
+                    <div>
+                      <h4 className="font-semibold">Instructions personnalisées appliquées:</h4>
+                      <p className="text-sm text-muted-foreground italic border-l-2 border-primary pl-3">
+                        "{config.personalizedInstructions[selectedDocument.templateId]}"
+                      </p>
+                    </div>
+                  )}
+                  
                   <div>
                     <h4 className="font-semibold">Contenu du document:</h4>
                     <p className="text-sm whitespace-pre-wrap">
                       {selectedDocument.content}
                       
                       {"\n\nCe document a été généré automatiquement selon les exigences du référentiel MASE 2024."}
+                      {config.generationType === 'personalized' 
+                        ? "\nGénération personnalisée avec instructions spécifiques."
+                        : "\nGénération standard avec personnalisation automatique."
+                      }
                       {"\n\nIl inclut toutes les sections requises:"}
                       {"\n• Objectifs et politique"}
                       {"\n• Responsabilités"}
@@ -919,6 +1127,13 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                       {"\n• Indicateurs de performance"}
                       {"\n• Modalités de révision"}
                     </p>
+                  </div>
+                  
+                  <div className="pt-2 border-t">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Modèle: {config.styling.template}</span>
+                      <span>Généré le {new Date().toLocaleDateString()}</span>
+                    </div>
                   </div>
                 </div>
               </div>
