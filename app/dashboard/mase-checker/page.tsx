@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, FileText, AlertCircle, CheckCircle2, X, Eye, Download } from "lucide-react";
+import { Upload, FileText, AlertCircle, CheckCircle2, X, Eye, Download, Wand2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -45,6 +46,7 @@ const MASE_AXES = [
 ];
 
 export default function MaseCheckerPage() {
+  const router = useRouter();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
@@ -340,10 +342,17 @@ export default function MaseCheckerPage() {
                     </Badge>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    size="sm"
+                    onClick={() => router.push('/dashboard/mase-generator')}
+                  >
+                    <Wand2 className="h-4 w-4 mr-2" />
+                    Générer les documents manquants
+                  </Button>
                   <Button variant="outline" size="sm" onClick={exportResults}>
                     <Download className="h-4 w-4 mr-2" />
-                    Exporter
+                    Exporter résultats
                   </Button>
                   <Button
                     variant="outline"
@@ -457,6 +466,27 @@ export default function MaseCheckerPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {analysisResults.filter(r => r.score < 80).length > 0 && (
+                      <Alert>
+                        <Wand2 className="h-4 w-4" />
+                        <AlertTitle>Générez automatiquement vos documents manquants</AlertTitle>
+                        <AlertDescription>
+                          <div className="flex flex-col sm:flex-row gap-3 mt-3">
+                            <span className="flex-1">
+                              Basé sur cette analyse, MASE Generator peut créer automatiquement les documents manquants ou corriger ceux qui ne sont pas conformes.
+                            </span>
+                            <Button 
+                              size="sm"
+                              onClick={() => router.push('/dashboard/mase-generator')}
+                            >
+                              <Wand2 className="h-4 w-4 mr-2" />
+                              Générer maintenant
+                            </Button>
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    
                     {analysisResults
                       .filter(r => r.score < 80)
                       .sort((a, b) => a.score - b.score)

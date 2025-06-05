@@ -1,112 +1,931 @@
+"use client";
+
+import { useState } from "react";
+import { 
+  FileText, 
+  Wand2, 
+  CheckCircle2, 
+  Search, 
+  Settings, 
+  Palette, 
+  Info, 
+  ArrowRight, 
+  ArrowLeft,
+  Download,
+  Eye,
+  Clock,
+  Building,
+  Shield,
+  Users,
+  Wrench,
+  RefreshCw
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wand2, FileText, Image, Video } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+// Types
+interface DocumentTemplate {
+  id: string;
+  name: string;
+  description: string;
+  axis: string;
+  required: boolean;
+  estimatedTime: string;
+}
+
+interface GenerationConfig {
+  mode: 'post-audit' | 'with-docs' | 'complete';
+  selectedDocs: string[];
+  companyInfo: {
+    name: string;
+    sector: string;
+    size: string;
+    activities: string;
+  };
+  styling: {
+    template: string;
+    primaryColor: string;
+    logo: File | null;
+  };
+}
+
+interface GeneratedDocument {
+  id: string;
+  templateId: string;
+  name: string;
+  status: 'generated' | 'in-progress' | 'error';
+  downloadUrl?: string;
+  content?: string;
+}
+
+// Mock data pour les 5 axes MASE et leurs documents
+const MASE_AXES = [
+  "Engagement de la direction",
+  "Compétences et qualifications", 
+  "Préparation et organisation des interventions",
+  "Réalisation des interventions",
+  "Retour d'expérience et amélioration continue"
+];
+
+const DOCUMENT_TEMPLATES: DocumentTemplate[] = [
+  { id: 'politique-sse', name: 'Politique SSE', description: 'Document de politique santé, sécurité et environnement', axis: MASE_AXES[0], required: true, estimatedTime: '5 min' },
+  { id: 'organigramme', name: 'Organigramme SSE', description: 'Structure organisationnelle SSE', axis: MASE_AXES[0], required: true, estimatedTime: '3 min' },
+  { id: 'plan-formation', name: 'Plan de formation', description: 'Programme de formation du personnel', axis: MASE_AXES[1], required: true, estimatedTime: '7 min' },
+  { id: 'habilitations', name: 'Matrice des habilitations', description: 'Suivi des compétences et habilitations', axis: MASE_AXES[1], required: false, estimatedTime: '4 min' },
+  { id: 'procedure-preparation', name: 'Procédure de préparation', description: 'Méthodes de préparation des interventions', axis: MASE_AXES[2], required: true, estimatedTime: '6 min' },
+  { id: 'check-list', name: 'Check-lists interventions', description: 'Listes de vérification pour les interventions', axis: MASE_AXES[2], required: false, estimatedTime: '4 min' },
+  { id: 'consignes-securite', name: 'Consignes de sécurité', description: 'Instructions de sécurité opérationnelles', axis: MASE_AXES[3], required: true, estimatedTime: '5 min' },
+  { id: 'fiche-poste', name: 'Fiches de poste', description: 'Descriptions des postes de travail', axis: MASE_AXES[3], required: false, estimatedTime: '8 min' },
+  { id: 'retour-experience', name: 'Procédure REX', description: 'Processus de retour d\'expérience', axis: MASE_AXES[4], required: true, estimatedTime: '5 min' },
+  { id: 'indicateurs', name: 'Tableau de bord SSE', description: 'Indicateurs de performance SSE', axis: MASE_AXES[4], required: false, estimatedTime: '6 min' }
+];
 
 export default function MaseGeneratorPage() {
+  const [currentStep, setCurrentStep] = useState<'mode' | 'selection' | 'config' | 'info' | 'generation' | 'results'>('mode');
+  const [config, setConfig] = useState<GenerationConfig>({
+    mode: 'complete',
+    selectedDocs: [],
+    companyInfo: { name: '', sector: '', size: '', activities: '' },
+    styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null }
+  });
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generatedDocuments, setGeneratedDocuments] = useState<GeneratedDocument[]>([]);
+  const [selectedDocument, setSelectedDocument] = useState<GeneratedDocument | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Step 1: Mode Selection
+  const handleModeSelection = (mode: GenerationConfig['mode']) => {
+    setConfig({ ...config, mode });
+    setCurrentStep('selection');
+  };
+
+  // Step 2: Document Selection
+  const toggleDocumentSelection = (docId: string) => {
+    const selected = config.selectedDocs.includes(docId);
+    if (selected) {
+      setConfig({
+        ...config,
+        selectedDocs: config.selectedDocs.filter(id => id !== docId)
+      });
+    } else {
+      setConfig({
+        ...config,
+        selectedDocs: [...config.selectedDocs, docId]
+      });
+    }
+  };
+
+  const selectAllByAxis = (axis: string) => {
+    const axisDocs = DOCUMENT_TEMPLATES.filter(doc => doc.axis === axis).map(doc => doc.id);
+    const currentAxisDocs = config.selectedDocs.filter(id => 
+      DOCUMENT_TEMPLATES.find(doc => doc.id === id)?.axis === axis
+    );
+    
+    if (currentAxisDocs.length === axisDocs.length) {
+      // Deselect all from this axis
+      setConfig({
+        ...config,
+        selectedDocs: config.selectedDocs.filter(id => 
+          DOCUMENT_TEMPLATES.find(doc => doc.id === id)?.axis !== axis
+        )
+      });
+    } else {
+      // Select all from this axis
+      const newSelected = [...config.selectedDocs];
+      axisDocs.forEach(docId => {
+        if (!newSelected.includes(docId)) {
+          newSelected.push(docId);
+        }
+      });
+      setConfig({ ...config, selectedDocs: newSelected });
+    }
+  };
+
+  const selectAllDocuments = () => {
+    const allDocIds = DOCUMENT_TEMPLATES.map(doc => doc.id);
+    if (config.selectedDocs.length === allDocIds.length) {
+      // Deselect all
+      setConfig({ ...config, selectedDocs: [] });
+    } else {
+      // Select all
+      setConfig({ ...config, selectedDocs: allDocIds });
+    }
+  };
+
+  // Step 3: Configuration
+  const handleConfigChange = (field: string, value: any) => {
+    if (field.startsWith('styling.')) {
+      const stylePath = field.split('.')[1];
+      setConfig({
+        ...config,
+        styling: { ...config.styling, [stylePath]: value }
+      });
+    } else if (field.startsWith('companyInfo.')) {
+      const infoPath = field.split('.')[1];
+      setConfig({
+        ...config,
+        companyInfo: { ...config.companyInfo, [infoPath]: value }
+      });
+    }
+  };
+
+  // Step 5: Generation
+  const startGeneration = async () => {
+    setCurrentStep('generation');
+    setIsGenerating(true);
+    setGenerationProgress(0);
+
+    // Simulate document generation
+    const totalDocs = config.selectedDocs.length;
+    const generatedDocs: GeneratedDocument[] = [];
+
+    for (let i = 0; i < totalDocs; i++) {
+      const templateId = config.selectedDocs[i];
+      const template = DOCUMENT_TEMPLATES.find(t => t.id === templateId);
+      
+      // Simulate generation time
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const generatedDoc: GeneratedDocument = {
+        id: `gen-${Date.now()}-${i}`,
+        templateId,
+        name: template?.name || 'Document',
+        status: 'generated',
+        downloadUrl: '#',
+        content: `Contenu du document ${template?.name} généré automatiquement selon le référentiel MASE.`
+      };
+      
+      generatedDocs.push(generatedDoc);
+      setGeneratedDocuments([...generatedDocs]);
+      setGenerationProgress(((i + 1) / totalDocs) * 100);
+    }
+
+    setIsGenerating(false);
+    setCurrentStep('results');
+  };
+
+  // Export all documents
+  const exportAllDocuments = () => {
+    const exportData = {
+      date: new Date().toISOString(),
+      config,
+      documents: generatedDocuments
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mase-documents-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Download individual document
+  const downloadDocument = (doc: GeneratedDocument) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId);
+    const content = `${doc.name}
+
+Entreprise: ${config.companyInfo.name}
+Secteur: ${config.companyInfo.sector}
+
+${doc.content}
+
+Ce document a été généré automatiquement selon les exigences du référentiel MASE 2024.
+
+Il inclut toutes les sections requises:
+• Objectifs et politique
+• Responsabilités
+• Procédures
+• Indicateurs de performance
+• Modalités de révision
+
+Axe MASE: ${template?.axis}
+Date de génération: ${new Date().toLocaleDateString()}`;
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Reset generator
+  const resetGenerator = () => {
+    setCurrentStep('mode');
+    setConfig({
+      mode: 'complete',
+      selectedDocs: [],
+      companyInfo: { name: '', sector: '', size: '', activities: '' },
+      styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null }
+    });
+    setGeneratedDocuments([]);
+    setGenerationProgress(0);
+  };
+
+  const getStepNumber = () => {
+    const steps = ['mode', 'selection', 'config', 'info', 'generation', 'results'];
+    return steps.indexOf(currentStep) + 1;
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto py-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Mase Generator</h1>
+        <h1 className="text-3xl font-bold tracking-tight">MASE Generator</h1>
         <p className="text-muted-foreground">
-          Generate high-quality content with AI assistance
+          Générez automatiquement vos documents conformes au référentiel MASE
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText size={20} />
-              Text Content
-            </CardTitle>
-            <CardDescription>
-              Generate articles, blogs, and written content
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full">
-              <Wand2 size={16} className="mr-2" />
-              Generate Text
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Image size={20} />
-              Images
-            </CardTitle>
-            <CardDescription>
-              Create custom images and graphics
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" variant="outline">
-              <Wand2 size={16} className="mr-2" />
-              Generate Images
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Video size={20} />
-              Video Scripts
-            </CardTitle>
-            <CardDescription>
-              Generate scripts and video content plans
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" variant="outline">
-              <Wand2 size={16} className="mr-2" />
-              Generate Scripts
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
+      {/* Progress indicator */}
       <Card>
-        <CardHeader>
-          <CardTitle>Quick Generate</CardTitle>
-          <CardDescription>
-            Enter a prompt to generate content instantly
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <textarea
-                  placeholder="Describe what you want to generate..."
-                  className="w-full min-h-[100px] p-3 border rounded-md resize-none"
-                />
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-medium">Étape {getStepNumber()}/6</span>
+            <Badge variant="outline">
+              {currentStep === 'mode' && 'Sélection du mode'}
+              {currentStep === 'selection' && 'Choix des documents'}
+              {currentStep === 'config' && 'Configuration'}
+              {currentStep === 'info' && 'Informations entreprise'}
+              {currentStep === 'generation' && 'Génération en cours'}
+              {currentStep === 'results' && 'Résultats'}
+            </Badge>
+          </div>
+          <Progress value={(getStepNumber() / 6) * 100} className="h-2" />
+        </CardContent>
+      </Card>
+
+      {/* Step 1: Mode Selection */}
+      {currentStep === 'mode' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Choisissez votre mode de génération</CardTitle>
+              <CardDescription>
+                Sélectionnez la méthode qui correspond le mieux à votre situation
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-3">
+                <Card 
+                  className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
+                  onClick={() => handleModeSelection('post-audit')}
+                >
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Search className="h-5 w-5" />
+                      Après audit MASE CHECKER
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Générez les documents manquants identifiés lors de votre audit automatique
+                    </p>
+                    <Badge>Recommandé</Badge>
+                  </CardContent>
+                </Card>
+
+                <Card 
+                  className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
+                  onClick={() => handleModeSelection('with-docs')}
+                >
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <FileText className="h-5 w-5" />
+                      Avec documents existants
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Analysez vos documents actuels et générez les améliorations nécessaires
+                    </p>
+                    <Badge variant="secondary">Optimisation</Badge>
+                  </CardContent>
+                </Card>
+
+                <Card 
+                  className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
+                  onClick={() => handleModeSelection('complete')}
+                >
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Wand2 className="h-5 w-5" />
+                      Génération complète
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Créez tous vos documents MASE depuis zéro
+                    </p>
+                    <Badge variant="outline">Nouveau projet</Badge>
+                  </CardContent>
+                </Card>
               </div>
-            </div>
-            <div className="flex gap-2">
-              <Button>Generate Content</Button>
-              <Button variant="outline">Save Template</Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Generation History</CardTitle>
-          <CardDescription>
-            Your recently generated content
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center text-muted-foreground py-8">
-            <p>No content generated yet</p>
-            <p className="text-sm">Start generating to see your history</p>
+      {/* Step 2: Document Selection */}
+      {currentStep === 'selection' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <CardTitle>Sélectionnez les documents à générer</CardTitle>
+                  <CardDescription>
+                    Choisissez les documents MASE selon vos besoins
+                  </CardDescription>
+                </div>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={selectAllDocuments}
+                  >
+                    {config.selectedDocs.length === DOCUMENT_TEMPLATES.length 
+                      ? 'Tout désélectionner' 
+                      : 'Tout sélectionner'
+                    }
+                  </Button>
+                  <Badge variant="outline">
+                    {config.selectedDocs.length}/{DOCUMENT_TEMPLATES.length} document(s) sélectionné(s)
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="by-axis">
+                <TabsList>
+                  <TabsTrigger value="by-axis">Par axe MASE</TabsTrigger>
+                  <TabsTrigger value="all-docs">Tous les documents</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="by-axis" className="space-y-6">
+                  {MASE_AXES.map((axis, axisIndex) => {
+                    const axisDocs = DOCUMENT_TEMPLATES.filter(doc => doc.axis === axis);
+                    const selectedAxisDocs = axisDocs.filter(doc => config.selectedDocs.includes(doc.id));
+                    
+                    return (
+                      <Card key={axisIndex}>
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="text-lg">Axe {axisIndex + 1}: {axis}</CardTitle>
+                              <CardDescription>
+                                {selectedAxisDocs.length}/{axisDocs.length} documents sélectionnés
+                              </CardDescription>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => selectAllByAxis(axis)}
+                            >
+                              {selectedAxisDocs.length === axisDocs.length ? 'Tout désélectionner' : 'Tout sélectionner'}
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid gap-3 sm:grid-cols-1 lg:grid-cols-2">
+                            {axisDocs.map((doc) => (
+                              <div 
+                                key={doc.id}
+                                className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                                onClick={() => toggleDocumentSelection(doc.id)}
+                              >
+                                <Checkbox 
+                                  checked={config.selectedDocs.includes(doc.id)}
+                                  onChange={() => toggleDocumentSelection(doc.id)}
+                                />
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-medium text-sm">{doc.name}</p>
+                                    {doc.required && <Badge variant="destructive" className="text-xs">Obligatoire</Badge>}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">{doc.description}</p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Clock className="h-3 w-3 text-muted-foreground" />
+                                    <span className="text-xs text-muted-foreground">{doc.estimatedTime}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </TabsContent>
+
+                <TabsContent value="all-docs">
+                  <div className="grid gap-3 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                    {DOCUMENT_TEMPLATES.map((doc) => (
+                      <div 
+                        key={doc.id}
+                        className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                        onClick={() => toggleDocumentSelection(doc.id)}
+                      >
+                        <Checkbox 
+                          checked={config.selectedDocs.includes(doc.id)}
+                          onChange={() => toggleDocumentSelection(doc.id)}
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-sm">{doc.name}</p>
+                            {doc.required && <Badge variant="destructive" className="text-xs">Obligatoire</Badge>}
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-1">{doc.description}</p>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">{doc.estimatedTime}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={() => setCurrentStep('mode')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
+            </Button>
+            <Button 
+              onClick={() => setCurrentStep('config')}
+              disabled={config.selectedDocs.length === 0}
+            >
+              Continuer
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
+
+      {/* Step 3: Configuration */}
+      {currentStep === 'config' && (
+        <div className="space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Style et apparence
+                </CardTitle>
+                <CardDescription>
+                  Personnalisez l'apparence de vos documents
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="template">Modèle de document</Label>
+                  <select 
+                    id="template"
+                    className="w-full mt-1 p-2 border rounded-md"
+                    value={config.styling.template}
+                    onChange={(e) => handleConfigChange('styling.template', e.target.value)}
+                  >
+                    <option value="moderne">Moderne</option>
+                    <option value="classique">Classique</option>
+                    <option value="minimaliste">Minimaliste</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="color">Couleur principale</Label>
+                  <div className="flex gap-2 mt-1">
+                    <input
+                      id="color"
+                      type="color"
+                      value={config.styling.primaryColor}
+                      onChange={(e) => handleConfigChange('styling.primaryColor', e.target.value)}
+                      className="w-12 h-10 border rounded"
+                    />
+                    <Input
+                      value={config.styling.primaryColor}
+                      onChange={(e) => handleConfigChange('styling.primaryColor', e.target.value)}
+                      placeholder="#3b82f6"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="logo">Logo de l'entreprise (optionnel)</Label>
+                  <Input
+                    id="logo"
+                    type="file"
+                    accept="image/*"
+                    className="mt-1"
+                    onChange={(e) => handleConfigChange('styling.logo', e.target.files?.[0] || null)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Informations entreprise
+                </CardTitle>
+                <CardDescription>
+                  Ces informations seront utilisées pour personnaliser vos documents
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="company-name">Nom de l'entreprise *</Label>
+                  <Input
+                    id="company-name"
+                    value={config.companyInfo.name}
+                    onChange={(e) => handleConfigChange('companyInfo.name', e.target.value)}
+                    placeholder="ACME Corporation"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="sector">Secteur d'activité *</Label>
+                  <Input
+                    id="sector"
+                    value={config.companyInfo.sector}
+                    onChange={(e) => handleConfigChange('companyInfo.sector', e.target.value)}
+                    placeholder="BTP, Industrie, Services..."
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="size">Taille de l'entreprise</Label>
+                  <select 
+                    id="size"
+                    className="w-full mt-1 p-2 border rounded-md"
+                    value={config.companyInfo.size}
+                    onChange={(e) => handleConfigChange('companyInfo.size', e.target.value)}
+                  >
+                    <option value="">Sélectionner...</option>
+                    <option value="1-10">1-10 salariés</option>
+                    <option value="11-50">11-50 salariés</option>
+                    <option value="51-250">51-250 salariés</option>
+                    <option value="250+">Plus de 250 salariés</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label htmlFor="activities">Activités principales</Label>
+                  <Textarea
+                    id="activities"
+                    value={config.companyInfo.activities}
+                    onChange={(e) => handleConfigChange('companyInfo.activities', e.target.value)}
+                    placeholder="Décrivez brièvement vos activités principales..."
+                    rows={3}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={() => setCurrentStep('selection')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
+            </Button>
+            <Button 
+              onClick={() => setCurrentStep('info')}
+              disabled={!config.companyInfo.name || !config.companyInfo.sector}
+            >
+              Continuer
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 4: Additional Info */}
+      {currentStep === 'info' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Info className="h-5 w-5" />
+                Récapitulatif de votre génération
+              </CardTitle>
+              <CardDescription>
+                Vérifiez les paramètres avant de lancer la génération
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Mode de génération</h4>
+                    <Badge>
+                      {config.mode === 'post-audit' && 'Après audit MASE CHECKER'}
+                      {config.mode === 'with-docs' && 'Avec documents existants'}
+                      {config.mode === 'complete' && 'Génération complète'}
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-2">Documents sélectionnés</h4>
+                    <div className="space-y-1">
+                      {config.selectedDocs.map(docId => {
+                        const doc = DOCUMENT_TEMPLATES.find(d => d.id === docId);
+                        return (
+                          <div key={docId} className="text-sm">• {doc?.name}</div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Total: {config.selectedDocs.length} documents
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Entreprise</h4>
+                    <div className="text-sm space-y-1">
+                      <p><strong>Nom:</strong> {config.companyInfo.name}</p>
+                      <p><strong>Secteur:</strong> {config.companyInfo.sector}</p>
+                      {config.companyInfo.size && <p><strong>Taille:</strong> {config.companyInfo.size}</p>}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-2">Style</h4>
+                    <div className="text-sm space-y-1">
+                      <p><strong>Modèle:</strong> {config.styling.template}</p>
+                      <div className="flex items-center gap-2">
+                        <strong>Couleur:</strong>
+                        <div 
+                          className="w-4 h-4 rounded border"
+                          style={{ backgroundColor: config.styling.primaryColor }}
+                        />
+                        <span>{config.styling.primaryColor}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Alert className="mt-6">
+                <Info className="h-4 w-4" />
+                <AlertTitle>Temps estimé de génération</AlertTitle>
+                <AlertDescription>
+                  La génération de vos {config.selectedDocs.length} documents prendra environ{' '}
+                  {Math.ceil(config.selectedDocs.length * 1.5)} minutes.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={() => setCurrentStep('config')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
+            </Button>
+            <Button onClick={startGeneration}>
+              <Wand2 className="h-4 w-4 mr-2" />
+              Lancer la génération
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 5: Generation */}
+      {currentStep === 'generation' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <RefreshCw className="h-5 w-5 animate-spin" />
+                Génération en cours
+              </CardTitle>
+              <CardDescription>
+                Vos documents MASE sont en cours de création...
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Progression globale</span>
+                    <span>{Math.round(generationProgress)}%</span>
+                  </div>
+                  <Progress value={generationProgress} className="h-3" />
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="font-semibold">Documents générés:</h4>
+                  <div className="space-y-1">
+                    {generatedDocuments.map((doc) => (
+                      <div key={doc.id} className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <span>{doc.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Génération automatique</AlertTitle>
+                  <AlertDescription>
+                    Vos documents sont générés selon le référentiel MASE 2024 et personnalisés avec les informations de votre entreprise.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Step 6: Results */}
+      {currentStep === 'results' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    Documents générés avec succès
+                  </CardTitle>
+                  <CardDescription>
+                    {generatedDocuments.length} documents MASE ont été créés pour {config.companyInfo.name}
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={exportAllDocuments}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Tout exporter
+                  </Button>
+                  <Button variant="outline" onClick={resetGenerator}>
+                    Nouvelle génération
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                {generatedDocuments.map((doc) => {
+                  const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId);
+                  return (
+                    <Card key={doc.id} className="relative">
+                      <CardHeader className="pb-4 pr-4">
+                        <div className="pr-24">
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <FileText className="h-5 w-5" />
+                            <span className="truncate">{doc.name}</span>
+                          </CardTitle>
+                          <CardDescription className="mt-2">
+                            {template?.description}
+                          </CardDescription>
+                        </div>
+                        <Badge 
+                          className="absolute top-4 right-4 text-xs px-2 py-1 max-w-[80px]" 
+                          variant="secondary"
+                          title={template?.axis}
+                        >
+                          <span className="truncate">Axe {MASE_AXES.indexOf(template?.axis || '') + 1}</span>
+                        </Badge>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => {
+                              setSelectedDocument(doc);
+                              setShowPreview(true);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Aperçu
+                          </Button>
+                          <Button 
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => downloadDocument(doc)}
+                          >
+                            <Download className="h-4 w-4 mr-1" />
+                            Télécharger
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Document Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Aperçu - {selectedDocument?.name}</DialogTitle>
+            <DialogDescription>
+              Document généré selon le référentiel MASE
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertTitle>Aperçu simplifié</AlertTitle>
+              <AlertDescription>
+                Ceci est un aperçu du contenu. Le document final sera formaté selon le modèle sélectionné.
+              </AlertDescription>
+            </Alert>
+            {selectedDocument && (
+              <div className="mt-4 p-4 border rounded-lg bg-muted/50">
+                <h3 className="font-bold text-lg mb-4">{selectedDocument.name}</h3>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold">Entreprise: {config.companyInfo.name}</h4>
+                    <p className="text-sm text-muted-foreground">Secteur: {config.companyInfo.sector}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">Contenu du document:</h4>
+                    <p className="text-sm whitespace-pre-wrap">
+                      {selectedDocument.content}
+                      
+                      {"\n\nCe document a été généré automatiquement selon les exigences du référentiel MASE 2024."}
+                      {"\n\nIl inclut toutes les sections requises:"}
+                      {"\n• Objectifs et politique"}
+                      {"\n• Responsabilités"}
+                      {"\n• Procédures"}
+                      {"\n• Indicateurs de performance"}
+                      {"\n• Modalités de révision"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
