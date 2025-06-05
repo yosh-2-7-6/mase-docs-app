@@ -390,17 +390,18 @@ Date de génération: ${new Date().toLocaleDateString()}`;
   };
 
   const getStepNumber = () => {
-    const steps = ['mode', 'selection', 'config', 'info', 'personalization', 'generation', 'results'];
-    const currentIndex = steps.indexOf(currentStep);
+    // Mapping des étapes vers leurs numéros affichés
+    const stepMapping: { [key: string]: number } = {
+      'mode': 1,
+      'selection': 2, 
+      'config': 3,
+      'info': 4,
+      'personalization': 5, // Seulement en mode personnalisé
+      'generation': config.generationType === 'personalized' ? 6 : 5,
+      'results': 6
+    };
     
-    // Si on est à l'étape de personnalisation ou après, et qu'on n'est pas en mode personnalisé,
-    // on ajuste le numéro pour garder la cohérence 1-6
-    if (config.generationType !== 'personalized' && currentIndex >= 4) {
-      // On saute l'étape de personnalisation dans le comptage
-      return currentIndex; // sera 5 pour generation, 6 pour results
-    }
-    
-    return currentIndex + 1;
+    return stepMapping[currentStep] || 1;
   };
   
   const getTotalSteps = () => {
@@ -568,6 +569,20 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                   </CardDescription>
                 </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  {config.mode === 'post-audit' && hasAuditHistory && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        MaseStateManager.setViewMode('view-results');
+                        router.push('/dashboard/mase-checker');
+                      }}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Voir audit
+                    </Button>
+                  )}
                   <Button 
                     variant="outline" 
                     size="sm"
@@ -591,10 +606,10 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                   <AlertTitle>Documents présélectionnés</AlertTitle>
                   <AlertDescription>
                     Basé sur votre audit du {new Date(latestAudit.date).toLocaleDateString()}, 
-                    nous avons présélectionné {config.selectedDocs.length} document(s) à améliorer ({
+                    nous avons présélectionné {
                       latestAudit.analysisResults?.filter((result: any) => result.score < 80).length || 0
-                    } document(s) audité(s) {'< 80%'}).
-                    Vous pouvez ajuster cette sélection selon vos besoins.
+                    } document(s) {'< 80%'} de conformité sur les {latestAudit.documentsAnalyzed} documents audités. 
+                    Ajustez cette sélection selon vos besoins.
                   </AlertDescription>
                 </Alert>
               )}
@@ -645,11 +660,6 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                               <CardTitle className="text-lg">Axe {axisIndex + 1}: {axis}</CardTitle>
                               <CardDescription>
                                 {selectedAxisDocs.length}/{axisDocs.length} documents sélectionnés
-                                {config.mode === 'post-audit' && (
-                                  <span className="ml-2 text-blue-600 dark:text-blue-400">
-                                    • Scores d'audit affichés
-                                  </span>
-                                )}
                               </CardDescription>
                             </div>
                             <Button 
@@ -709,11 +719,6 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                                         title="Score d'audit"
                                       >
                                         {doc.auditScore}%
-                                      </Badge>
-                                    )}
-                                    {needsImprovement && (
-                                      <Badge variant="outline" className="text-xs border-amber-500 text-amber-700 dark:text-amber-300">
-                                        Génération Recommandée
                                       </Badge>
                                     )}
                                   </div>
@@ -800,11 +805,6 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                                 title="Score d'audit"
                               >
                                 {enrichedDoc.auditScore}%
-                              </Badge>
-                            )}
-                            {needsImprovement && (
-                              <Badge variant="outline" className="text-xs border-amber-500 text-amber-700 dark:text-amber-300">
-                                Génération Recommandée
                               </Badge>
                             )}
                           </div>

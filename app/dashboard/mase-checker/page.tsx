@@ -742,7 +742,16 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                           <TableCell className="font-medium">{result.documentName}</TableCell>
                           <TableCell>{result.axis}</TableCell>
                           <TableCell>
-                            <Badge variant={getScoreBadgeVariant(result.score)}>
+                            <Badge 
+                              variant={getScoreBadgeVariant(result.score)}
+                              className={`${
+                                result.score >= 80 
+                                  ? 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700' 
+                                  : result.score >= 60 
+                                  ? 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700'
+                                  : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-200 dark:border-red-700'
+                              }`}
+                            >
                               {result.score}%
                             </Badge>
                           </TableCell>
@@ -868,7 +877,16 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                                 <Alert key={result.documentId} className="border-l-4 border-l-amber-500">
                                   <AlertTitle className="flex items-center justify-between">
                                     <span>Priorité {index + 1}: {result.documentName}</span>
-                                    <Badge variant={getScoreBadgeVariant(result.score)}>
+                                    <Badge 
+                                      variant={getScoreBadgeVariant(result.score)}
+                                      className={`${
+                                        result.score >= 80 
+                                          ? 'bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700' 
+                                          : result.score >= 60 
+                                          ? 'bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700'
+                                          : 'bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-200 dark:border-red-700'
+                                      }`}
+                                    >
                                       {result.score}%
                                     </Badge>
                                   </AlertTitle>
@@ -928,7 +946,12 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                               .map((result) => (
                                 <div key={result.documentId} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950 rounded-lg">
                                   <span className="font-medium text-sm">{result.documentName}</span>
-                                  <Badge variant="default">{result.score}%</Badge>
+                                  <Badge 
+                                    variant="default"
+                                    className="bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700"
+                                  >
+                                    {result.score}%
+                                  </Badge>
                                 </div>
                               ))}
                           </div>
