@@ -22,7 +22,8 @@ import {
   Users,
   Wrench,
   RefreshCw,
-  X
+  X,
+  AlertTriangle
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -478,15 +479,15 @@ Date de génération: ${new Date().toLocaleDateString()}`;
       'info': 4,
       'personalization': 5, // Seulement en mode personnalisé
       'generation': config.generationType === 'personalized' ? 6 : 5,
-      'results': 6
+      'results': config.generationType === 'personalized' ? 7 : 6
     };
     
     return stepMapping[currentStep] || 1;
   };
   
   const getTotalSteps = () => {
-    // Toujours 6 étapes au total, que ce soit standard ou personnalisé
-    return 6;
+    // 7 étapes pour personnalisé, 6 pour standard
+    return config.generationType === 'personalized' ? 7 : 6;
   };
 
   // Vérifier s'il y a des résultats en mémoire (côté client uniquement)
@@ -510,15 +511,40 @@ Date de génération: ${new Date().toLocaleDateString()}`;
 
       {/* Notification de génération en mémoire */}
       {hasGenerationHistory && (
-        <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
-          <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          <AlertTitle className="text-blue-900 dark:text-blue-100">
-            Génération précédente disponible
+        <Alert className={
+          (currentStep === 'info' || currentStep === 'personalization' || currentStep === 'generation' || currentStep === 'results')
+            ? "border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800"
+            : "border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800"
+        }>
+          {(currentStep === 'info' || currentStep === 'personalization' || currentStep === 'generation' || currentStep === 'results') ? (
+            <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+          ) : (
+            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          )}
+          <AlertTitle className={
+            (currentStep === 'info' || currentStep === 'personalization' || currentStep === 'generation' || currentStep === 'results')
+              ? "text-red-900 dark:text-red-100"
+              : "text-blue-900 dark:text-blue-100"
+          }>
+            {(currentStep === 'info' || currentStep === 'personalization' || currentStep === 'generation' || currentStep === 'results')
+              ? "Attention : Écrasement des résultats précédents"
+              : "Génération précédente disponible"
+            }
           </AlertTitle>
-          <AlertDescription className="text-blue-800 dark:text-blue-200">
+          <AlertDescription className={
+            (currentStep === 'info' || currentStep === 'personalization' || currentStep === 'generation' || currentStep === 'results')
+              ? "text-red-800 dark:text-red-200"
+              : "text-blue-800 dark:text-blue-200"
+          }>
             <div className="flex items-center justify-between">
               <span>
-                {latestGenerationState.documentsGenerated.length} documents générés le {new Date(latestGenerationState.date).toLocaleDateString()} à {new Date(latestGenerationState.date).toLocaleTimeString()}
+                {(currentStep === 'info' || currentStep === 'personalization' || currentStep === 'generation' || currentStep === 'results') ? (
+                  <>
+                    <strong>Les {latestGenerationState.documentsGenerated.length} documents générés le {new Date(latestGenerationState.date).toLocaleDateString()} seront définitivement effacés</strong> si vous poursuivez cette nouvelle génération.
+                  </>
+                ) : (
+                  `${latestGenerationState.documentsGenerated.length} documents générés le ${new Date(latestGenerationState.date).toLocaleDateString()} à ${new Date(latestGenerationState.date).toLocaleTimeString()}`
+                )}
               </span>
               <Button
                 variant="outline"

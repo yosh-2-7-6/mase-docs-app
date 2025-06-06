@@ -24,6 +24,9 @@ interface PriorityActionsProps {
 
 export function PriorityActions({ actions, auditDate }: PriorityActionsProps) {
   const router = useRouter();
+  
+  // Limiter à 3 actions prioritaires
+  const topActions = actions.slice(0, 3);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -32,10 +35,17 @@ export function PriorityActions({ actions, auditDate }: PriorityActionsProps) {
       case 'medium':
         return "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700";
       case 'low':
-        return "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700";
+        return "bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700";
       default:
         return "bg-gray-100 text-gray-600 border-gray-300";
     }
+  };
+  
+  const getIconColor = (score?: number) => {
+    if (!score) return "text-gray-500";
+    if (score < 60) return "text-red-500";
+    if (score < 80) return "text-yellow-500";
+    return "text-green-500";
   };
 
   const getPriorityLabel = (priority: string) => {
@@ -50,16 +60,22 @@ export function PriorityActions({ actions, auditDate }: PriorityActionsProps) {
   const getActionIcon = (type: string) => {
     switch (type) {
       case 'audit':
-        return <Shield className="h-4 w-4" />;
+        return Shield;
       case 'document':
-        return <FileText className="h-4 w-4" />;
+        return FileText;
       case 'profile':
-        return <Calendar className="h-4 w-4" />;
+        return Calendar;
       case 'axis':
-        return <AlertTriangle className="h-4 w-4" />;
+        return AlertTriangle;
       default:
-        return <ArrowRight className="h-4 w-4" />;
+        return ArrowRight;
     }
+  };
+  
+  // Extraire le score de la description si c'est un document
+  const extractScore = (description: string): number | null => {
+    const match = description.match(/(\d+)%/);
+    return match ? parseInt(match[1]) : null;
   };
 
   return (
@@ -83,51 +99,62 @@ export function PriorityActions({ actions, auditDate }: PriorityActionsProps) {
         )}
       </CardHeader>
       <CardContent>
-        {actions.length > 0 ? (
+        {topActions.length > 0 ? (
           <div className="space-y-3">
-            {actions.map((action) => (
-              <div 
-                key={action.id}
-                className="flex items-start space-x-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
-              >
-                <div className={`p-2 rounded-lg ${
-                  action.type === 'audit' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300' :
-                  action.type === 'document' ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300' :
-                  'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-300'
-                }`}>
-                  {getActionIcon(action.type)}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <h4 className="text-sm font-medium truncate">{action.title}</h4>
-                    <Badge 
-                      variant="outline" 
-                      className={`text-xs ${getPriorityColor(action.priority)}`}
-                    >
-                      {getPriorityLabel(action.priority)}
-                    </Badge>
+            {topActions.map((action) => {
+              const score = extractScore(action.description);
+              const Icon = getActionIcon(action.type);
+              
+              return (
+                <div 
+                  key={action.id}
+                  className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    {/* Left side - Document info */}
+                    <div className="flex items-start gap-3 flex-1">
+                      <div className={`mt-0.5 ${score !== null ? getIconColor(score) : 'text-gray-500'}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                          {action.title}
+                        </h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {action.context || 'Document SSE'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Right side - Priority, score, and button */}
+                    <div className="flex flex-col items-end gap-2 min-w-[140px]">
+                      <Badge 
+                        variant="outline" 
+                        className={`text-xs ${getPriorityColor(action.priority)}`}
+                      >
+                        {getPriorityLabel(action.priority)}
+                      </Badge>
+                      {score !== null && (
+                        <span className={`text-lg font-bold ${
+                          score < 60 ? 'text-red-600 dark:text-red-400' :
+                          score < 80 ? 'text-yellow-600 dark:text-yellow-400' :
+                          'text-green-600 dark:text-green-400'
+                        }`}>
+                          {score}%
+                        </span>
+                      )}
+                      <Button
+                        size="sm"
+                        onClick={() => router.push(action.path)}
+                        className="text-xs"
+                      >
+                        Améliorer la conformité
+                      </Button>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    {action.description}
-                  </p>
-                  {action.context && (
-                    <p className="text-xs text-muted-foreground italic mb-2">
-                      {action.context}
-                    </p>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => router.push(action.path)}
-                    className="text-xs h-7"
-                  >
-                    {action.action}
-                    <ArrowRight className="h-3 w-3 ml-1" />
-                  </Button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-6">

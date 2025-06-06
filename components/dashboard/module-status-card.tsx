@@ -108,20 +108,33 @@ export function ModuleStatusCard({
           )}
         </div>
 
-        {/* Metric */}
-        {metric && (
-          <div className="flex items-center justify-between py-2">
-            <span className="text-2xl font-bold">{metric.value}</span>
-            <span className="text-sm text-muted-foreground">{metric.label}</span>
-          </div>
-        )}
+        {/* Metric - Always render for consistent height */}
+        <div className="flex items-center justify-between py-2 min-h-[3rem]">
+          {metric ? (
+            <>
+              <span className="text-2xl font-bold">{metric.value}</span>
+              <span className="text-sm text-muted-foreground">{metric.label}</span>
+            </>
+          ) : (
+            <>
+              <span className="text-2xl font-bold text-muted-foreground">—</span>
+              <span className="text-sm text-muted-foreground">Aucune donnée</span>
+            </>
+          )}
+        </div>
 
-        {/* Additional Info */}
-        {additionalInfo && (
-          <p className="text-xs text-muted-foreground border-l-2 border-gray-200 pl-3 dark:border-gray-700">
-            {additionalInfo}
-          </p>
-        )}
+        {/* Additional Info - Always render for consistent height */}
+        <div className="min-h-[2rem] flex items-center">
+          {additionalInfo ? (
+            <p className="text-xs text-muted-foreground border-l-2 border-gray-200 pl-3 dark:border-gray-700">
+              {additionalInfo}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground/50 italic">
+              En attente de données
+            </p>
+          )}
+        </div>
 
         {/* Action Button */}
         <Button 

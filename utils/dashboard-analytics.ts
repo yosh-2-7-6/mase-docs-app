@@ -67,11 +67,11 @@ export class DashboardAnalytics {
 
     // Pondération des axes MASE
     const axisWeights = {
-      'Management des risques': 0.25,
-      'Personnel et formation': 0.20,
-      'Matériel et maintenance': 0.20,
-      'Sous-traitance': 0.20,
-      'Retour d\'expérience': 0.15
+      'Engagement de la direction': 0.25,
+      'Compétences et qualifications': 0.20,
+      'Préparation et organisation des interventions': 0.20,
+      'Réalisation des interventions': 0.20,
+      'Retour d\'expérience et amélioration continue': 0.15
     };
 
     let totalScore = 0;
@@ -227,43 +227,25 @@ export class DashboardAnalytics {
       });
     }
 
-    // 4. Documents non conformes (< 80%)
+    // 4. Documents non conformes (< 80%) - Affichage individuel
     if (auditResults.analysisResults) {
-      const nonCompliantDocs = auditResults.analysisResults.filter(doc => doc.score < 80);
+      const nonCompliantDocs = auditResults.analysisResults
+        .filter(doc => doc.score < 80)
+        .sort((a, b) => a.score - b.score); // Tri croissant (pires en premier)
       
-      if (nonCompliantDocs.length > 0) {
+      // Ajouter chaque document non conforme individuellement
+      nonCompliantDocs.forEach((doc, index) => {
         actions.push({
-          id: 'non-compliant-docs',
+          id: `doc-${doc.id || index}`,
           type: 'document',
-          priority: 'high',
-          title: `${nonCompliantDocs.length} document(s) non conforme(s)`,
-          description: 'Des documents nécessitent une amélioration ou une mise à jour',
-          action: 'Générer des améliorations',
+          priority: doc.score < 60 ? 'high' : 'medium',
+          title: doc.name,
+          description: `Score de conformité: ${doc.score}%`,
+          action: 'Améliorer la conformité',
           path: '/dashboard/mase-generator',
-          context: `Score moyen: ${Math.round(nonCompliantDocs.reduce((sum, doc) => sum + doc.score, 0) / nonCompliantDocs.length)}%`
+          context: doc.axis || 'Document SSE'
         });
-      }
-    }
-
-    // 5. Axes MASE déséquilibrés
-    const axisScores = this.getAxisScores();
-    if (axisScores) {
-      const weakAxes = axisScores.filter(axis => axis.score < 80);
-      
-      if (weakAxes.length > 0) {
-        const weakestAxis = weakAxes.reduce((min, axis) => axis.score < min.score ? axis : min);
-        
-        actions.push({
-          id: 'weak-axis',
-          type: 'axis',
-          priority: 'medium',
-          title: `Axe "${weakestAxis.name}" faible`,
-          description: 'Cet axe MASE nécessite une attention particulière',
-          action: 'Voir les recommandations',
-          path: '/dashboard/mase-checker',
-          context: `Score: ${weakestAxis.score}%`
-        });
-      }
+      });
     }
 
     // Limiter à 5 actions maximum, triées par priorité

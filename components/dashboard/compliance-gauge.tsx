@@ -97,7 +97,12 @@ export function ComplianceGauge({ score, lastAuditDate }: ComplianceGaugeProps) 
                   strokeWidth="12"
                   fill="transparent"
                   strokeLinecap="round"
-                  className={statusInfo.color.replace('bg-', 'text-')}
+                  className={score !== null ? (
+                    score >= 90 ? 'text-emerald-600' :
+                    score >= 80 ? 'text-green-600' :
+                    score >= 60 ? 'text-yellow-500' :
+                    'text-red-500'
+                  ) : 'text-gray-400'}
                   style={{
                     strokeDasharray,
                     strokeDashoffset,
@@ -112,7 +117,7 @@ export function ComplianceGauge({ score, lastAuditDate }: ComplianceGaugeProps) 
               <div className="text-4xl font-bold text-gray-900 dark:text-gray-100">
                 {score !== null ? `${score}%` : '—'}
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <div className={`text-sm mt-1 ${score !== null ? statusInfo.textColor : 'text-gray-500 dark:text-gray-400'}`}>
                 Score global
               </div>
             </div>

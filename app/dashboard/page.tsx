@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ComplianceGauge } from "@/components/dashboard/compliance-gauge";
 import { ModuleStatusCard } from "@/components/dashboard/module-status-card";
 import { AxisProgressBars } from "@/components/dashboard/axis-progress-bars";
@@ -13,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MaseStateManager } from "@/utils/mase-state";
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -43,7 +45,7 @@ export default function DashboardPage() {
   const handleAxisClick = (axisName: string) => {
     // Set view mode to show axis details in MASE CHECKER
     MaseStateManager.setViewMode('view-results');
-    window.location.href = '/dashboard/mase-checker';
+    router.push('/dashboard/mase-checker');
   };
 
   if (isLoading || !dashboardData) {

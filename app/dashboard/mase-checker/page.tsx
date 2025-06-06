@@ -638,11 +638,21 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="space-y-4">
-                  <div className="flex items-baseline space-x-2">
-                    <span className={`text-5xl font-bold ${getScoreColor(globalScore)}`}>
-                      {globalScore}%
-                    </span>
-                    <span className="text-muted-foreground">de conformité</span>
+                  <div>
+                    <div className="flex items-baseline space-x-4">
+                      <span className={`text-5xl font-bold ${getScoreColor(globalScore)}`}>
+                        {globalScore}%
+                      </span>
+                      <span className="text-muted-foreground text-xl">de conformité</span>
+                      {(() => {
+                        const nonCompliantDocs = analysisResults.filter(result => result.score < 80).length;
+                        return nonCompliantDocs > 0 ? (
+                          <span className="text-xl text-red-600 dark:text-red-400">
+                            • {nonCompliantDocs} document{nonCompliantDocs > 1 ? 's' : ''} non conforme{nonCompliantDocs > 1 ? 's' : ''}
+                          </span>
+                        ) : null;
+                      })()}
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Badge variant={getScoreBadgeVariant(globalScore)}>
@@ -663,7 +673,7 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                     }}
                   >
                     <Wand2 className="h-4 w-4 mr-2" />
-                    Générer les documents manquants
+                    Améliorer la conformité
                   </Button>
                   <Button variant="outline" size="sm" onClick={exportCompleteAnalysis}>
                     <Download className="h-4 w-4 mr-2" />
