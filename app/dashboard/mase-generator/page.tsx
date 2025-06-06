@@ -154,14 +154,46 @@ export default function MaseGeneratorPage() {
       setCompanyProfile(profile);
     };
 
+    const checkGenerationHistory = () => {
+      // Vérifier s'il y a une génération en mémoire à afficher
+      const viewMode = MaseStateManager.getGenerationViewMode();
+      const latestGeneration = MaseStateManager.getLatestGeneration();
+      
+      if (viewMode === 'view-results' && latestGeneration && latestGeneration.completed) {
+        // Restaurer les résultats de la dernière génération
+        setConfig({
+          mode: latestGeneration.mode,
+          selectedDocs: latestGeneration.documentsGenerated.map(d => d.id),
+          generationType: latestGeneration.generationType,
+          personalizedInstructions: latestGeneration.personalizedInstructions || {},
+          styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null }
+        });
+        
+        setGeneratedDocuments(latestGeneration.documentsGenerated.map(doc => ({
+          id: doc.id,
+          templateId: doc.template,
+          name: doc.name,
+          status: 'generated' as const,
+          downloadUrl: '#',
+          content: `Contenu du document ${doc.name} généré automatiquement selon le référentiel MASE.`
+        })));
+        
+        setCurrentStep('results');
+        // Nettoyer le mode de vue
+        MaseStateManager.clearGenerationViewMode();
+      }
+    };
+
     // Charger les données au démarrage
     checkAuditHistory();
     loadUserProfile();
+    checkGenerationHistory();
 
     // Vérifier aussi quand la fenêtre reprend le focus (navigation entre pages)
     const handleFocus = () => {
       checkAuditHistory();
       loadUserProfile(); // Recharger le profil aussi
+      checkGenerationHistory();
     };
     window.addEventListener('focus', handleFocus);
     
@@ -332,6 +364,32 @@ export default function MaseGeneratorPage() {
     }
 
     setIsGenerating(false);
+    
+    // Sauvegarder les résultats de génération
+    const generationResult = {
+      id: MaseStateManager.generateGenerationId(),
+      date: new Date().toISOString(),
+      mode: config.mode,
+      generationType: config.generationType,
+      documentsGenerated: generatedDocs.map(doc => ({
+        id: doc.id,
+        name: doc.name,
+        axis: DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId)?.axis || '',
+        template: doc.templateId
+      })),
+      config: {
+        companyName: companyProfile.name,
+        sector: companyProfile.sector,
+        companySize: companyProfile.size,
+        mainActivities: companyProfile.activities,
+        implementationDate: new Date().toISOString()
+      },
+      personalizedInstructions: config.generationType === 'personalized' ? config.personalizedInstructions : undefined,
+      completed: true,
+      auditId: latestAudit?.id
+    };
+    
+    MaseStateManager.saveGenerationResults(generationResult);
     setCurrentStep('results');
   };
 
@@ -394,6 +452,9 @@ Date de génération: ${new Date().toLocaleDateString()}`;
 
   // Reset generator
   const resetGenerator = () => {
+    // Effacer le mode de vue de génération si nécessaire
+    MaseStateManager.clearGenerationViewMode();
+    
     setCurrentStep('mode');
     setConfig({
       mode: 'complete',
@@ -426,6 +487,16 @@ Date de génération: ${new Date().toLocaleDateString()}`;
     return 6;
   };
 
+  // Vérifier s'il y a des résultats en mémoire (côté client uniquement)
+  const [latestGenerationState, setLatestGenerationState] = useState<any>(null);
+  const [hasGenerationHistory, setHasGenerationHistory] = useState(false);
+  
+  useEffect(() => {
+    const latestGen = MaseStateManager.getLatestGeneration();
+    setLatestGenerationState(latestGen);
+    setHasGenerationHistory(latestGen && latestGen.completed && currentStep !== 'results');
+  }, [currentStep]);
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div>
@@ -434,6 +505,35 @@ Date de génération: ${new Date().toLocaleDateString()}`;
           Générez automatiquement vos documents conformes au référentiel MASE
         </p>
       </div>
+
+      {/* Notification de génération en mémoire */}
+      {hasGenerationHistory && (
+        <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+          <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          <AlertTitle className="text-blue-900 dark:text-blue-100">
+            Génération précédente disponible
+          </AlertTitle>
+          <AlertDescription className="text-blue-800 dark:text-blue-200">
+            <div className="flex items-center justify-between">
+              <span>
+                {latestGenerationState.documentsGenerated.length} documents générés le {new Date(latestGenerationState.date).toLocaleDateString()} à {new Date(latestGenerationState.date).toLocaleTimeString()}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  MaseStateManager.setGenerationViewMode('view-results');
+                  window.location.reload();
+                }}
+                className="ml-4"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Voir les résultats
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Progress indicator */}
       <Card>
@@ -1308,8 +1408,12 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                     <Download className="h-4 w-4 mr-2" />
                     Tout exporter
                   </Button>
-                  <Button variant="outline" onClick={resetGenerator}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
+                  <Button 
+                    variant="default"
+                    onClick={resetGenerator}
+                    className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                  >
+                    <RefreshCw className="h-5 w-5 mr-2" />
                     Nouvelle génération
                   </Button>
                 </div>

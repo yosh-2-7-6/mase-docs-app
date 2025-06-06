@@ -616,8 +616,8 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                   </CardDescription>
                 </div>
                 <Button
-                  variant="outline"
-                  size="sm"
+                  variant="default"
+                  size="default"
                   onClick={() => {
                     // Clear audit history and reset everything
                     MaseStateManager.clearHistory();
@@ -628,9 +628,9 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                     setAxisScores([]);
                     setGlobalScore(0);
                   }}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  <RefreshCw className="h-5 w-5" />
                   Nouvelle analyse
                 </Button>
               </div>
