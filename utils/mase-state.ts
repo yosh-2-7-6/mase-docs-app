@@ -40,7 +40,7 @@ export interface MaseGenerationResult {
     mainActivities: string;
     implementationDate: string;
   };
-  personalizedInstructions?: string;
+  personalizedInstructions?: string | { [docId: string]: string };
   completed: boolean;
   auditId?: string; // Lien vers l'audit associé si mode post-audit
 }

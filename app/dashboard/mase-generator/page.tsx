@@ -165,7 +165,9 @@ export default function MaseGeneratorPage() {
           mode: latestGeneration.mode,
           selectedDocs: latestGeneration.documentsGenerated.map(d => d.id),
           generationType: latestGeneration.generationType,
-          personalizedInstructions: latestGeneration.personalizedInstructions || {},
+          personalizedInstructions: typeof latestGeneration.personalizedInstructions === 'string' 
+            ? {} 
+            : latestGeneration.personalizedInstructions || {},
           styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null }
         });
         
@@ -494,7 +496,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
   useEffect(() => {
     const latestGen = MaseStateManager.getLatestGeneration();
     setLatestGenerationState(latestGen);
-    setHasGenerationHistory(latestGen && latestGen.completed && currentStep !== 'results');
+    setHasGenerationHistory(Boolean(latestGen && latestGen.completed && currentStep !== 'results'));
   }, [currentStep]);
 
   return (
