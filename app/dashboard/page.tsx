@@ -2,27 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ComplianceGauge } from "@/components/dashboard/compliance-gauge";
-import { ModuleStatusCard } from "@/components/dashboard/module-status-card";
-import { AxisProgressBars } from "@/components/dashboard/axis-progress-bars";
-import { PriorityActions } from "@/components/dashboard/priority-actions";
-import { ActivityTimeline } from "@/components/dashboard/activity-timeline";
-import { DashboardAnalytics, type DashboardData } from "@/utils/dashboard-analytics";
+import { DashboardAnalytics, type SimplifiedDashboardData } from "@/utils/dashboard-analytics";
 import { UserProfileManager } from "@/utils/user-profile";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MaseStateManager } from "@/utils/mase-state";
+import { FileText, Files, AlertCircle, Activity, Shield } from "lucide-react";
+import { PriorityActions } from "@/components/dashboard/priority-actions";
+import { ActivityTimeline } from "@/components/dashboard/activity-timeline";
+import { GlobalScoreChart } from "@/components/dashboard/global-score-chart";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<SimplifiedDashboardData | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadDashboardData = () => {
       try {
-        const data = DashboardAnalytics.getDashboardData();
+        const data = DashboardAnalytics.getSimplifiedDashboardData();
         const profile = UserProfileManager.getUserProfile();
         
         setDashboardData(data);
@@ -42,12 +41,6 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleAxisClick = (axisName: string) => {
-    // Set view mode to show axis details in MASE CHECKER
-    MaseStateManager.setViewMode('view-results');
-    router.push('/dashboard/mase-checker');
-  };
-
   if (isLoading || !dashboardData) {
     return (
       <div className="space-y-6">
@@ -56,9 +49,12 @@ export default function DashboardPage() {
           <Skeleton className="h-4 w-96" />
         </div>
         <div className="grid gap-6 lg:grid-cols-3">
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
-          <Skeleton className="h-64" />
+          <Skeleton className="h-96 col-span-2" />
+          <div className="space-y-4">
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+            <Skeleton className="h-24" />
+          </div>
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
           <Skeleton className="h-96" />
@@ -87,61 +83,78 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Top Section - Global Score & Module Cards */}
+      {/* Score Global avec Camembert */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Compliance Gauge */}
-        <div className="lg:col-span-1">
-          <ComplianceGauge 
-            score={dashboardData.globalScore}
-            lastAuditDate={dashboardData.lastAuditDate ? DashboardAnalytics.formatDate(dashboardData.lastAuditDate) : undefined}
-          />
-        </div>
+        <GlobalScoreChart 
+          globalScore={dashboardData.globalScore}
+          totalDocuments={dashboardData.existingDocuments}
+          conformeDocuments={dashboardData.conformeDocuments}
+          nonConformeDocuments={dashboardData.nonCompliantDocuments}
+          documentsRequis={dashboardData.documentsRequis}
+        />
+        
+        {/* Indicateurs Complémentaires */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Documents Existants
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {dashboardData.existingDocuments}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Documents audités
+              </p>
+            </CardContent>
+          </Card>
 
-        {/* Module Status Cards */}
-        <div className="lg:col-span-2 grid gap-6 md:grid-cols-2">
-          <ModuleStatusCard
-            module="checker"
-            title="MASE CHECKER"
-            description="Audit de conformité SSE"
-            status={dashboardData.checkerData.status}
-            metric={dashboardData.checkerData.metric}
-            lastActivity={dashboardData.checkerData.lastActivity ? DashboardAnalytics.getTimeAgo(dashboardData.checkerData.lastActivity) : undefined}
-            actionLabel={dashboardData.checkerData.hasData ? "Voir les résultats" : "Commencer l'audit"}
-            actionPath="/dashboard/mase-checker"
-            hasData={dashboardData.checkerData.hasData}
-            additionalInfo={dashboardData.checkerData.additionalInfo}
-          />
-          
-          <ModuleStatusCard
-            module="generator"
-            title="MASE GENERATOR"
-            description="Génération de documents"
-            status={dashboardData.generatorData.status}
-            metric={dashboardData.generatorData.metric}
-            lastActivity={dashboardData.generatorData.lastActivity ? DashboardAnalytics.getTimeAgo(dashboardData.generatorData.lastActivity) : undefined}
-            actionLabel={dashboardData.generatorData.hasData ? "Nouvelle génération" : "Commencer la génération"}
-            actionPath="/dashboard/mase-generator"
-            hasData={dashboardData.generatorData.hasData}
-            additionalInfo={dashboardData.generatorData.additionalInfo}
-          />
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Files className="h-4 w-4" />
+                Documents Manquants
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">
+                {dashboardData.missingDocuments}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                À créer ou améliorer
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
+                Non Conformes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">
+                {dashboardData.nonCompliantDocuments}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Score {'<'} 80%
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      {/* Middle Section - Axis Progress & Priority Actions */}
+      {/* Priority Actions & Recent Activity - Limitées à 5 items */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <AxisProgressBars 
-          axisScores={dashboardData.axisScores}
-          onAxisClick={handleAxisClick}
-        />
-        
         <PriorityActions 
           actions={dashboardData.priorityActions}
           auditDate={dashboardData.lastAuditDate ? DashboardAnalytics.formatDate(dashboardData.lastAuditDate) : undefined}
         />
-      </div>
-
-      {/* Bottom Section - Activity Timeline */}
-      <div className="grid gap-6">
+        
         <ActivityTimeline activities={dashboardData.recentActivity} />
       </div>
 

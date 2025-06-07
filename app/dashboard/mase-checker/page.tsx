@@ -223,7 +223,7 @@ export default function MaseCheckerPage() {
       const axisResults = mockResults.filter(r => r.axis === axis);
       const avgScore = axisResults.length > 0 
         ? Math.round(axisResults.reduce((sum, r) => sum + r.score, 0) / axisResults.length)
-        : 0;
+        : -1; // -1 indicates N/A (no documents)
       return {
         name: axis,
         score: avgScore,
@@ -231,10 +231,13 @@ export default function MaseCheckerPage() {
       };
     });
 
-    // Calculate global score
-    const totalScore = Math.round(
-      mockResults.reduce((sum, r) => sum + r.score, 0) / mockResults.length
-    );
+    // Calculate global score based only on provided documents
+    const documentsWithScores = mockResults.filter(r => r.score >= 0);
+    const totalScore = documentsWithScores.length > 0
+      ? Math.round(
+          documentsWithScores.reduce((sum, r) => sum + r.score, 0) / documentsWithScores.length
+        )
+      : 0;
 
     setAnalysisResults(mockResults);
     setAxisScores(axisData);
@@ -350,6 +353,7 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
 
   // Get score color
   const getScoreColor = (score: number) => {
+    if (score === -1) return "text-muted-foreground";
     if (score >= 80) return "text-green-600";
     if (score >= 60) return "text-yellow-600";
     return "text-red-600";
@@ -357,6 +361,7 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
 
   // Get score badge variant
   const getScoreBadgeVariant = (score: number): "destructive" | "secondary" | "default" => {
+    if (score === -1) return "secondary";
     if (score >= 80) return "default";
     if (score >= 60) return "secondary";
     return "destructive";
@@ -707,17 +712,19 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                         </CardDescription>
                       </div>
                       <div className="text-right">
-                        <div className={`text-2xl font-bold ${getScoreColor(axis.score)}`}>
-                          {axis.score}%
+                        <div className={`text-2xl font-bold ${axis.score === -1 ? 'text-muted-foreground' : getScoreColor(axis.score)}`}>
+                          {axis.score === -1 ? 'N/A' : `${axis.score}%`}
                         </div>
-                        <Badge variant={getScoreBadgeVariant(axis.score)}>
-                          {axis.score >= 80 ? "Conforme" : axis.score >= 60 ? "Partiel" : "Non conforme"}
-                        </Badge>
+                        {axis.score !== -1 && (
+                          <Badge variant={getScoreBadgeVariant(axis.score)}>
+                            {axis.score >= 80 ? "Conforme" : axis.score >= 60 ? "Partiel" : "Non conforme"}
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <Progress value={axis.score} className="h-3" />
+                    {axis.score !== -1 && <Progress value={axis.score} className="h-3" />}
                     <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
                       <span>Cliquez pour voir les actions recommandées</span>
                       <ArrowRight className="h-4 w-4" />

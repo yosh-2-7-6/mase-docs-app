@@ -56,6 +56,19 @@ export interface ActivityItem {
   };
 }
 
+export interface SimplifiedDashboardData {
+  globalScore: number | null;
+  maseStatus: string;
+  lastAuditDate: string | null;
+  existingDocuments: number;
+  missingDocuments: number;
+  nonCompliantDocuments: number;
+  conformeDocuments: number;
+  documentsRequis: number;
+  priorityActions: PriorityAction[];
+  recentActivity: ActivityItem[];
+}
+
 export class DashboardAnalytics {
   
   /**
@@ -236,10 +249,10 @@ export class DashboardAnalytics {
       // Ajouter chaque document non conforme individuellement
       nonCompliantDocs.forEach((doc, index) => {
         actions.push({
-          id: `doc-${doc.id || index}`,
+          id: `doc-${doc.documentId || index}`,
           type: 'document',
           priority: doc.score < 60 ? 'high' : 'medium',
-          title: doc.name,
+          title: doc.documentName,
           description: `Score de conformité: ${doc.score}%`,
           action: 'Améliorer la conformité',
           path: '/dashboard/mase-generator',
@@ -345,6 +358,45 @@ export class DashboardAnalytics {
     });
   }
 
+  /**
+   * Compile les données simplifiées du dashboard
+   */
+  static getSimplifiedDashboardData(): SimplifiedDashboardData {
+    const globalScore = this.calculateGlobalScore();
+    const auditResults = MaseStateManager.getLatestAudit();
+    
+    let existingDocuments = 0;
+    let missingDocuments = 0;
+    let nonCompliantDocuments = 0;
+    let conformeDocuments = 0;
+    const documentsRequis = 15; // Nombre standard de documents requis pour la conformité MASE
+    
+    if (auditResults && auditResults.analysisResults) {
+      existingDocuments = auditResults.analysisResults.length;
+      nonCompliantDocuments = auditResults.analysisResults.filter(doc => doc.score < 80).length;
+      conformeDocuments = auditResults.analysisResults.filter(doc => doc.score >= 80).length;
+      
+      // Calcul des documents manquants
+      missingDocuments = Math.max(0, documentsRequis - existingDocuments);
+    } else {
+      // Si aucun audit, tous les documents sont manquants
+      missingDocuments = documentsRequis;
+    }
+    
+    return {
+      globalScore,
+      maseStatus: this.getMaseStatus(globalScore),
+      lastAuditDate: auditResults?.date || null,
+      existingDocuments,
+      missingDocuments,
+      nonCompliantDocuments,
+      conformeDocuments,
+      documentsRequis,
+      priorityActions: this.generatePriorityActions().slice(0, 5), // Limiter à 5
+      recentActivity: this.getRecentActivity().slice(0, 5) // Limiter à 5
+    };
+  }
+  
   /**
    * Calcule le temps écoulé depuis une date
    */

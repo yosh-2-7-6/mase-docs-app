@@ -9,6 +9,7 @@ import {
   Home,
   FileCheck,
   FileText,
+  Files,
   CreditCard,
   Settings,
   LogOut,
@@ -59,6 +60,11 @@ const mainNavItems = [
     title: "Mase Generator",
     url: "/dashboard/mase-generator",
     icon: FileText,
+  },
+  {
+    title: "Mes Documents",
+    url: "/dashboard/documents",
+    icon: Files,
   },
 ]
 
