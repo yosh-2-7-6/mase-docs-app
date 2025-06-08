@@ -522,7 +522,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
             <Button
               variant="ghost"
               size="sm"
-              className="absolute top-2 right-2 h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 rounded-md"
+              className="absolute top-2 right-2 h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 rounded-md"
               onClick={(e) => {
                 e.stopPropagation();
                 MaseStateManager.clearGenerationHistory();
@@ -531,7 +531,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
               }}
               title="Supprimer l'historique de génération"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3 w-3" />
             </Button>
           )}
           
@@ -633,7 +633,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="absolute top-2 right-2 h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 rounded-md"
+                            className="absolute top-2 right-2 h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 rounded-md"
                             onClick={(e) => {
                               e.stopPropagation();
                               MaseStateManager.clearHistory();
@@ -642,7 +642,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                             }}
                             title="Supprimer l'historique d'audit"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3" />
                           </Button>
                           <p className="text-xs text-green-700 dark:text-green-300 font-medium">
                             Dernier audit: {new Date(latestAudit.date).toLocaleDateString()}

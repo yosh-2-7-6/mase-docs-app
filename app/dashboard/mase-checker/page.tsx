@@ -404,58 +404,67 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
       </div>
 
       {/* Carte bleue pour résultats d'audit existants - avant barre de progression */}
-      {currentStep === 'upload' && (() => {
-        const latestAudit = MaseStateManager.getLatestAudit();
-        return latestAudit && latestAudit.completed ? (
-          <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 relative group">
-            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <AlertTitle className="text-blue-900 dark:text-blue-100">
-              Résultats d'audit disponibles
-            </AlertTitle>
-            <AlertDescription className="text-blue-800 dark:text-blue-200">
-              <div className="flex items-center justify-between">
-                <span>
-                  Audit réalisé le {new Date(latestAudit.date).toLocaleDateString()} • 
-                  Score global: {latestAudit.globalScore}% • 
-                  {latestAudit.analysisResults?.length || 0} documents analysés
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    loadExistingAuditResults();
-                  }}
-                  className="ml-4"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Voir les résultats
-                </Button>
-              </div>
-            </AlertDescription>
-            {/* Corbeille qui apparaît au survol */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="absolute top-2 right-2 h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 rounded-md"
-              onClick={() => {
-                MaseStateManager.clearHistory();
-                // Reset state to hide the card without page reload
-                setCurrentStep('upload');
-                setAnalysisComplete(false);
-                setDocuments([]);
-                setAnalysisResults([]);
-                setAxisScores([]);
-                setGlobalScore(0);
-              }}
-              title="Supprimer les résultats d'audit"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </Alert>
-        ) : null;
-      })()}
+      {(() => {
+        if (currentStep === 'upload') {
+          const latestAudit = MaseStateManager.getLatestAudit();
+          if (latestAudit && latestAudit.completed) {
+            return (
+              <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 relative group mb-4 hover:pr-10 transition-all duration-200">
+                <div className="absolute top-2 right-2 hidden group-hover:block">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/50 rounded-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm('Êtes-vous sûr de vouloir supprimer ces résultats d\'audit ?')) {
+                        MaseStateManager.clearHistory();
+                        setCurrentStep('upload');
+                        setAnalysisComplete(false);
+                        setDocuments([]);
+                        setAnalysisResults([]);
+                        setAxisScores([]);
+                        setGlobalScore(0);
+                      }
+                    }}
+                    title="Supprimer les résultats d'audit"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+                <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <AlertTitle className="text-blue-900 dark:text-blue-100">
+                  Résultats d'audit disponibles
+                </AlertTitle>
+                <AlertDescription className="text-blue-800 dark:text-blue-200">
+                  <div className="flex items-center justify-between">
+                    <span>
+                      Audit réalisé le {new Date(latestAudit.date).toLocaleDateString()} • 
+                      Score global: {latestAudit.globalScore}% • 
+                      {latestAudit.analysisResults?.length || 0} documents analysés
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          loadExistingAuditResults();
+                        }}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        Voir les résultats
+                      </Button>
 
-      {/* Progress indicator */}
+                    </div>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            );
+          }
+        }
+        return null;
+      })()}
+      
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-4">
