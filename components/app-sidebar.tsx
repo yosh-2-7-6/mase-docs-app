@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { createClient } from "@/utils/supabase/client"
 import { useRouter } from "next/navigation"
+import { MaseStateManager } from "@/utils/mase-state"
 
 // Menu items for the main navigation
 const mainNavItems = [
@@ -105,6 +106,22 @@ export function AppSidebar() {
     router.push("/sign-in")
   }
 
+  const handleMaseCheckerClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    // Clear any existing view mode and navigation mode
+    MaseStateManager.clearGenerationViewMode()
+    MaseStateManager.clearNavigationMode()
+    router.push("/dashboard/mase-checker")
+  }
+
+  const handleMaseGeneratorClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    // Clear any existing view mode and navigation mode
+    MaseStateManager.clearGenerationViewMode()
+    MaseStateManager.clearNavigationMode()
+    router.push("/dashboard/mase-generator")
+  }
+
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -131,10 +148,22 @@ export function AppSidebar() {
               {mainNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url}>
-                    <Link href={item.url}>
-                      <item.icon className="size-4" />
-                      <span>{item.title}</span>
-                    </Link>
+                    {item.title === "Mase Checker" ? (
+                      <a href={item.url} onClick={handleMaseCheckerClick}>
+                        <item.icon className="size-4" />
+                        <span>{item.title}</span>
+                      </a>
+                    ) : item.title === "Mase Generator" ? (
+                      <a href={item.url} onClick={handleMaseGeneratorClick}>
+                        <item.icon className="size-4" />
+                        <span>{item.title}</span>
+                      </a>
+                    ) : (
+                      <Link href={item.url}>
+                        <item.icon className="size-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

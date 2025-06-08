@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, Download, Eye, Edit, Trash2, Search, Filter, Upload, Clock, CheckCircle2, AlertCircle, X } from "lucide-react";
+import { FileText, Download, Eye, Edit, Search, Filter, Upload, Clock, CheckCircle2, AlertCircle, X, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MaseStateManager } from "@/utils/mase-state";
@@ -387,7 +387,7 @@ export default function DocumentsPage() {
                 {filteredDocuments.map((doc) => (
                   <TableRow 
                     key={doc.id}
-                    className="relative"
+                    className="group relative"
                     onMouseEnter={() => setHoveredRow(doc.id)}
                     onMouseLeave={() => setHoveredRow(null)}
                   >
@@ -409,7 +409,7 @@ export default function DocumentsPage() {
                       </div>
                     </TableCell>
                     <TableCell>{getStatusBadge(doc.status, doc.score)}</TableCell>
-                    <TableCell>
+                    <TableCell className="relative">
                       <div className="flex gap-1">
                         <Button 
                           variant="ghost" 
@@ -427,22 +427,20 @@ export default function DocumentsPage() {
                         >
                           <Download className="h-4 w-4" />
                         </Button>
+                        {/* Bouton de suppression au hover - dans la dernière cellule */}
+                        {hoveredRow === doc.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteDocument(doc.id)}
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-800 hover:bg-red-50 ml-2"
+                            title="Supprimer le document"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
-                    {/* Bouton de suppression au hover */}
-                    {hoveredRow === doc.id && (
-                      <div className="absolute top-2 right-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteDocument(doc.id)}
-                          className="h-6 w-6 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
-                          title="Supprimer le document"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
                   </TableRow>
                 ))}
               </TableBody>

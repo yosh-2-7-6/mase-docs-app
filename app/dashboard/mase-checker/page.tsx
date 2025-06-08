@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Upload, FileText, AlertCircle, CheckCircle2, X, Eye, Download, Wand2, RefreshCw, ArrowLeft, ArrowRight, Shield } from "lucide-react";
+import { Upload, FileText, AlertCircle, CheckCircle2, X, Eye, Download, Wand2, RefreshCw, ArrowLeft, ArrowRight, Shield, Info, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { MaseStateManager } from "@/utils/mase-state";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,10 +76,8 @@ export default function MaseCheckerPage() {
         return;
       }
 
-      // For direct navigation, only load existing results if they exist
-      if (MaseStateManager.hasCompletedAudit()) {
-        loadExistingAuditResults();
-      }
+      // For direct navigation, always start at upload step
+      setCurrentStep('upload');
     };
 
     checkExistingAudit();
@@ -142,6 +140,9 @@ export default function MaseCheckerPage() {
 
   // Process files
   const handleFiles = (files: FileList) => {
+    // Clear old audit history when starting a new analysis with files
+    MaseStateManager.clearHistory();
+    
     const newDocuments: Document[] = Array.from(files).map((file, index) => ({
       id: `doc-${Date.now()}-${index}`,
       name: file.name,
@@ -402,6 +403,58 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
         </p>
       </div>
 
+      {/* Carte bleue pour résultats d'audit existants - avant barre de progression */}
+      {currentStep === 'upload' && (() => {
+        const latestAudit = MaseStateManager.getLatestAudit();
+        return latestAudit && latestAudit.completed ? (
+          <Alert className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 relative group">
+            <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <AlertTitle className="text-blue-900 dark:text-blue-100">
+              Résultats d'audit disponibles
+            </AlertTitle>
+            <AlertDescription className="text-blue-800 dark:text-blue-200">
+              <div className="flex items-center justify-between">
+                <span>
+                  Audit réalisé le {new Date(latestAudit.date).toLocaleDateString()} • 
+                  Score global: {latestAudit.globalScore}% • 
+                  {latestAudit.analysisResults?.length || 0} documents analysés
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    loadExistingAuditResults();
+                  }}
+                  className="ml-4"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Voir les résultats
+                </Button>
+              </div>
+            </AlertDescription>
+            {/* Corbeille qui apparaît au survol */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-2 right-2 h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 rounded-md"
+              onClick={() => {
+                MaseStateManager.clearHistory();
+                // Reset state to hide the card without page reload
+                setCurrentStep('upload');
+                setAnalysisComplete(false);
+                setDocuments([]);
+                setAnalysisResults([]);
+                setAxisScores([]);
+                setGlobalScore(0);
+              }}
+              title="Supprimer les résultats d'audit"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </Alert>
+        ) : null;
+      })()}
+
       {/* Progress indicator */}
       <Card>
         <CardContent className="pt-6">
@@ -624,19 +677,14 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                   variant="default"
                   size="default"
                   onClick={() => {
-                    // Clear audit history and reset everything
-                    MaseStateManager.clearHistory();
-                    setCurrentStep('upload');
-                    setAnalysisComplete(false);
-                    setDocuments([]);
-                    setAnalysisResults([]);
-                    setAxisScores([]);
-                    setGlobalScore(0);
+                    // Passer en mode post-audit et aller directement à l'étape 2
+                    MaseStateManager.setNavigationMode('post-audit-direct');
+                    router.push('/dashboard/mase-generator');
                   }}
-                  className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                  className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
                 >
-                  <RefreshCw className="h-5 w-5" />
-                  Nouvelle analyse
+                  <Wand2 className="h-5 w-5" />
+                  Améliorer la conformité
                 </Button>
               </div>
             </CardHeader>
@@ -669,20 +717,26 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button 
-                    size="sm"
-                    onClick={() => {
-                      // Passer en mode post-audit et aller directement à l'étape 2
-                      MaseStateManager.setNavigationMode('post-audit-direct');
-                      router.push('/dashboard/mase-generator');
-                    }}
-                  >
-                    <Wand2 className="h-4 w-4 mr-2" />
-                    Améliorer la conformité
-                  </Button>
                   <Button variant="outline" size="sm" onClick={exportCompleteAnalysis}>
                     <Download className="h-4 w-4 mr-2" />
                     Rapport complet
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => {
+                      // Reset to upload step but keep history for the blue card
+                      setCurrentStep('upload');
+                      setAnalysisComplete(false);
+                      setDocuments([]);
+                      setAnalysisResults([]);
+                      setAxisScores([]);
+                      setGlobalScore(0);
+                    }}
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Nouvelle analyse
                   </Button>
                 </div>
               </div>

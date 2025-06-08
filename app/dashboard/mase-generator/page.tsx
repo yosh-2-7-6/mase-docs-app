@@ -23,7 +23,8 @@ import {
   Wrench,
   RefreshCw,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Trash2
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -513,9 +514,27 @@ Date de génération: ${new Date().toLocaleDateString()}`;
       {hasGenerationHistory && (
         <Alert className={
           (currentStep === 'info' || currentStep === 'personalization' || currentStep === 'generation' || currentStep === 'results')
-            ? "border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800"
-            : "border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800"
+            ? "border-red-200 bg-red-50 dark:bg-red-950 dark:border-red-800 relative group"
+            : "border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800 relative group"
         }>
+          {/* Trash button that appears on hover */}
+          {!(currentStep === 'info' || currentStep === 'personalization' || currentStep === 'generation' || currentStep === 'results') && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-2 right-2 h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 rounded-md"
+              onClick={(e) => {
+                e.stopPropagation();
+                MaseStateManager.clearGenerationHistory();
+                setHasGenerationHistory(false);
+                setLatestGenerationState(null);
+              }}
+              title="Supprimer l'historique de génération"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+          
           {(currentStep === 'info' || currentStep === 'personalization' || currentStep === 'generation' || currentStep === 'results') ? (
             <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
           ) : (
@@ -610,11 +629,11 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                         Générez les documents manquants identifiés lors de votre audit automatique
                       </p>
                       {latestAudit && (
-                        <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800 relative">
+                        <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800 relative group">
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="absolute top-1 right-1 h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-100 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950"
+                            className="absolute top-2 right-2 h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 rounded-md"
                             onClick={(e) => {
                               e.stopPropagation();
                               MaseStateManager.clearHistory();
@@ -623,7 +642,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                             }}
                             title="Supprimer l'historique d'audit"
                           >
-                            <X className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                           <p className="text-xs text-green-700 dark:text-green-300 font-medium">
                             Dernier audit: {new Date(latestAudit.date).toLocaleDateString()}

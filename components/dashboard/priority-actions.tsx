@@ -86,11 +86,6 @@ export function PriorityActions({ actions, auditDate }: PriorityActionsProps) {
             <AlertTriangle className="h-5 w-5 text-orange-500" />
             <span>Actions Prioritaires</span>
           </CardTitle>
-          {actions.length > 0 && (
-            <Badge variant="outline" className="text-xs">
-              {actions.filter(a => a.priority === 'high').length} urgentes
-            </Badge>
-          )}
         </div>
         {auditDate && (
           <p className="text-sm text-muted-foreground">
@@ -126,8 +121,8 @@ export function PriorityActions({ actions, auditDate }: PriorityActionsProps) {
                       </div>
                     </div>
                     
-                    {/* Right side - Priority, score, and button */}
-                    <div className="flex flex-col items-end gap-2 min-w-[140px]">
+                    {/* Right side - Priority and score */}
+                    <div className="flex items-center gap-3">
                       <Badge 
                         variant="outline" 
                         className={`text-xs ${getPriorityColor(action.priority)}`}
@@ -143,13 +138,6 @@ export function PriorityActions({ actions, auditDate }: PriorityActionsProps) {
                           {score}%
                         </span>
                       )}
-                      <Button
-                        size="sm"
-                        onClick={() => router.push(action.path)}
-                        className="text-xs"
-                      >
-                        Améliorer la conformité
-                      </Button>
                     </div>
                   </div>
                 </div>
@@ -165,6 +153,19 @@ export function PriorityActions({ actions, auditDate }: PriorityActionsProps) {
             <p className="text-xs text-muted-foreground mt-1">
               Effectuez un audit pour obtenir des recommandations personnalisées
             </p>
+          </div>
+        )}
+        {topActions.length > 0 && (
+          <div className="flex justify-end mt-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/dashboard/mase-checker')}
+              className="text-xs flex items-center gap-2"
+            >
+              Voir toutes les actions
+              <ArrowRight className="h-3 w-3" />
+            </Button>
           </div>
         )}
       </CardContent>

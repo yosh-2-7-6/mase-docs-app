@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { DashboardAnalytics, type SimplifiedDashboardData } from "@/utils/dashboard-analytics";
 import { UserProfileManager } from "@/utils/user-profile";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Files, AlertCircle, Activity, Shield } from "lucide-react";
 import { PriorityActions } from "@/components/dashboard/priority-actions";
 import { ActivityTimeline } from "@/components/dashboard/activity-timeline";
 import { GlobalScoreChart } from "@/components/dashboard/global-score-chart";
@@ -83,70 +81,16 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Score Global avec Camembert */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <GlobalScoreChart 
-          globalScore={dashboardData.globalScore}
-          totalDocuments={dashboardData.existingDocuments}
-          conformeDocuments={dashboardData.conformeDocuments}
-          nonConformeDocuments={dashboardData.nonCompliantDocuments}
-          documentsRequis={dashboardData.documentsRequis}
-        />
-        
-        {/* Indicateurs Complémentaires */}
-        <div className="space-y-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Documents Existants
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dashboardData.existingDocuments}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Documents audités
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Files className="h-4 w-4" />
-                Documents Manquants
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
-                {dashboardData.missingDocuments}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                À créer ou améliorer
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                Non Conformes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {dashboardData.nonCompliantDocuments}
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Score {'<'} 80%
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      {/* Scores de Conformité avec 2 Camemberts */}
+      <GlobalScoreChart 
+        globalScore={dashboardData.globalScore}
+        totalDocuments={dashboardData.existingDocuments}
+        conformeDocuments={dashboardData.conformeDocuments}
+        nonConformeDocuments={dashboardData.nonCompliantDocuments}
+        documentsRequis={dashboardData.documentsRequis}
+        auditScore={dashboardData.globalScore}
+        hasAudit={dashboardData.lastAuditDate !== null}
+      />
 
       {/* Priority Actions & Recent Activity - Limitées à 5 items */}
       <div className="grid gap-6 lg:grid-cols-2">
