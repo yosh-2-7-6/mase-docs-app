@@ -180,18 +180,27 @@ export default function MaseCheckerPage() {
       setAnalysisProgress(i);
     }
 
-    // Generate mock results with realistic MASE document names
+    // Generate mock results with realistic MASE document names that match MASE GENERATOR keywords
     const mockDocumentNames = [
       'Politique SSE',
       'Organigramme SSE', 
       'Plan de formation',
       'Matrice des habilitations',
       'Procédure de préparation',
-      'Check-lists interventions',
+      'Check-list interventions',
       'Consignes de sécurité',
-      'Fiches de poste',
+      'Fiche de poste',
       'Procédure REX',
-      'Tableau de bord SSE'
+      'Tableau de bord SSE',
+      'Manuel management',
+      'Revue de direction',
+      'Livret d\'accueil sécurité',
+      'DUER',
+      'Plan de prévention',
+      'Permis de travail',
+      'Registre des contrôles',
+      'Audit interne',
+      'Actions correctives'
     ];
 
     const mockResults: AnalysisResult[] = documents.map((doc, index) => {

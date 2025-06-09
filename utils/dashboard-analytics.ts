@@ -369,7 +369,7 @@ export class DashboardAnalytics {
     let missingDocuments = 0;
     let nonCompliantDocuments = 0;
     let conformeDocuments = 0;
-    const documentsRequis = 15; // Nombre standard de documents requis pour la conformité MASE
+    const documentsRequis = 20; // Nombre total de documents dans le référentiel MASE (15 requis + 5 optionnels)
     
     if (auditResults && auditResults.analysisResults) {
       existingDocuments = auditResults.analysisResults.length;

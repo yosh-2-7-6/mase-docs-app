@@ -842,15 +842,15 @@ Date de génération: ${new Date().toLocaleDateString()}`;
       'info': 4,
       'personalization': 5, // Toujours présent maintenant
       'generation': 6,
-      'results': 7
+      'results': 6
     };
     
     return stepMapping[currentStep] || 1;
   };
   
   const getTotalSteps = () => {
-    // Toujours 7 étapes maintenant (avec personnalisation obligatoire)
-    return 7;
+    // Toujours 6 étapes maintenant (avec personnalisation obligatoire)
+    return 6;
   };
 
   // Vérifier s'il y a des résultats en mémoire (côté client uniquement)
@@ -1598,45 +1598,136 @@ Date de génération: ${new Date().toLocaleDateString()}`;
               <div className="space-y-6">
                 {config.selectedDocs.map((docId) => {
                   const doc = DOCUMENT_TEMPLATES.find(d => d.id === docId);
+                  
+                  // Enrichissement avec scores d'audit si disponibles
+                  let auditScore: number | undefined;
+                  let auditRecommendations: string[] = [];
+                  
+                  if (config.mode === 'post-audit' && latestAudit && latestAudit.analysisResults) {
+                    const matchingAudit = findMatchingAuditedDocument(docId, latestAudit.analysisResults);
+                    console.log('Debug étape 5/7:', {
+                      docId,
+                      doc: doc?.name,
+                      matchingAudit,
+                      latestAuditCount: latestAudit.analysisResults.length
+                    });
+                    if (matchingAudit) {
+                      auditScore = matchingAudit.score;
+                      // Générer des recommandations fictives basées sur le score
+                      if (auditScore !== undefined && auditScore < 80) {
+                        auditRecommendations = [
+                          `Score actuel: ${auditScore}%. Des améliorations sont nécessaires.`,
+                          `Points d'amélioration identifiés: ${auditScore < 60 ? 'Structure documentaire incomplète, ' : ''}${auditScore < 70 ? 'Manque de détails sur les responsabilités, ' : ''}Mise à jour des procédures requise.`,
+                          `Recommandation: Intégrer les spécificités de votre secteur "${companyProfile.sector}" et mentionner vos certifications.`
+                        ];
+                      }
+                    }
+                  }
+                  
+                  const needsImprovement = auditScore !== undefined && auditScore < 80;
+                  
                   return (
-                    <Card key={docId} className="border-l-4 border-l-primary">
+                    <Card 
+                      key={docId} 
+                      className={`border-l-4 ${needsImprovement ? 'border-l-amber-500 bg-amber-50 dark:bg-amber-950' : 'border-l-primary'}`}
+                    >
                       <CardHeader className="pb-4">
                         <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle className="text-lg">{doc?.name}</CardTitle>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <CardTitle className="text-lg">{doc?.name}</CardTitle>
+                              {auditScore !== undefined && (
+                                <Badge 
+                                  variant={auditScore >= 80 ? "default" : auditScore >= 60 ? "secondary" : "destructive"}
+                                  className={
+                                    auditScore >= 80 
+                                      ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900 dark:text-green-200 dark:border-green-700" 
+                                      : auditScore >= 60 
+                                      ? "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900 dark:text-yellow-200 dark:border-yellow-700"
+                                      : "bg-red-100 text-red-800 border-red-300 dark:bg-red-900 dark:text-red-200 dark:border-red-700"
+                                  }
+                                >
+                                  {auditScore}%
+                                </Badge>
+                              )}
+                            </div>
                             <CardDescription className="mt-1">
                               {doc?.description} • Axe MASE: {doc?.axis}
                             </CardDescription>
+                            {needsImprovement && (
+                              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                                <Shield className="h-3 w-3 inline mr-1" />
+                                Amélioration recommandée (score faible)
+                              </p>
+                            )}
                           </div>
                           <Badge variant="outline">{doc?.estimatedTime}</Badge>
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-3">
-                          <Label htmlFor={`instructions-${docId}`}>
-                            Instructions spécifiques pour ce document
-                          </Label>
-                          <Textarea
-                            id={`instructions-${docId}`}
-                            placeholder={`Exemple: "Inclure nos procédures spécifiques au travail en hauteur, mentionner notre certification ISO 45001, adapter au contexte ${companyProfile.sector.toLowerCase()}..."`}
-                            value={(config.personalizedInstructions && config.personalizedInstructions[docId]) || ''}
-                            onChange={(e) => setConfig({
-                              ...config,
-                              personalizedInstructions: {
-                                ...(config.personalizedInstructions || {}),
-                                [docId]: e.target.value
-                              }
-                            })}
-                            rows={4}
-                            className="resize-none"
-                          />
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>
-                              {(config.personalizedInstructions && config.personalizedInstructions[docId]?.length) || 0} caractères
-                            </span>
-                            {!(config.personalizedInstructions && config.personalizedInstructions[docId]) && (
-                              <span className="text-amber-600">Optionnel - document généré avec contenu standard si vide</span>
-                            )}
+                        <div className="space-y-4">
+                          {/* Affichage des recommandations d'audit si disponibles */}
+                          {auditRecommendations.length > 0 && (
+                            <div className="bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                              <h4 className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2 flex items-center">
+                                <AlertTriangle className="h-4 w-4 mr-1" />
+                                Recommandations de l'audit
+                              </h4>
+                              <ul className="text-xs text-amber-700 dark:text-amber-300 space-y-1">
+                                {auditRecommendations.map((rec, idx) => (
+                                  <li key={idx} className="flex items-start">
+                                    <span className="mr-2">•</span>
+                                    <span>{rec}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          <div className="space-y-3">
+                            <Label htmlFor={`instructions-${docId}`}>
+                              Instructions spécifiques pour ce document
+                            </Label>
+                            <Textarea
+                              id={`instructions-${docId}`}
+                              placeholder={`Exemple: "Inclure nos procédures spécifiques au travail en hauteur, mentionner notre certification ISO 45001, adapter au contexte ${companyProfile.sector.toLowerCase()}..."`}
+                              value={(() => {
+                                // Si l'utilisateur a déjà écrit quelque chose, on garde son texte
+                                if (config.personalizedInstructions && config.personalizedInstructions[docId]) {
+                                  return config.personalizedInstructions[docId];
+                                }
+                                
+                                // Sinon, si le document nécessite une amélioration, on pré-remplit
+                                if (needsImprovement && auditScore !== undefined) {
+                                  return `Veuillez corriger les points suivants identifiés lors de l'audit (score actuel: ${auditScore}%):\n\n` +
+                                    `1. Mettre à jour la structure documentaire selon le référentiel MASE 2022\n` +
+                                    `2. Intégrer les spécificités de votre secteur "${companyProfile.sector}"\n` +
+                                    `3. Détailler les responsabilités et les procédures opérationnelles\n` +
+                                    `4. Ajouter des indicateurs de performance et de suivi\n` +
+                                    `5. Mentionner vos certifications et qualifications spécifiques`;
+                                }
+                                
+                                // Sinon, champ vide
+                                return '';
+                              })()}
+                              onChange={(e) => setConfig({
+                                ...config,
+                                personalizedInstructions: {
+                                  ...(config.personalizedInstructions || {}),
+                                  [docId]: e.target.value
+                                }
+                              })}
+                              rows={needsImprovement ? 6 : 4}
+                              className="resize-none"
+                            />
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>
+                                {(config.personalizedInstructions && config.personalizedInstructions[docId]?.length) || 0} caractères
+                              </span>
+                              {!(config.personalizedInstructions && config.personalizedInstructions[docId]) && (
+                                <span className="text-amber-600">Optionnel - document généré avec contenu standard si vide</span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </CardContent>
