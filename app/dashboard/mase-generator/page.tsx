@@ -25,8 +25,7 @@ import {
   RefreshCw,
   X,
   AlertTriangle,
-  Trash2,
-  FileCheck
+  Trash2
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,16 +51,15 @@ interface DocumentTemplate {
 }
 
 interface GenerationConfig {
-  mode: 'post-audit' | 'from-existing' | 'from-scratch';
+  mode: 'post-audit' | 'from-scratch';
   selectedDocs: string[];
-  generationType: 'standard' | 'personalized';
+  generationType: 'personalized'; // Toujours personnalisé maintenant
   personalizedInstructions: { [docId: string]: string };
   styling: {
     template: string;
     primaryColor: string;
     logo: File | null;
   };
-  documentsToImprove?: string[]; // IDs des documents à améliorer pour le mode from-existing
 }
 
 interface CompanyProfile {
@@ -90,17 +88,189 @@ const MASE_AXES = [
 ];
 
 const DOCUMENT_TEMPLATES: DocumentTemplate[] = [
+  // Axe 1: Engagement de la direction
   { id: 'politique-sse', name: 'Politique SSE', description: 'Document de politique santé, sécurité et environnement', axis: MASE_AXES[0], required: true, estimatedTime: '5 min' },
   { id: 'organigramme', name: 'Organigramme SSE', description: 'Structure organisationnelle SSE', axis: MASE_AXES[0], required: true, estimatedTime: '3 min' },
+  { id: 'manuel-management', name: 'Manuel de management SSE', description: 'Document de référence du système de management', axis: MASE_AXES[0], required: true, estimatedTime: '8 min' },
+  { id: 'revue-direction', name: 'Revue de direction', description: 'Compte-rendu de revue de direction SSE', axis: MASE_AXES[0], required: true, estimatedTime: '6 min' },
+  
+  // Axe 2: Compétences et qualifications
   { id: 'plan-formation', name: 'Plan de formation', description: 'Programme de formation du personnel', axis: MASE_AXES[1], required: true, estimatedTime: '7 min' },
-  { id: 'habilitations', name: 'Matrice des habilitations', description: 'Suivi des compétences et habilitations', axis: MASE_AXES[1], required: false, estimatedTime: '4 min' },
+  { id: 'habilitations', name: 'Matrice des habilitations', description: 'Suivi des compétences et habilitations', axis: MASE_AXES[1], required: true, estimatedTime: '4 min' },
+  { id: 'accueil-securite', name: 'Livret d\'accueil sécurité', description: 'Document d\'accueil pour les nouveaux arrivants', axis: MASE_AXES[1], required: true, estimatedTime: '5 min' },
+  { id: 'evaluation-competences', name: 'Évaluation des compétences', description: 'Grille d\'évaluation des compétences SSE', axis: MASE_AXES[1], required: false, estimatedTime: '6 min' },
+  
+  // Axe 3: Préparation et organisation des interventions
   { id: 'procedure-preparation', name: 'Procédure de préparation', description: 'Méthodes de préparation des interventions', axis: MASE_AXES[2], required: true, estimatedTime: '6 min' },
+  { id: 'analyse-risques', name: 'Document unique (DUER)', description: 'Évaluation des risques professionnels', axis: MASE_AXES[2], required: true, estimatedTime: '10 min' },
+  { id: 'plan-prevention', name: 'Plan de prévention', description: 'Plans de prévention pour interventions', axis: MASE_AXES[2], required: true, estimatedTime: '7 min' },
   { id: 'check-list', name: 'Check-lists interventions', description: 'Listes de vérification pour les interventions', axis: MASE_AXES[2], required: false, estimatedTime: '4 min' },
+  
+  // Axe 4: Réalisation des interventions  
   { id: 'consignes-securite', name: 'Consignes de sécurité', description: 'Instructions de sécurité opérationnelles', axis: MASE_AXES[3], required: true, estimatedTime: '5 min' },
-  { id: 'fiche-poste', name: 'Fiches de poste', description: 'Descriptions des postes de travail', axis: MASE_AXES[3], required: false, estimatedTime: '8 min' },
+  { id: 'fiche-poste', name: 'Fiches de poste', description: 'Descriptions des postes de travail', axis: MASE_AXES[3], required: true, estimatedTime: '8 min' },
+  { id: 'permis-travail', name: 'Permis de travail', description: 'Autorisations pour travaux spécifiques', axis: MASE_AXES[3], required: true, estimatedTime: '4 min' },
+  { id: 'registre-controles', name: 'Registre des contrôles', description: 'Suivi des contrôles et vérifications', axis: MASE_AXES[3], required: false, estimatedTime: '5 min' },
+  
+  // Axe 5: Retour d'expérience et amélioration continue
   { id: 'retour-experience', name: 'Procédure REX', description: 'Processus de retour d\'expérience', axis: MASE_AXES[4], required: true, estimatedTime: '5 min' },
-  { id: 'indicateurs', name: 'Tableau de bord SSE', description: 'Indicateurs de performance SSE', axis: MASE_AXES[4], required: false, estimatedTime: '6 min' }
+  { id: 'indicateurs', name: 'Tableau de bord SSE', description: 'Indicateurs de performance SSE', axis: MASE_AXES[4], required: true, estimatedTime: '6 min' },
+  { id: 'audit-interne', name: 'Procédure d\'audit interne', description: 'Méthodologie d\'audit interne SSE', axis: MASE_AXES[4], required: true, estimatedTime: '7 min' },
+  { id: 'actions-correctives', name: 'Gestion des actions correctives', description: 'Suivi des actions d\'amélioration', axis: MASE_AXES[4], required: false, estimatedTime: '5 min' }
 ];
+
+// Templates de contenu simulé pour les documents MASE
+const DOCUMENT_CONTENT_TEMPLATES: Record<string, string> = {
+  'politique-sse': `POLITIQUE SANTÉ, SÉCURITÉ ET ENVIRONNEMENT
+
+1. ENGAGEMENT DE LA DIRECTION
+Notre entreprise s'engage à mettre en œuvre une politique SSE ambitieuse, conforme aux exigences réglementaires et aux standards MASE.
+
+2. OBJECTIFS SSE
+- Zéro accident du travail
+- Réduction des impacts environnementaux
+- Amélioration continue de nos performances
+
+3. RESPONSABILITÉS
+Chaque collaborateur est responsable de l'application des règles de sécurité dans son domaine d'activité.
+
+4. MOYENS ET RESSOURCES
+L'entreprise met à disposition les moyens humains, techniques et financiers nécessaires.`,
+
+  'organigramme': `ORGANIGRAMME SSE
+
+DIRECTION GÉNÉRALE
+├── Responsable SSE
+│   ├── Coordinateur Sécurité
+│   ├── Coordinateur Environnement
+│   └── Formateur SSE
+├── RESPONSABLES D'ÉQUIPE
+│   ├── Chef d'équipe Atelier A
+│   ├── Chef d'équipe Atelier B
+│   └── Chef d'équipe Maintenance
+└── PERSONNEL OPÉRATIONNEL
+    ├── Opérateurs
+    ├── Techniciens
+    └── Agents de maintenance
+
+COMITÉS ET INSTANCES
+- CHSCT / CSE
+- Comité de direction SSE
+- Groupe de travail amélioration continue`,
+
+  'plan-formation': `PLAN DE FORMATION SSE ANNUEL
+
+1. FORMATIONS RÉGLEMENTAIRES OBLIGATOIRES
+- Accueil sécurité nouveaux arrivants (4h)
+- Recyclage gestes et postures (3h)
+- Formation EPI (2h)
+- Conduite d'équipements (selon CACES)
+
+2. FORMATIONS MÉTIER SPÉCIFIQUES
+- Travail en hauteur
+- Espaces confinés
+- Manipulation produits chimiques
+- Conduite de chantier
+
+3. FORMATIONS ENCADREMENT
+- Animation sécurité (1 jour)
+- Analyse d'accident (0.5 jour)
+- Réglementations SSE (1 jour)
+
+4. PLANNING ET BUDGET
+Budget annuel : [À définir selon l'entreprise]
+Suivi trimestriel des réalisations`,
+
+  'analyse-risques': `DOCUMENT UNIQUE D'ÉVALUATION DES RISQUES (DUER)
+
+1. MÉTHODOLOGIE D'ÉVALUATION
+Grille d'évaluation : Gravité x Probabilité x Exposition
+Niveaux de risque : 1 (Faible) à 4 (Critique)
+
+2. INVENTAIRE DES POSTES DE TRAVAIL
+- Production : Machines, manutention, produits chimiques
+- Maintenance : Travail en hauteur, énergie, outillage
+- Bureaux : Écrans, ergonomie, stress
+
+3. ÉVALUATION PAR UNITÉ DE TRAVAIL
+[Tableau détaillé par poste avec risques identifiés]
+
+4. PLAN D'ACTIONS DE PRÉVENTION
+Mesures prioritaires pour les risques évalués ≥ 3
+Planification et responsabilités définies
+Suivi annuel obligatoire`,
+
+  'consignes-securite': `CONSIGNES GÉNÉRALES DE SÉCURITÉ
+
+1. RÈGLES FONDAMENTALES
+- Port des EPI obligatoire en zones de production
+- Interdiction de fumer dans l'enceinte
+- Respect de la signalisation de sécurité
+- Déclaration immédiate de tout incident
+
+2. ACCÈS AUX ZONES DE TRAVAIL
+- Badge d'accès obligatoire
+- Accompagnement des visiteurs
+- Zones interdites clairement délimitées
+
+3. CONDUITE À TENIR EN CAS D'URGENCE
+- Accident : Alerter, Protéger, Secourir
+- Incendie : Évacuer selon plan d'évacuation
+- Numéros d'urgence affichés
+
+4. ÉQUIPEMENTS DE PROTECTION
+Liste des EPI par zone de travail
+Contrôle et maintenance des équipements`,
+
+  'retour-experience': `PROCÉDURE RETOUR D'EXPÉRIENCE (REX)
+
+1. OBJECTIFS DU REX
+- Capitaliser sur les événements
+- Identifier les causes profondes
+- Mettre en place des actions correctives
+- Partager les bonnes pratiques
+
+2. ÉVÉNEMENTS CONCERNÉS
+- Accidents et presque-accidents
+- Défaillances d'équipement
+- Non-conformités environnementales
+- Situations dangereuses
+
+3. PROCESSUS D'ANALYSE
+- Déclaration dans les 24h
+- Investigation sur le terrain
+- Analyse des causes (méthode 5M)
+- Plan d'actions correctives
+
+4. DIFFUSION ET SUIVI
+- Communication aux équipes
+- Intégration dans formations
+- Suivi efficacité des mesures`
+};
+
+// Mots-clés pour la correspondance intelligente avec les documents audités
+const DOCUMENT_KEYWORDS: Record<string, string[]> = {
+  'politique-sse': ['politique', 'policy', 'sse', 'hse'],
+  'organigramme': ['organigramme', 'organisation', 'structure', 'organigram'],
+  'manuel-management': ['manuel', 'management', 'système'],
+  'revue-direction': ['revue', 'direction', 'review'],
+  'plan-formation': ['formation', 'plan', 'training'],
+  'habilitations': ['habilitation', 'compétence', 'qualification', 'matrice'],
+  'accueil-securite': ['accueil', 'sécurité', 'livret', 'welcome'],
+  'evaluation-competences': ['évaluation', 'compétence', 'skill'],
+  'procedure-preparation': ['procédure', 'préparation', 'preparation'],
+  'analyse-risques': ['duer', 'risque', 'évaluation', 'document unique'],
+  'plan-prevention': ['prévention', 'plan', 'prevention'],
+  'check-list': ['check', 'liste', 'vérification', 'checklist'],
+  'consignes-securite': ['consigne', 'sécurité', 'instruction'],
+  'fiche-poste': ['fiche', 'poste', 'job', 'description'],
+  'permis-travail': ['permis', 'travail', 'autorisation', 'permit'],
+  'registre-controles': ['registre', 'contrôle', 'vérification'],
+  'retour-experience': ['rex', 'retour', 'expérience', 'feedback'],
+  'indicateurs': ['indicateur', 'tableau', 'bord', 'kpi', 'dashboard'],
+  'audit-interne': ['audit', 'interne', 'internal'],
+  'actions-correctives': ['action', 'corrective', 'amélioration']
+};
 
 export default function MaseGeneratorPage() {
   const router = useRouter();
@@ -108,10 +278,9 @@ export default function MaseGeneratorPage() {
   const [config, setConfig] = useState<GenerationConfig>({
     mode: 'from-scratch',
     selectedDocs: [],
-    generationType: 'standard',
+    generationType: 'personalized',
     personalizedInstructions: {},
-    styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null },
-    documentsToImprove: []
+    styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null }
   });
   
   // Profil entreprise (récupéré depuis /settings)
@@ -125,16 +294,205 @@ export default function MaseGeneratorPage() {
   // État de l'historique d'audit (récupéré depuis MASE CHECKER)
   const [hasAuditHistory, setHasAuditHistory] = useState(false);
   const [latestAudit, setLatestAudit] = useState<any>(null);
-  
-  // État des documents disponibles pour amélioration
-  const [documentsForImprovement, setDocumentsForImprovement] = useState<any[]>([]);
-  const [hasDocumentsWithRecommendations, setHasDocumentsWithRecommendations] = useState(false);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generatedDocuments, setGeneratedDocuments] = useState<GeneratedDocument[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<GeneratedDocument | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+
+  // Fonctions utilitaires pour la détection des documents manquants
+  const findMatchingAuditedDocument = (templateId: string, auditResults: any[]) => {
+    const template = DOCUMENT_TEMPLATES.find(t => t.id === templateId);
+    if (!template || !auditResults) return null;
+    
+    const keywords = DOCUMENT_KEYWORDS[templateId] || [];
+    const templateName = template.name.toLowerCase();
+    
+    return auditResults.find((result: any) => {
+      const resultName = result.documentName.toLowerCase();
+      
+      // Correspondance exacte du nom
+      if (templateName === resultName || 
+          templateName.includes(resultName) || 
+          resultName.includes(templateName)) {
+        return true;
+      }
+      
+      // Correspondance par mots-clés
+      return keywords.some(keyword => 
+        resultName.includes(keyword.toLowerCase()) ||
+        keyword.toLowerCase().includes(resultName)
+      );
+    });
+  };
+
+  const getMissingMandatoryDocuments = () => {
+    if (!latestAudit?.analysisResults) return DOCUMENT_TEMPLATES.filter(doc => doc.required);
+    
+    const mandatoryDocs = DOCUMENT_TEMPLATES.filter(doc => doc.required);
+    const auditResults = latestAudit.analysisResults;
+    
+    return mandatoryDocs.filter(doc => {
+      const matchingDoc = findMatchingAuditedDocument(doc.id, auditResults);
+      return !matchingDoc; // Document manquant si aucune correspondance trouvée
+    });
+  };
+
+  const getDocumentsNeedingImprovement = () => {
+    if (!latestAudit?.analysisResults) return [];
+    
+    const auditResults = latestAudit.analysisResults;
+    const documentsToImprove: (DocumentTemplate & { auditScore: number; needsImprovement: boolean })[] = [];
+    
+    DOCUMENT_TEMPLATES.forEach(template => {
+      const matchingDoc = findMatchingAuditedDocument(template.id, auditResults);
+      if (matchingDoc && matchingDoc.score < 80) {
+        documentsToImprove.push({
+          ...template,
+          auditScore: matchingDoc.score,
+          needsImprovement: true
+        });
+      }
+    });
+    
+    return documentsToImprove;
+  };
+
+  const getIntelligentPreselection = () => {
+    const preselected = [];
+    
+    // Documents audités nécessitant une amélioration (< 80%)
+    const documentsToImprove = getDocumentsNeedingImprovement();
+    preselected.push(...documentsToImprove.map(doc => doc.id));
+    
+    // Documents MASE obligatoires manquants
+    const missingDocs = getMissingMandatoryDocuments();
+    preselected.push(...missingDocs.map(doc => doc.id));
+    
+    return Array.from(new Set(preselected)); // Supprimer les doublons
+  };
+
+  const getContextualMessage = () => {
+    if (config.mode !== 'post-audit' || !latestAudit) return null;
+    
+    const documentsToImprove = getDocumentsNeedingImprovement();
+    const missingDocs = getMissingMandatoryDocuments();
+    const auditDate = new Date(latestAudit.date).toLocaleDateString('fr-FR');
+    
+    const improveCount = documentsToImprove.length;
+    const missingCount = missingDocs.length;
+    const totalAudited = latestAudit.analysisResults?.length || 0;
+    
+    if (improveCount > 0 && missingCount > 0) {
+      return {
+        type: 'mixed',
+        message: `Basé sur votre audit du ${auditDate}, nous avons présélectionné ${improveCount} document(s) < 80% de conformité et ${missingCount} document(s) manquant(s) MASE sur les ${totalAudited} documents audités. Ajustez cette sélection selon vos besoins.`,
+        icon: '🎯'
+      };
+    } else if (improveCount > 0) {
+      return {
+        type: 'improve',
+        message: `Basé sur votre audit du ${auditDate}, nous avons présélectionné ${improveCount} document(s) < 80% de conformité sur les ${totalAudited} documents audités. Ajustez cette sélection selon vos besoins.`,
+        icon: '📈'
+      };
+    } else if (missingCount > 0) {
+      return {
+        type: 'missing',
+        message: `Nous avons identifié ${missingCount} document(s) MASE obligatoire(s) manquant(s) de votre système documentaire. Ces documents sont présélectionnés pour création.`,
+        icon: '📋'
+      };
+    }
+    
+    return {
+      type: 'complete',
+      message: `Excellent ! Votre audit du ${auditDate} montre une bonne conformité. Vous pouvez créer des documents supplémentaires selon vos besoins.`,
+      icon: '✅'
+    };
+  };
+
+  // Fonctions de pré-remplissage intelligent des instructions SSE
+  const generateSimulatedContent = (docId: string, auditScore?: number) => {
+    const template = DOCUMENT_CONTENT_TEMPLATES[docId];
+    if (!template) return '';
+    
+    let content = template;
+    
+    // Personnaliser avec le score d'audit si disponible
+    if (auditScore !== undefined) {
+      content = `DOCUMENT EXISTANT À AMÉLIORER
+Score de conformité actuel : ${auditScore}%
+
+CONTENU ACTUEL IDENTIFIÉ :
+${template}
+
+STATUS : Document nécessitant une amélioration pour atteindre la conformité MASE (≥80%)`;
+    }
+    
+    return content;
+  };
+
+  const generateImprovementInstructions = (docId: string, auditScore: number, recommendations: string[]) => {
+    const simulatedContent = generateSimulatedContent(docId, auditScore);
+    const docName = DOCUMENT_TEMPLATES.find(d => d.id === docId)?.name || 'Document';
+    
+    return `${simulatedContent}
+
+RECOMMANDATIONS D'AMÉLIORATION IDENTIFIÉES :
+${recommendations.map(rec => `• ${rec}`).join('\n')}
+
+INSTRUCTIONS POUR LA GÉNÉRATION :
+Créer une version améliorée de ce document en intégrant les recommandations ci-dessus. 
+Le nouveau document doit :
+1. Conserver la structure et les bonnes pratiques existantes
+2. Intégrer spécifiquement chaque recommandation listée
+3. Être conforme aux exigences MASE 2024
+4. Atteindre un niveau de conformité ≥ 80%
+
+Personnalisez le contenu selon les spécificités de l'entreprise [${companyProfile.name}] dans le secteur [${companyProfile.sector}].`;
+  };
+
+  const generatePrefilledInstructions = () => {
+    const instructions: { [docId: string]: string } = {};
+    
+    if (config.mode === 'post-audit' && latestAudit) {
+      const documentsToImprove = getDocumentsNeedingImprovement();
+      
+      config.selectedDocs.forEach(docId => {
+        const docToImprove = documentsToImprove.find(doc => doc.id === docId);
+        
+        if (docToImprove && docToImprove.auditScore < 80) {
+          // Document non-conforme : pré-remplir avec instructions d'amélioration
+          const auditResult = latestAudit.analysisResults?.find((result: any) => {
+            const matchingDoc = findMatchingAuditedDocument(docId, [result]);
+            return matchingDoc;
+          });
+          
+          const recommendations = auditResult?.recommendations || [
+            'Améliorer la conformité selon les standards MASE',
+            'Compléter les sections manquantes',
+            'Préciser les responsabilités'
+          ];
+          
+          instructions[docId] = generateImprovementInstructions(
+            docId, 
+            docToImprove.auditScore, 
+            recommendations
+          );
+        } else {
+          // Document manquant : laisser vide pour personnalisation libre
+          instructions[docId] = '';
+        }
+      });
+    } else {
+      // Mode from-scratch : tous les champs vides
+      config.selectedDocs.forEach(docId => {
+        instructions[docId] = '';
+      });
+    }
+    
+    return instructions;
+  };
 
   // Vérifier l'historique d'audit et charger le profil utilisateur au chargement
   useEffect(() => {
@@ -221,93 +579,25 @@ export default function MaseGeneratorPage() {
     };
   }, []);
 
-  // Initialiser les données pour le mode "améliorer documents"
-  useEffect(() => {
-    const loadDocumentsForImprovement = () => {
-      if (hasAuditHistory && latestAudit) {
-        const docsWithRecommendations = DocumentManager.getFilteredDocuments({
-          type: 'original',
-          source: 'mase-checker'
-        }).filter(doc => 
-          doc.metadata.recommendations && 
-          doc.metadata.recommendations.length > 0 &&
-          doc.metadata.auditScore !== undefined &&
-          doc.metadata.auditScore < 80
-        );
-        
-        setDocumentsForImprovement(docsWithRecommendations);
-        setHasDocumentsWithRecommendations(docsWithRecommendations.length > 0);
-      } else {
-        setDocumentsForImprovement([]);
-        setHasDocumentsWithRecommendations(false);
-      }
-    };
-    
-    loadDocumentsForImprovement();
-  }, [hasAuditHistory, latestAudit]);
+  // Plus besoin du code pour documentsForImprovement
 
   // Step 1: Mode Selection
   const handleModeSelection = (mode: GenerationConfig['mode']) => {
     let selectedDocs = config.selectedDocs;
-    let documentsToImprove: string[] = [];
     
-    // Si mode post-audit, présélectionner les documents à améliorer (<80%)
-    if (mode === 'post-audit' && latestAudit && latestAudit.analysisResults) {
-      // Trouver tous les documents avec un score < 80%
-      const lowScoreDocIds = latestAudit.analysisResults
-        .filter((result: any) => result.score < 80)
-        .map((result: any) => {
-          // Mapper les noms de documents aux IDs de templates
-          // Améliorer la logique de matching pour être plus flexible
-          const normalizedResultName = result.documentName.toLowerCase().trim();
-          const template = DOCUMENT_TEMPLATES.find(t => {
-            const normalizedTemplateName = t.name.toLowerCase().trim();
-            // Vérifier une correspondance exacte ou partielle
-            return normalizedTemplateName === normalizedResultName ||
-                   normalizedTemplateName.includes(normalizedResultName) ||
-                   normalizedResultName.includes(normalizedTemplateName) ||
-                   // Vérifier aussi les mots clés importants
-                   (normalizedResultName.includes('politique') && normalizedTemplateName.includes('politique')) ||
-                   (normalizedResultName.includes('organigramme') && normalizedTemplateName.includes('organigramme')) ||
-                   (normalizedResultName.includes('formation') && normalizedTemplateName.includes('formation')) ||
-                   (normalizedResultName.includes('habilitation') && normalizedTemplateName.includes('habilitation')) ||
-                   (normalizedResultName.includes('check') && normalizedTemplateName.includes('check')) ||
-                   (normalizedResultName.includes('consigne') && normalizedTemplateName.includes('consigne')) ||
-                   (normalizedResultName.includes('fiche') && normalizedTemplateName.includes('fiche')) ||
-                   (normalizedResultName.includes('rex') && normalizedTemplateName.includes('rex')) ||
-                   (normalizedResultName.includes('tableau') && normalizedTemplateName.includes('tableau')) ||
-                   (normalizedResultName.includes('indicateur') && normalizedTemplateName.includes('tableau'));
-          });
-          return template?.id;
-        })
-        .filter(Boolean);
-      
-      // Ajouter aussi les documents manquants
-      const missingDocIds = latestAudit.missingDocuments
-        .map((docName: string) => {
-          const normalizedDocName = docName.toLowerCase().trim();
-          const template = DOCUMENT_TEMPLATES.find(t => {
-            const normalizedTemplateName = t.name.toLowerCase().trim();
-            return normalizedTemplateName === normalizedDocName ||
-                   normalizedTemplateName.includes(normalizedDocName) ||
-                   normalizedDocName.includes(normalizedTemplateName);
-          });
-          return template?.id;
-        })
-        .filter(Boolean);
-      
-      // Combiner et dédupliquer
-      const combined = [...lowScoreDocIds, ...missingDocIds];
-      const allDocIds = Array.from(new Set(combined));
-      selectedDocs = allDocIds;
+    // Si mode post-audit, utiliser la présélection intelligente
+    if (mode === 'post-audit' && latestAudit) {
+      selectedDocs = getIntelligentPreselection();
     }
     
-    // Si mode from-existing, préparer la liste des documents à améliorer
-    if (mode === 'from-existing') {
-      documentsToImprove = documentsForImprovement.map(doc => doc.id);
-    }
-    
-    setConfig({ ...config, mode, selectedDocs, documentsToImprove });
+    // Toujours en génération personnalisée maintenant
+    setConfig({ 
+      ...config, 
+      mode, 
+      selectedDocs,
+      generationType: 'personalized',
+      personalizedInstructions: {} // Sera rempli plus tard
+    });
     setCurrentStep('selection');
   };
 
@@ -415,17 +705,12 @@ export default function MaseGeneratorPage() {
       const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId);
       const documentId = DocumentManager.addDocument({
         name: doc.name,
-        type: config.mode === 'from-existing' ? 'modified' : 'generated',
+        type: 'generated',
         source: 'mase-generator',
         templateId: doc.templateId,
         metadata: {
           templateUsed: config.styling.template,
-          parentDocumentId: config.mode === 'from-existing' ? 
-            config.documentsToImprove?.find(id => 
-              DocumentManager.getDocument(id)?.name.toLowerCase().includes(
-                template?.name.toLowerCase() || ''
-              )
-            ) : undefined
+          parentDocumentId: undefined
         }
       });
       
@@ -467,7 +752,7 @@ export default function MaseGeneratorPage() {
       personalizedInstructions: config.generationType === 'personalized' ? config.personalizedInstructions : undefined,
       completed: true,
       auditId: latestAudit?.id,
-      improvedDocuments: config.mode === 'from-existing' ? config.documentsToImprove : undefined
+      improvedDocuments: undefined
     };
     
     MaseStateManager.saveGenerationResults(generationResult);
@@ -540,10 +825,9 @@ Date de génération: ${new Date().toLocaleDateString()}`;
     setConfig({
       mode: 'from-scratch',
       selectedDocs: [],
-      generationType: 'standard',
+      generationType: 'personalized',
       personalizedInstructions: {},
-      styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null },
-      documentsToImprove: []
+      styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null }
     });
     setGeneratedDocuments([]);
     setGenerationProgress(0);
@@ -556,17 +840,17 @@ Date de génération: ${new Date().toLocaleDateString()}`;
       'selection': 2, 
       'config': 3,
       'info': 4,
-      'personalization': 5, // Seulement en mode personnalisé
-      'generation': config.generationType === 'personalized' ? 6 : 5,
-      'results': 6
+      'personalization': 5, // Toujours présent maintenant
+      'generation': 6,
+      'results': 7
     };
     
     return stepMapping[currentStep] || 1;
   };
   
   const getTotalSteps = () => {
-    // 7 étapes pour personnalisé, 6 pour standard
-    return config.generationType === 'personalized' ? 7 : 6;
+    // Toujours 7 étapes maintenant (avec personnalisation obligatoire)
+    return 7;
   };
 
   // Vérifier s'il y a des résultats en mémoire (côté client uniquement)
@@ -690,7 +974,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3 max-w-6xl mx-auto">
+              <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 max-w-4xl mx-auto">
                 {/* Mode 1: À partir d'un audit */}
                 {hasAuditHistory ? (
                   <Card 
@@ -766,6 +1050,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                         <Button 
                           size="sm" 
                           variant="outline"
+                          className="bg-white text-black hover:bg-gray-100"
                           onClick={() => router.push('/dashboard/mase-checker')}
                         >
                           Faire un audit
@@ -775,51 +1060,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                   </Card>
                 )}
 
-                {/* Mode 2: Améliorer vos documents */}
-                {hasDocumentsWithRecommendations ? (
-                  <Card 
-                    className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
-                    onClick={() => handleModeSelection('from-existing')}
-                  >
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <FileCheck className="h-5 w-5" />
-                        Améliorer vos documents
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Appliquez les recommandations de l'audit à vos documents existants
-                      </p>
-                      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                        <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
-                          {documentsForImprovement.length} document(s) peuvent être améliorés
-                        </p>
-                        <p className="text-xs text-blue-600 dark:text-blue-400">
-                          Basé sur les recommandations de votre audit
-                        </p>
-                      </div>
-                      <Badge variant="outline">Amélioration ciblée</Badge>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card className="border-2 border-dashed border-muted-foreground/25 opacity-60">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg text-muted-foreground">
-                        <FileCheck className="h-5 w-5" />
-                        Améliorer vos documents
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Aucun document avec recommandations d'amélioration disponible
-                      </p>
-                      <Badge variant="secondary">Non disponible</Badge>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Mode 3: À partir de 0 */}
+                {/* Mode 2: À partir de 0 */}
                 <Card 
                   className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
                   onClick={() => handleModeSelection('from-scratch')}
@@ -887,19 +1128,30 @@ Date de génération: ${new Date().toLocaleDateString()}`;
               </div>
             </CardHeader>
             <CardContent>
-              {config.mode === 'post-audit' && latestAudit && (
-                <Alert className="mb-4">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <AlertTitle>Documents présélectionnés</AlertTitle>
-                  <AlertDescription>
-                    Basé sur votre audit du {new Date(latestAudit.date).toLocaleDateString()}, 
-                    nous avons présélectionné {
-                      latestAudit.analysisResults?.filter((result: any) => result.score < 80).length || 0
-                    } document(s) {'< 80%'} de conformité sur les {latestAudit.documentsAnalyzed} documents audités. 
-                    Ajustez cette sélection selon vos besoins.
-                  </AlertDescription>
-                </Alert>
-              )}
+              {(() => {
+                const contextualMessage = getContextualMessage();
+                if (!contextualMessage) return null;
+                
+                const alertColorClass = {
+                  'mixed': 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800',
+                  'improve': 'bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800',
+                  'missing': 'bg-purple-50 dark:bg-purple-950 border-purple-200 dark:border-purple-800',
+                  'complete': 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800'
+                }[contextualMessage.type];
+                
+                return (
+                  <Alert className={`mb-4 ${alertColorClass}`}>
+                    <CheckCircle2 className="h-4 w-4" />
+                    <AlertTitle className="flex items-center gap-2">
+                      <span>{contextualMessage.icon}</span>
+                      Présélection intelligente
+                    </AlertTitle>
+                    <AlertDescription>
+                      {contextualMessage.message}
+                    </AlertDescription>
+                  </Alert>
+                );
+              })()}
               
               <Tabs defaultValue="by-axis">
                 <TabsList>
@@ -1259,7 +1511,6 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                     <h4 className="font-semibold mb-2">Mode de génération</h4>
                     <Badge>
                       {config.mode === 'post-audit' && 'À partir d\'un audit'}
-                      {config.mode === 'from-existing' && 'Améliorer vos documents'}
                       {config.mode === 'from-scratch' && 'À partir de 0'}
                     </Badge>
                   </div>
@@ -1309,118 +1560,16 @@ Date de génération: ${new Date().toLocaleDateString()}`;
             </CardContent>
           </Card>
 
-          {/* Choix du type de génération */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Type de génération</CardTitle>
-              <CardDescription>
-                Choisissez le niveau de personnalisation pour vos documents
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <Card 
-                  className={`cursor-pointer transition-all border-2 ${
-                    config.generationType === 'standard' 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                  onClick={() => setConfig({ ...config, generationType: 'standard' })}
-                >
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Wand2 className="h-5 w-5" />
-                      Génération standard
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Documents conformes aux exigences MASE avec vos informations d'entreprise
-                    </p>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        <span>Conformité référentiel MASE</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        <span>Personnalisation automatique</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        <span>Génération rapide</span>
-                      </div>
-                    </div>
-                    <Alert className="mt-4">
-                      <Info className="h-4 w-4" />
-                      <AlertDescription>
-                        Temps estimé: ~{Math.ceil(config.selectedDocs.length * 1)} minute(s)
-                      </AlertDescription>
-                    </Alert>
-                  </CardContent>
-                </Card>
-
-                <Card 
-                  className={`cursor-pointer transition-all border-2 ${
-                    config.generationType === 'personalized' 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                  onClick={() => setConfig({ ...config, generationType: 'personalized' })}
-                >
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Settings className="h-5 w-5" />
-                      Génération personnalisée
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Documents ultra-personnalisés avec vos instructions SSE spécifiques
-                    </p>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        <span>Conformité référentiel MASE</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        <span>Instructions SSE sur mesure</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        <span>Contenu adapté à vos spécificités</span>
-                      </div>
-                    </div>
-                    <Alert className="mt-4">
-                      <Info className="h-4 w-4" />
-                      <AlertDescription>
-                        Temps estimé: ~{Math.ceil(config.selectedDocs.length * 2)} minute(s)
-                      </AlertDescription>
-                    </Alert>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-
           <div className="flex justify-between">
             <Button variant="outline" onClick={() => setCurrentStep('config')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
             </Button>
             
-            {config.generationType === 'standard' ? (
-              <Button onClick={startGeneration}>
-                <Wand2 className="h-4 w-4 mr-2" />
-                Lancer la génération standard
-              </Button>
-            ) : (
-              <Button onClick={() => setCurrentStep('personalization')}>
-                Personnaliser les documents
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            )}
+            <Button onClick={() => setCurrentStep('personalization')}>
+              Personnaliser les documents
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
           </div>
         </div>
       )}

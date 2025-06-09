@@ -38,8 +38,8 @@ export interface MaseAuditResult {
 export interface MaseGenerationResult {
   id: string;
   date: string;
-  mode: 'post-audit' | 'from-existing' | 'from-scratch'; // Ajout du nouveau mode
-  generationType: 'standard' | 'personalized';
+  mode: 'post-audit' | 'from-scratch'; // Seulement 2 modes maintenant
+  generationType: 'personalized'; // Toujours personnalisé maintenant
   documentsGenerated: Array<{
     id: string;
     name: string;

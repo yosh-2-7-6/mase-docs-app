@@ -759,7 +759,7 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" size="sm" onClick={exportCompleteAnalysis}>
+                  <Button variant="default" size="sm" onClick={exportCompleteAnalysis} className="bg-green-600 hover:bg-green-700 text-white">
                     <Download className="h-4 w-4 mr-2" />
                     Rapport Audit
                   </Button>
@@ -787,22 +787,10 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
 
           {/* Results Tabs */}
           <Tabs defaultValue="by-axis" className="space-y-4">
-            <div className="flex items-center justify-between gap-4">
-              <TabsList>
-                <TabsTrigger value="by-axis">Par axe MASE</TabsTrigger>
-                <TabsTrigger value="by-document">Par document</TabsTrigger>
-              </TabsList>
-              <div className="flex gap-2">
-                <Button variant="outline" className="whitespace-nowrap">
-                  <Wand2 className="mr-2 h-4 w-4" />
-                  Améliorer Conformité Documents
-                </Button>
-                <Button className="whitespace-nowrap">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Créer Documents Manquants
-                </Button>
-              </div>
-            </div>
+            <TabsList>
+              <TabsTrigger value="by-axis">Par axe MASE</TabsTrigger>
+              <TabsTrigger value="by-document">Par document</TabsTrigger>
+            </TabsList>
 
             <TabsContent value="by-axis" className="space-y-4">
               {axisScores.map((axis, index) => (
@@ -890,6 +878,7 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                                   setSelectedDocument(documents.find(d => d.id === result.documentId) || null);
                                   setShowPreview(true);
                                 }}
+                                title="Voir le document"
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
@@ -897,9 +886,25 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => exportDocumentAnalysis(result)}
+                                title="Télécharger l'analyse"
                               >
                                 <Download className="h-4 w-4" />
                               </Button>
+                              {result.score < 80 && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => {
+                                    // Navigation directe vers MASE GENERATOR avec présélection intelligente
+                                    MaseStateManager.setNavigationMode('post-audit-direct');
+                                    router.push('/dashboard/mase-generator');
+                                  }}
+                                  className="bg-amber-600 hover:bg-amber-700 text-white"
+                                  title="Améliorer ce document"
+                                >
+                                  <Wand2 className="h-4 w-4" />
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -990,7 +995,7 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                               }}
                             >
                               <Wand2 className="h-4 w-4 mr-2" />
-                              Générer documents conformes
+                              Améliorer ces documents
                             </Button>
                           </div>
                         </CardHeader>

@@ -534,3 +534,179 @@ rm /mnt/d/Dev/Projets/mase-docs-app/components/ui/custom-trash-icon.tsx
 - **Accessibility**: Icônes lisibles, zones de clic appropriées
 
 L'application MASE DOCS est maintenant complètement optimisée avec une interface utilisateur professionnelle et intuitive. Toutes les demandes d'optimisation ont été implémentées avec succès.
+
+---
+
+## Session Continuation: MASE GENERATOR Final Refactoring (Janvier 2025)
+
+### Task 19: Architecture Simplification - Mode Unique Intelligent
+
+**Objective:** Finaliser la refactorisation complète de MASE GENERATOR selon les spécifications finales : suppression du 3ème mode et génération personnalisée forcée.
+
+### Requirements Implemented:
+
+#### **🔄 Refactorisation Mode Unique Intelligent** ✅
+
+**Spécifications finales confirmées :**
+- **Seulement 2 modes** : "À partir d'un audit" et "À partir de 0"
+- **Génération personnalisée forcée** pour TOUS les modes (plus de choix standard vs personnalisé)
+- **Étape personnalisation obligatoire** : Toujours 7 étapes avec personnalisation
+- **Pré-remplissage intelligent** : Instructions automatiques pour documents non conformes
+- **Contenu simulé** : Templates en attendant l'implémentation OCR
+
+#### **1. Suppression Mode "Améliorer vos documents"** ✅
+
+**Implementation :**
+- **Interface utilisateur** : Card du 3ème mode supprimée complètement
+- **Grid layout** : `lg:grid-cols-2` maintenu pour 2 colonnes
+- **Navigation conditionnelle** : Plus de vérification `hasDocumentsWithRecommendations`
+- **Workflow simplifié** : Mode unique intelligent gère amélioration + création
+
+**Code Changes :**
+```typescript
+// Supprimé entièrement :
+// Card "Améliorer vos documents" (lignes ~850-890)
+// Logique hasDocumentsWithRecommendations
+// Mode 'from-existing' des interfaces
+
+// Conservé :
+interface GenerationConfig {
+  mode: 'post-audit' | 'from-scratch'; // Seulement 2 modes
+  generationType: 'personalized'; // Toujours personnalisé
+  // ...
+}
+```
+
+#### **2. Architecture TypeScript Mise à Jour** ✅
+
+**Interfaces refactorisées :**
+```typescript
+// MaseGenerationResult interface
+mode: 'post-audit' | 'from-scratch'; // Plus de 'from-existing'
+generationType: 'personalized'; // Plus de choix standard/personnalisé
+
+// GenerationConfig interface  
+generationType: 'personalized'; // Forcé en personnalisé
+```
+
+**Suppression références obsolètes :**
+- ✅ Mode `'from-existing'` supprimé partout
+- ✅ Mode `'complete'` remplacé par `'from-scratch'`
+- ✅ Choix `'standard'` supprimé (toujours `'personalized'`)
+
+#### **3. Workflow 7 Étapes Obligatoires** ✅
+
+**Étapes finales standardisées :**
+1. **Mode** - Sélection entre 2 modes
+2. **Selection** - Choix des documents  
+3. **Config** - Configuration style et entreprise
+4. **Info** - Récapitulatif (plus de choix standard/personnalisé)
+5. **Personalization** - Instructions SSE (obligatoire)
+6. **Generation** - Génération en cours
+7. **Results** - Résultats finaux
+
+**Step counting corrigé :**
+```typescript
+const getStepNumber = () => {
+  const stepMapping: { [key: string]: number } = {
+    'mode': 1, 'selection': 2, 'config': 3, 'info': 4,
+    'personalization': 5, 'generation': 6, 'results': 7
+  };
+  return stepMapping[currentStep] || 1;
+};
+
+const getTotalSteps = () => 7; // Toujours 7 étapes maintenant
+```
+
+#### **4. Mode Unique Intelligent Implémenté** ✅
+
+**Logique unifiée :**
+- **Mode post-audit** : Détection automatique des documents <80% + documents manquants
+- **Présélection intelligente** : Combine amélioration + création dans une sélection
+- **Pré-remplissage automatique** : Instructions générées pour documents non conformes
+- **Messages contextuels** : Explications adaptées selon le mix amélioration/création
+
+**Algorithm core :**
+```typescript
+const getIntelligentPreselection = () => {
+  const preselected = [];
+  
+  // Documents à améliorer (< 80%)
+  const documentsToImprove = getDocumentsNeedingImprovement();
+  preselected.push(...documentsToImprove.map(doc => doc.id));
+  
+  // Documents MASE manquants
+  const missingDocs = getMissingMandatoryDocuments();
+  preselected.push(...missingDocs.map(doc => doc.id));
+  
+  return Array.from(new Set(preselected));
+};
+```
+
+#### **5. Templates de Contenu Simulé** ✅
+
+**20 documents MASE** avec contenu pré-défini :
+```typescript
+const DOCUMENT_CONTENT_TEMPLATES: Record<string, string> = {
+  'politique-sse': `POLITIQUE SANTÉ, SÉCURITÉ ET ENVIRONNEMENT...`,
+  'organigramme': `ORGANIGRAMME SSE...`,
+  'plan-formation': `PLAN DE FORMATION SSE ANNUEL...`,
+  // ... 17 autres templates
+};
+```
+
+**Fonctionnalités :**
+- **Contenu simulé réaliste** pour 6 documents clés
+- **Personnalisation automatique** avec informations entreprise
+- **Instructions d'amélioration** pré-remplies en mode post-audit
+- **Architecture prête** pour intégration OCR future
+
+### **🎯 Résultats Finaux**
+
+#### **Architecture Simplifiée** ✅
+- **2 modes seulement** : Workflow clair et intuitif
+- **Génération forcée personnalisée** : Meilleure qualité garantie
+- **Logic unifiée** : Mode intelligent gère tous les cas
+- **Code nettoyé** : Plus de références obsolètes
+
+#### **UX Optimisée** ✅
+- **Workflow linéaire** : 7 étapes cohérentes pour tous
+- **Présélection intelligente** : Documents pertinents pré-sélectionnés
+- **Instructions pré-remplies** : Guidance automatique pour améliorations
+- **Messages contextuels** : Utilisateur informé de la logique
+
+#### **Performance Technique** ✅
+- **Build réussi** : ✅ Compilation sans erreurs
+- **Types complets** : ✅ Interface TypeScript cohérentes  
+- **Code maintenu** : ✅ Architecture propre et évolutive
+- **Fonctionnalités préservées** : ✅ Toutes les capacités existantes
+
+### **📊 Métriques de Réussite**
+
+#### **Code Quality :**
+- **Interfaces unifiées** : 2 modes au lieu de 3
+- **0 erreurs TypeScript** : Types cohérents partout
+- **Logic simplifiée** : Mode unique intelligent
+- **Architecture future-ready** : Prête pour OCR
+
+#### **User Experience :**
+- **Workflow simplifié** : Moins de choix, plus d'efficacité
+- **Qualité garantie** : Génération personnalisée forcée
+- **Guidance intelligente** : Pré-remplissage automatique
+- **Résultats optimaux** : Focus sur conformité MASE
+
+#### **Business Value :**
+- **Simplicité d'usage** : UX rationalisée sans perte de fonctionnalité
+- **Qualité documentaire** : Personnalisation obligatoire = meilleurs résultats
+- **Workflow intuitif** : De l'audit à l'amélioration en mode unifié
+- **Évolutivité technique** : Architecture prête pour features avancées
+
+### **Current Application Status:**
+
+✅ **MASE GENERATOR** : Refactorisé avec 2 modes et génération personnalisée forcée  
+✅ **Workflow unifié** : Mode unique intelligent gérant amélioration + création  
+✅ **Interface simplifiée** : 7 étapes cohérentes pour tous les modes  
+✅ **Instructions automatiques** : Pré-remplissage intelligent en mode post-audit  
+✅ **Architecture propre** : Code nettoyé sans références obsolètes  
+
+**L'application MASE DOCS est maintenant finalisée avec une architecture simplifiée, un workflow intuitif et une génération de documents de qualité optimale garantie par la personnalisation forcée.** 🚀
