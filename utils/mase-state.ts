@@ -1,5 +1,17 @@
 // Utilitaire pour gérer l'état partagé entre MASE CHECKER et MASE GENERATOR
 
+// Types pour les documents uploadés
+export interface UploadedDocument {
+  id: string;
+  name: string;
+  content?: string; // Contenu temporaire en session
+  type: string;
+  size: number;
+  uploadDate: string;
+  score?: number;
+  recommendations?: string[];
+}
+
 export interface MaseAuditResult {
   id: string;
   date: string;
@@ -20,12 +32,13 @@ export interface MaseAuditResult {
     gaps: string[];
     recommendations: string[];
   }>;
+  uploadedDocuments?: UploadedDocument[]; // Documents uploadés durant l'audit
 }
 
 export interface MaseGenerationResult {
   id: string;
   date: string;
-  mode: 'post-audit' | 'complete';
+  mode: 'post-audit' | 'from-existing' | 'from-scratch'; // Ajout du nouveau mode
   generationType: 'standard' | 'personalized';
   documentsGenerated: Array<{
     id: string;
@@ -43,6 +56,7 @@ export interface MaseGenerationResult {
   personalizedInstructions?: string | { [docId: string]: string };
   completed: boolean;
   auditId?: string; // Lien vers l'audit associé si mode post-audit
+  improvedDocuments?: string[]; // IDs des documents améliorés si mode from-existing
 }
 
 const STORAGE_KEY = 'mase_audit_history';

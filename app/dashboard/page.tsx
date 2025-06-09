@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { DashboardAnalytics, type SimplifiedDashboardData } from "@/utils/dashboard-analytics";
 import { UserProfileManager } from "@/utils/user-profile";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { PriorityActions } from "@/components/dashboard/priority-actions";
 import { ActivityTimeline } from "@/components/dashboard/activity-timeline";
 import { GlobalScoreChart } from "@/components/dashboard/global-score-chart";
@@ -39,7 +41,7 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
-  if (isLoading || !dashboardData) {
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <div>
@@ -57,6 +59,41 @@ export default function DashboardPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           <Skeleton className="h-96" />
           <Skeleton className="h-96" />
+        </div>
+      </div>
+    );
+  }
+
+  // Handle case when no audit has been performed
+  if (!dashboardData || !dashboardData.lastAuditDate) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
+        <div className="max-w-md space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold">Bienvenue sur votre tableau de bord MASE</h1>
+            <p className="text-muted-foreground">
+              Commencez par effectuer un audit ou générer des documents pour voir vos indicateurs.
+            </p>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-2">
+            <a
+              href="/dashboard/mase-checker"
+              className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              Effectuer un audit
+            </a>
+            <a
+              href="/dashboard/mase-generator"
+              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-3 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              Générer des documents
+            </a>
+          </div>
+          
+          <div className="pt-4 text-sm text-muted-foreground">
+            <p>Vous pourrez suivre votre conformité MASE une fois vos premiers documents générés ou audités.</p>
+          </div>
         </div>
       </div>
     );

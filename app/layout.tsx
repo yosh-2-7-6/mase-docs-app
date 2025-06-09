@@ -1,5 +1,6 @@
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { StagewiseToolbar } from '@stagewise/toolbar-next';
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
@@ -31,6 +32,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <StagewiseToolbar
+          config={{
+            plugins: [], // Add your custom plugins here
+          }}
+          />
           {children}
         </ThemeProvider>
       </body>

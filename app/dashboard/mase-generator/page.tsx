@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MaseStateManager } from "@/utils/mase-state";
 import { UserProfileManager } from "@/utils/user-profile";
+import { DocumentManager } from "@/utils/document-manager";
 import { 
   FileText, 
   Wand2, 
@@ -24,7 +25,8 @@ import {
   RefreshCw,
   X,
   AlertTriangle,
-  Trash2
+  Trash2,
+  FileCheck
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,7 +52,7 @@ interface DocumentTemplate {
 }
 
 interface GenerationConfig {
-  mode: 'post-audit' | 'complete';
+  mode: 'post-audit' | 'from-existing' | 'from-scratch';
   selectedDocs: string[];
   generationType: 'standard' | 'personalized';
   personalizedInstructions: { [docId: string]: string };
@@ -59,6 +61,7 @@ interface GenerationConfig {
     primaryColor: string;
     logo: File | null;
   };
+  documentsToImprove?: string[]; // IDs des documents à améliorer pour le mode from-existing
 }
 
 interface CompanyProfile {
@@ -103,11 +106,12 @@ export default function MaseGeneratorPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<'mode' | 'selection' | 'config' | 'info' | 'personalization' | 'generation' | 'results'>('mode');
   const [config, setConfig] = useState<GenerationConfig>({
-    mode: 'complete',
+    mode: 'from-scratch',
     selectedDocs: [],
     generationType: 'standard',
     personalizedInstructions: {},
-    styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null }
+    styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null },
+    documentsToImprove: []
   });
   
   // Profil entreprise (récupéré depuis /settings)
@@ -121,6 +125,10 @@ export default function MaseGeneratorPage() {
   // État de l'historique d'audit (récupéré depuis MASE CHECKER)
   const [hasAuditHistory, setHasAuditHistory] = useState(false);
   const [latestAudit, setLatestAudit] = useState<any>(null);
+  
+  // État des documents disponibles pour amélioration
+  const [documentsForImprovement, setDocumentsForImprovement] = useState<any[]>([]);
+  const [hasDocumentsWithRecommendations, setHasDocumentsWithRecommendations] = useState(false);
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -213,9 +221,35 @@ export default function MaseGeneratorPage() {
     };
   }, []);
 
+  // Initialiser les données pour le mode "améliorer documents"
+  useEffect(() => {
+    const loadDocumentsForImprovement = () => {
+      if (hasAuditHistory && latestAudit) {
+        const docsWithRecommendations = DocumentManager.getFilteredDocuments({
+          type: 'original',
+          source: 'mase-checker'
+        }).filter(doc => 
+          doc.metadata.recommendations && 
+          doc.metadata.recommendations.length > 0 &&
+          doc.metadata.auditScore !== undefined &&
+          doc.metadata.auditScore < 80
+        );
+        
+        setDocumentsForImprovement(docsWithRecommendations);
+        setHasDocumentsWithRecommendations(docsWithRecommendations.length > 0);
+      } else {
+        setDocumentsForImprovement([]);
+        setHasDocumentsWithRecommendations(false);
+      }
+    };
+    
+    loadDocumentsForImprovement();
+  }, [hasAuditHistory, latestAudit]);
+
   // Step 1: Mode Selection
   const handleModeSelection = (mode: GenerationConfig['mode']) => {
     let selectedDocs = config.selectedDocs;
+    let documentsToImprove: string[] = [];
     
     // Si mode post-audit, présélectionner les documents à améliorer (<80%)
     if (mode === 'post-audit' && latestAudit && latestAudit.analysisResults) {
@@ -268,7 +302,12 @@ export default function MaseGeneratorPage() {
       selectedDocs = allDocIds;
     }
     
-    setConfig({ ...config, mode, selectedDocs });
+    // Si mode from-existing, préparer la liste des documents à améliorer
+    if (mode === 'from-existing') {
+      documentsToImprove = documentsForImprovement.map(doc => doc.id);
+    }
+    
+    setConfig({ ...config, mode, selectedDocs, documentsToImprove });
     setCurrentStep('selection');
   };
 
@@ -369,6 +408,43 @@ export default function MaseGeneratorPage() {
 
     setIsGenerating(false);
     
+    // Sauvegarder les documents dans DocumentManager
+    const documentIds: string[] = [];
+    
+    generatedDocs.forEach(doc => {
+      const template = DOCUMENT_TEMPLATES.find(t => t.id === doc.templateId);
+      const documentId = DocumentManager.addDocument({
+        name: doc.name,
+        type: config.mode === 'from-existing' ? 'modified' : 'generated',
+        source: 'mase-generator',
+        templateId: doc.templateId,
+        metadata: {
+          templateUsed: config.styling.template,
+          parentDocumentId: config.mode === 'from-existing' ? 
+            config.documentsToImprove?.find(id => 
+              DocumentManager.getDocument(id)?.name.toLowerCase().includes(
+                template?.name.toLowerCase() || ''
+              )
+            ) : undefined
+        }
+      });
+      
+      // Stocker le contenu temporairement
+      DocumentManager.setDocumentContent(documentId, doc.content || '');
+      documentIds.push(documentId);
+    });
+    
+    // Créer un rapport de génération
+    const reportId = DocumentManager.addReport({
+      type: 'generation',
+      summary: `Génération de ${generatedDocs.length} documents en mode ${config.mode}`,
+      documentIds,
+      metadata: {
+        generationType: config.generationType,
+        totalDocuments: generatedDocs.length
+      }
+    });
+    
     // Sauvegarder les résultats de génération
     const generationResult = {
       id: MaseStateManager.generateGenerationId(),
@@ -390,7 +466,8 @@ export default function MaseGeneratorPage() {
       },
       personalizedInstructions: config.generationType === 'personalized' ? config.personalizedInstructions : undefined,
       completed: true,
-      auditId: latestAudit?.id
+      auditId: latestAudit?.id,
+      improvedDocuments: config.mode === 'from-existing' ? config.documentsToImprove : undefined
     };
     
     MaseStateManager.saveGenerationResults(generationResult);
@@ -461,11 +538,12 @@ Date de génération: ${new Date().toLocaleDateString()}`;
     
     setCurrentStep('mode');
     setConfig({
-      mode: 'complete',
+      mode: 'from-scratch',
       selectedDocs: [],
       generationType: 'standard',
       personalizedInstructions: {},
-      styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null }
+      styling: { template: 'moderne', primaryColor: '#3b82f6', logo: null },
+      documentsToImprove: []
     });
     setGeneratedDocuments([]);
     setGenerationProgress(0);
@@ -480,7 +558,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
       'info': 4,
       'personalization': 5, // Seulement en mode personnalisé
       'generation': config.generationType === 'personalized' ? 6 : 5,
-      'results': config.generationType === 'personalized' ? 7 : 6
+      'results': 6
     };
     
     return stepMapping[currentStep] || 1;
@@ -612,7 +690,8 @@ Date de génération: ${new Date().toLocaleDateString()}`;
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 max-w-4xl mx-auto">
+              <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-3 max-w-6xl mx-auto">
+                {/* Mode 1: À partir d'un audit */}
                 {hasAuditHistory ? (
                   <Card 
                     className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
@@ -621,12 +700,12 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-lg">
                         <Search className="h-5 w-5" />
-                        Après audit MASE CHECKER
+                        À partir d'un audit
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Générez les documents manquants identifiés lors de votre audit automatique
+                        Générez les documents manquants identifiés lors de votre audit MASE CHECKER
                       </p>
                       {latestAudit && (
                         <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800 relative group">
@@ -659,12 +738,11 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                             className="text-xs text-blue-600 dark:text-blue-400 mt-1 underline hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Set view mode and navigate to MASE CHECKER results
                               MaseStateManager.setViewMode('view-results');
                               router.push('/dashboard/mase-checker');
                             }}
                           >
-                            💡 Cliquer pour voir les détails
+                            💡 Voir les détails de l'audit
                           </button>
                         </div>
                       )}
@@ -676,7 +754,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-lg text-muted-foreground">
                         <Search className="h-5 w-5" />
-                        Après audit MASE CHECKER
+                        À partir d'un audit
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -697,14 +775,59 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                   </Card>
                 )}
 
+                {/* Mode 2: Améliorer vos documents */}
+                {hasDocumentsWithRecommendations ? (
+                  <Card 
+                    className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
+                    onClick={() => handleModeSelection('from-existing')}
+                  >
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <FileCheck className="h-5 w-5" />
+                        Améliorer vos documents
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Appliquez les recommandations de l'audit à vos documents existants
+                      </p>
+                      <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+                          {documentsForImprovement.length} document(s) peuvent être améliorés
+                        </p>
+                        <p className="text-xs text-blue-600 dark:text-blue-400">
+                          Basé sur les recommandations de votre audit
+                        </p>
+                      </div>
+                      <Badge variant="outline">Amélioration ciblée</Badge>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="border-2 border-dashed border-muted-foreground/25 opacity-60">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg text-muted-foreground">
+                        <FileCheck className="h-5 w-5" />
+                        Améliorer vos documents
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Aucun document avec recommandations d'amélioration disponible
+                      </p>
+                      <Badge variant="secondary">Non disponible</Badge>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Mode 3: À partir de 0 */}
                 <Card 
                   className="cursor-pointer hover:shadow-md transition-shadow border-2 hover:border-primary"
-                  onClick={() => handleModeSelection('complete')}
+                  onClick={() => handleModeSelection('from-scratch')}
                 >
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <Wand2 className="h-5 w-5" />
-                      Génération complète
+                      À partir de 0
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -1135,8 +1258,9 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                   <div>
                     <h4 className="font-semibold mb-2">Mode de génération</h4>
                     <Badge>
-                      {config.mode === 'post-audit' && 'Après audit MASE CHECKER'}
-                      {config.mode === 'complete' && 'Génération complète'}
+                      {config.mode === 'post-audit' && 'À partir d\'un audit'}
+                      {config.mode === 'from-existing' && 'Améliorer vos documents'}
+                      {config.mode === 'from-scratch' && 'À partir de 0'}
                     </Badge>
                   </div>
 

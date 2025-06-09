@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { Upload, FileText, AlertCircle, CheckCircle2, X, Eye, Download, Wand2, RefreshCw, ArrowLeft, ArrowRight, Shield, Info, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { MaseStateManager } from "@/utils/mase-state";
+import { MaseStateManager, UploadedDocument } from "@/utils/mase-state";
+import { DocumentManager } from "@/utils/document-manager";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -246,6 +247,46 @@ export default function MaseCheckerPage() {
     setIsAnalyzing(false);
     setAnalysisComplete(true);
 
+    // Sauvegarder les documents dans DocumentManager
+    const uploadedDocs: UploadedDocument[] = documents.map((doc, index) => {
+      const result = mockResults[index];
+      return {
+        id: doc.id,
+        name: result.documentName, // Utiliser le nom MASE reconnu
+        content: '', // Le contenu réel serait stocké en session
+        type: doc.type,
+        size: parseFloat(doc.size),
+        uploadDate: new Date().toISOString(),
+        score: result.score,
+        recommendations: result.score < 80 ? result.recommendations : undefined
+      };
+    });
+
+    // Ajouter les documents à DocumentManager
+    uploadedDocs.forEach(doc => {
+      DocumentManager.addDocument({
+        name: doc.name,
+        type: 'original',
+        source: 'mase-checker',
+        metadata: {
+          size: doc.size,
+          auditScore: doc.score,
+          recommendations: doc.recommendations
+        }
+      });
+    });
+
+    // Créer un rapport d'audit
+    const reportId = DocumentManager.addReport({
+      type: 'audit',
+      summary: `Audit de ${documents.length} documents - Score global: ${totalScore}%`,
+      documentIds: uploadedDocs.map(d => d.id),
+      metadata: {
+        totalDocuments: documents.length,
+        averageScore: totalScore
+      }
+    });
+
     // Sauvegarder les résultats pour MASE GENERATOR
     const auditResults = {
       id: MaseStateManager.generateAuditId(),
@@ -255,7 +296,8 @@ export default function MaseCheckerPage() {
       axisScores: axisData,
       missingDocuments: mockResults.filter(r => r.score < 80).map(r => r.documentName),
       completed: true,
-      analysisResults: mockResults // Ajouter les résultats détaillés pour MASE GENERATOR
+      analysisResults: mockResults, // Ajouter les résultats détaillés pour MASE GENERATOR
+      uploadedDocuments: uploadedDocs // Ajouter les documents uploadés
     };
     
     MaseStateManager.saveAuditResults(auditResults);
@@ -396,11 +438,14 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">MASE Checker</h1>
-        <p className="text-muted-foreground">
-          Analysez automatiquement vos documents SSE et identifiez les écarts par rapport au référentiel MASE
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">MASE Checker</h1>
+          <p className="text-muted-foreground">
+            Analysez automatiquement vos documents SSE et identifiez les écarts par rapport au référentiel MASE
+          </p>
+        </div>
+
       </div>
 
       {/* Carte bleue pour résultats d'audit existants - avant barre de progression */}
@@ -677,24 +722,12 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Score de conformité global</CardTitle>
+                  <CardTitle>Score Audit</CardTitle>
                   <CardDescription>
                     Évaluation globale de vos documents par rapport au référentiel MASE
                   </CardDescription>
                 </div>
-                <Button
-                  variant="default"
-                  size="default"
-                  onClick={() => {
-                    // Passer en mode post-audit et aller directement à l'étape 2
-                    MaseStateManager.setNavigationMode('post-audit-direct');
-                    router.push('/dashboard/mase-generator');
-                  }}
-                  className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-                >
-                  <Wand2 className="h-5 w-5" />
-                  Améliorer la conformité
-                </Button>
+
               </div>
             </CardHeader>
             <CardContent>
@@ -728,7 +761,7 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" onClick={exportCompleteAnalysis}>
                     <Download className="h-4 w-4 mr-2" />
-                    Rapport complet
+                    Rapport Audit
                   </Button>
                   <Button
                     variant="default"
@@ -745,7 +778,7 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                     className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
                   >
                     <RefreshCw className="h-4 w-4 mr-2" />
-                    Nouvelle analyse
+                    Nouvel Audit
                   </Button>
                 </div>
               </div>
@@ -754,10 +787,22 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
 
           {/* Results Tabs */}
           <Tabs defaultValue="by-axis" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="by-axis">Par axe MASE</TabsTrigger>
-              <TabsTrigger value="by-document">Par document</TabsTrigger>
-            </TabsList>
+            <div className="flex items-center justify-between gap-4">
+              <TabsList>
+                <TabsTrigger value="by-axis">Par axe MASE</TabsTrigger>
+                <TabsTrigger value="by-document">Par document</TabsTrigger>
+              </TabsList>
+              <div className="flex gap-2">
+                <Button variant="outline" className="whitespace-nowrap">
+                  <Wand2 className="mr-2 h-4 w-4" />
+                  Améliorer Conformité Documents
+                </Button>
+                <Button className="whitespace-nowrap">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Créer Documents Manquants
+                </Button>
+              </div>
+            </div>
 
             <TabsContent value="by-axis" className="space-y-4">
               {axisScores.map((axis, index) => (
