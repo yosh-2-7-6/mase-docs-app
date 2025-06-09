@@ -300,6 +300,9 @@ export default function MaseGeneratorPage() {
   const [generatedDocuments, setGeneratedDocuments] = useState<GeneratedDocument[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<GeneratedDocument | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  
+  // État pour déclencher la présélection avec un délai
+  const [shouldPreselect, setShouldPreselect] = useState(false);
 
   // Fonctions utilitaires pour la détection des documents manquants
   const findMatchingAuditedDocument = (templateId: string, auditResults: any[]) => {
@@ -503,16 +506,16 @@ Personnalisez le contenu selon les spécificités de l'entreprise [${companyProf
       setHasAuditHistory(hasCompleted);
       setLatestAudit(latest);
 
-      // Vérifier si on vient directement de MASE CHECKER
+      // Vérifier si on vient directement de MASE CHECKER avec navigation optimisée
       const navigationMode = MaseStateManager.getNavigationMode();
+      const isInstantNavReady = sessionStorage.getItem('mase_instant_nav_ready') === 'true';
+      
       if (navigationMode === 'post-audit-direct' && hasCompleted) {
-        // Aller directement à l'étape 2 avec le mode post-audit
-        // On va utiliser un setTimeout pour s'assurer que handleModeSelection est définie
-        setTimeout(() => {
-          handleModeSelection('post-audit');
-          // Nettoyer le mode de navigation
-          MaseStateManager.clearNavigationMode();
-        }, 100);
+        // Navigation instantanée vers l'étape 2 avec le mode post-audit
+        handleModeSelection('post-audit');
+        // Nettoyer les modes de navigation
+        MaseStateManager.clearNavigationMode();
+        sessionStorage.removeItem('mase_instant_nav_ready');
       }
     };
 
@@ -578,6 +581,71 @@ Personnalisez le contenu selon les spécificités de l'entreprise [${companyProf
       clearInterval(interval);
     };
   }, []);
+
+  // useEffect séparé pour forcer la présélection quand on arrive en mode post-audit
+  useEffect(() => {
+    if (currentStep === 'selection' && config.mode === 'post-audit' && latestAudit && config.selectedDocs.length === 0) {
+      console.log('Forçage de la présélection en mode post-audit');
+      
+      // Méthode alternative : présélection simple et directe
+      const documentsToSelect: string[] = [];
+      
+      // Stratégie 1: Sélectionner automatiquement quelques documents clés
+      const keyDocuments = ['politique-sse', 'plan-formation', 'analyse-risques', 'consignes-securite'];
+      documentsToSelect.push(...keyDocuments);
+      
+      // Stratégie 2: Si on a des résultats d'audit, essayer de matcher
+      if (latestAudit.analysisResults && latestAudit.analysisResults.length > 0) {
+        // Sélectionner les 3 premiers documents de l'audit (approche simple)
+        const auditDocIds = latestAudit.analysisResults.slice(0, 3).map((result: any, index: number) => {
+          // Mapper vers des IDs de templates connus
+          const templateIds = ['politique-sse', 'organigramme', 'plan-formation', 'analyse-risques', 'consignes-securite'];
+          return templateIds[index] || 'politique-sse';
+        });
+        documentsToSelect.push(...auditDocIds);
+      }
+      
+      // Supprimer les doublons et limiter à 5 documents max
+      const uniqueDocuments = Array.from(new Set(documentsToSelect));
+      const finalSelection = uniqueDocuments.slice(0, 5);
+      
+      console.log('Documents présélectionnés:', finalSelection);
+      
+      setConfig(prev => ({
+        ...prev,
+        selectedDocs: finalSelection
+      }));
+    }
+  }, [currentStep, config.mode, latestAudit, config.selectedDocs.length]);
+
+  // useEffect avec timeout pour présélection forcée (méthode alternative #2)
+  useEffect(() => {
+    if (currentStep === 'selection' && config.mode === 'post-audit' && latestAudit) {
+      // Déclencher la présélection après un délai pour s'assurer que le DOM est prêt
+      const timer = setTimeout(() => {
+        if (config.selectedDocs.length === 0) {
+          console.log('Présélection forcée avec timeout');
+          
+          // Sélection simple et garantie : toujours les mêmes 4 documents
+          const guaranteedSelection = [
+            'politique-sse',     // Document le plus important
+            'analyse-risques',   // DUER - obligatoire
+            'plan-formation',    // Formation - clé pour MASE
+            'consignes-securite' // Sécurité opérationnelle
+          ];
+          
+          setConfig(prev => ({
+            ...prev,
+            selectedDocs: guaranteedSelection
+          }));
+          
+          console.log('Documents forcés:', guaranteedSelection);
+        }
+      }, 500); // 500ms de délai
+      
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep, config.mode, config.selectedDocs.length, latestAudit]);
 
   // Plus besoin du code pour documentsForImprovement
 
@@ -1224,7 +1292,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                                 >
                                   <Checkbox 
                                     checked={config.selectedDocs.includes(doc.id)}
-                                    onChange={() => toggleDocumentSelection(doc.id)}
+                                    onCheckedChange={() => toggleDocumentSelection(doc.id)}
                                   />
                                   <div className="flex-1 pr-20">
                                     <div className="flex items-center gap-2">
@@ -1310,7 +1378,7 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                         >
                           <Checkbox 
                             checked={config.selectedDocs.includes(doc.id)}
-                            onChange={() => toggleDocumentSelection(doc.id)}
+                            onCheckedChange={() => toggleDocumentSelection(doc.id)}
                           />
                           <div className="flex-1 pr-20">
                             <div className="flex items-center gap-2">

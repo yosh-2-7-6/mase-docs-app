@@ -904,8 +904,8 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                                   variant="default"
                                   size="sm"
                                   onClick={() => {
-                                    // Navigation directe vers MASE GENERATOR avec présélection intelligente
-                                    MaseStateManager.setNavigationMode('post-audit-direct');
+                                    // Navigation instantanée optimisée vers MASE GENERATOR
+                                    MaseStateManager.setInstantNavigationToGenerator();
                                     router.push('/dashboard/mase-generator');
                                   }}
                                   className="bg-amber-600 hover:bg-amber-700 text-white"
@@ -997,8 +997,8 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                             <Button 
                               variant="default"
                               onClick={() => {
-                                // Passer en mode post-audit et aller directement à l'étape 2
-                                MaseStateManager.setNavigationMode('post-audit-direct');
+                                // Navigation instantanée optimisée vers MASE GENERATOR étape 2
+                                MaseStateManager.setInstantNavigationToGenerator();
                                 setShowAxisPlan(false);
                                 router.push('/dashboard/mase-generator');
                               }}

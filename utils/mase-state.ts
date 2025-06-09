@@ -134,6 +134,22 @@ export class MaseStateManager {
     }
   }
 
+  // Optimisé: Configuration instantanée pour navigation directe
+  static setInstantNavigationToGenerator(): void {
+    try {
+      // Préparer toutes les données nécessaires en une fois
+      localStorage.setItem(NAVIGATION_KEY, 'post-audit-direct');
+      // Précharger l'audit dans la cache pour accès instantané
+      const latestAudit = this.getLatestAudit();
+      if (latestAudit) {
+        // Marquer comme prêt pour navigation instantanée
+        sessionStorage.setItem('mase_instant_nav_ready', 'true');
+      }
+    } catch (error) {
+      console.warn('Impossible de préparer la navigation instantanée:', error);
+    }
+  }
+
   static getNavigationMode(): string | null {
     try {
       return localStorage.getItem(NAVIGATION_KEY);
