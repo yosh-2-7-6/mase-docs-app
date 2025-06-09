@@ -1605,12 +1605,6 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                   
                   if (config.mode === 'post-audit' && latestAudit && latestAudit.analysisResults) {
                     const matchingAudit = findMatchingAuditedDocument(docId, latestAudit.analysisResults);
-                    console.log('Debug étape 5/7:', {
-                      docId,
-                      doc: doc?.name,
-                      matchingAudit,
-                      latestAuditCount: latestAudit.analysisResults.length
-                    });
                     if (matchingAudit) {
                       auditScore = matchingAudit.score;
                       // Générer des recommandations fictives basées sur le score
@@ -1722,10 +1716,30 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                             />
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
                               <span>
-                                {(config.personalizedInstructions && config.personalizedInstructions[docId]?.length) || 0} caractères
+                                {(() => {
+                                  // Calculer la longueur du texte réellement affiché
+                                  if (config.personalizedInstructions && config.personalizedInstructions[docId]) {
+                                    return config.personalizedInstructions[docId].length;
+                                  }
+                                  
+                                  if (needsImprovement && auditScore !== undefined) {
+                                    const prefilledText = `Veuillez corriger les points suivants identifiés lors de l'audit (score actuel: ${auditScore}%):\n\n` +
+                                      `1. Mettre à jour la structure documentaire selon le référentiel MASE 2022\n` +
+                                      `2. Intégrer les spécificités de votre secteur "${companyProfile.sector}"\n` +
+                                      `3. Détailler les responsabilités et les procédures opérationnelles\n` +
+                                      `4. Ajouter des indicateurs de performance et de suivi\n` +
+                                      `5. Mentionner vos certifications et qualifications spécifiques`;
+                                    return prefilledText.length;
+                                  }
+                                  
+                                  return 0;
+                                })()} caractères
                               </span>
-                              {!(config.personalizedInstructions && config.personalizedInstructions[docId]) && (
+                              {!config.personalizedInstructions?.[docId] && !needsImprovement && (
                                 <span className="text-amber-600">Optionnel - document généré avec contenu standard si vide</span>
+                              )}
+                              {!config.personalizedInstructions?.[docId] && needsImprovement && (
+                                <span className="text-blue-600">Instructions pré-remplies selon l'audit</span>
                               )}
                             </div>
                           </div>
