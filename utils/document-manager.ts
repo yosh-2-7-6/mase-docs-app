@@ -76,6 +76,32 @@ export class DocumentManager {
   }
 
   /**
+   * Force le rechargement des données depuis le stockage
+   */
+  static forceReload(): void {
+    console.log('Force reload des documents...');
+    
+    // Recharger depuis localStorage
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        this.registry = JSON.parse(stored);
+        console.log('Documents rechargés:', this.registry.documents.length);
+        console.log('Rapports rechargés:', this.registry.reports.length);
+      } catch (e) {
+        console.error('Erreur lors du rechargement du registre:', e);
+      }
+    } else {
+      console.log('Aucune donnée trouvée dans localStorage, réinitialisation');
+      this.registry = {
+        documents: [],
+        reports: [],
+        lastUpdated: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
    * Génère un ID unique pour un document
    */
   static generateDocumentId(): string {
@@ -256,6 +282,27 @@ export class DocumentManager {
   }
 
   /**
+   * Supprime tous les documents d'une source spécifique
+   */
+  static clearDocumentsBySource(source: 'mase-checker' | 'mase-generator'): void {
+    const beforeCount = this.registry.documents.length;
+    this.registry.documents = this.registry.documents.filter(doc => doc.source !== source);
+    const afterCount = this.registry.documents.length;
+    console.log(`Supprimés ${beforeCount - afterCount} documents de ${source}`);
+    this.save();
+  }
+
+  /**
+   * Supprime tous les documents et rapports (garde l'historique des rapports)
+   */
+  static clearAllDocuments(): void {
+    console.log(`Suppression de ${this.registry.documents.length} documents`);
+    this.registry.documents = [];
+    // Garder les rapports pour l'historique
+    this.save();
+  }
+
+  /**
    * Nettoie les documents de plus de 30 jours
    */
   private static cleanOldDocuments(): void {
@@ -302,6 +349,40 @@ export class DocumentManager {
   static getDocumentContent(id: string): string | null {
     const sessionData = this.getSessionData();
     return sessionData[id] || null;
+  }
+
+  /**
+   * Récupère le contenu d'un rapport
+   */
+  static getReportContent(id: string): string | null {
+    const report = this.registry.reports.find(r => r.id === id);
+    if (!report) return null;
+
+    return `RAPPORT ${report.type.toUpperCase()}
+========================================
+
+Date de génération: ${new Date(report.date).toLocaleDateString('fr-FR')}
+Type: ${report.type === 'audit' ? 'Rapport d\'audit MASE' : 'Rapport de génération de documents'}
+
+RÉSUMÉ
+-------
+${report.summary}
+
+DOCUMENTS ASSOCIÉS
+------------------
+${report.documentIds.map(docId => {
+  const doc = this.getDocument(docId);
+  return doc ? `- ${doc.name} (${doc.type})` : `- Document ID: ${docId}`;
+}).join('\n')}
+
+MÉTADONNÉES
+-----------
+${report.metadata ? Object.entries(report.metadata)
+  .map(([key, value]) => `${key}: ${value}`)
+  .join('\n') : 'Aucune métadonnée disponible'}
+
+Généré automatiquement par MASE DOCS
+`;
   }
 
   /**

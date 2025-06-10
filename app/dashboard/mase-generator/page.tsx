@@ -315,17 +315,37 @@ export default function MaseGeneratorPage() {
     return auditResults.find((result: any) => {
       const resultName = result.documentName.toLowerCase();
       
-      // Correspondance exacte du nom
-      if (templateName === resultName || 
-          templateName.includes(resultName) || 
-          resultName.includes(templateName)) {
-        return true;
+      // Correspondance directe pour certains documents communs
+      const directMapping: Record<string, string[]> = {
+        'politique-sse': ['politique sse'],
+        'organigramme': ['organigramme sse'],
+        'plan-formation': ['plan de formation'],
+        'habilitations': ['matrice des habilitations'],
+        'procedure-preparation': ['procédure de préparation'],
+        'check-list': ['check-list interventions'],
+        'consignes-securite': ['consignes de sécurité'],
+        'fiche-poste': ['fiche de poste'],
+        'retour-experience': ['procédure rex'],
+        'indicateurs': ['tableau de bord sse'],
+        'manuel-management': ['manuel management'],
+        'revue-direction': ['revue de direction'],
+        'accueil-securite': ['livret d\'accueil sécurité'],
+        'analyse-risques': ['duer'],
+        'plan-prevention': ['plan de prévention'],
+        'permis-travail': ['permis de travail'],
+        'registre-controles': ['registre des contrôles'],
+        'audit-interne': ['audit interne'],
+        'actions-correctives': ['actions correctives']
+      };
+      
+      // Vérifier d'abord le mapping direct
+      if (directMapping[templateId]) {
+        return directMapping[templateId].some(mapped => resultName === mapped);
       }
       
-      // Correspondance par mots-clés
+      // Sinon, utiliser la correspondance par mots-clés
       return keywords.some(keyword => 
-        resultName.includes(keyword.toLowerCase()) ||
-        keyword.toLowerCase().includes(resultName)
+        resultName.includes(keyword.toLowerCase())
       );
     });
   };
@@ -343,14 +363,20 @@ export default function MaseGeneratorPage() {
   };
 
   const getDocumentsNeedingImprovement = () => {
-    if (!latestAudit?.analysisResults) return [];
+    if (!latestAudit?.analysisResults) {
+      console.log('Pas de résultats d\'audit disponibles');
+      return [];
+    }
     
     const auditResults = latestAudit.analysisResults;
+    console.log('Résultats d\'audit:', auditResults);
     const documentsToImprove: (DocumentTemplate & { auditScore: number; needsImprovement: boolean })[] = [];
     
     DOCUMENT_TEMPLATES.forEach(template => {
       const matchingDoc = findMatchingAuditedDocument(template.id, auditResults);
+      console.log(`Template ${template.id} -> Correspondance:`, matchingDoc);
       if (matchingDoc && matchingDoc.score < 80) {
+        console.log(`Document ${template.id} ajouté (score: ${matchingDoc.score})`);
         documentsToImprove.push({
           ...template,
           auditScore: matchingDoc.score,
@@ -359,21 +385,31 @@ export default function MaseGeneratorPage() {
       }
     });
     
+    console.log('Documents à améliorer final:', documentsToImprove);
     return documentsToImprove;
   };
 
   const getIntelligentPreselection = () => {
+    console.log('=== Début getIntelligentPreselection ===');
+    console.log('latestAudit:', latestAudit);
+    
     const preselected = [];
     
     // Documents audités nécessitant une amélioration (< 80%)
     const documentsToImprove = getDocumentsNeedingImprovement();
+    console.log('Documents à améliorer:', documentsToImprove);
     preselected.push(...documentsToImprove.map(doc => doc.id));
     
     // Documents MASE obligatoires manquants
     const missingDocs = getMissingMandatoryDocuments();
+    console.log('Documents manquants:', missingDocs);
     preselected.push(...missingDocs.map(doc => doc.id));
     
-    return Array.from(new Set(preselected)); // Supprimer les doublons
+    const finalSelection = Array.from(new Set(preselected));
+    console.log('Sélection finale:', finalSelection);
+    console.log('=== Fin getIntelligentPreselection ===');
+    
+    return finalSelection;
   };
 
   const getContextualMessage = () => {
@@ -390,19 +426,19 @@ export default function MaseGeneratorPage() {
     if (improveCount > 0 && missingCount > 0) {
       return {
         type: 'mixed',
-        message: `Basé sur votre audit du ${auditDate}, nous avons présélectionné ${improveCount} document(s) < 80% de conformité et ${missingCount} document(s) manquant(s) MASE sur les ${totalAudited} documents audités. Ajustez cette sélection selon vos besoins.`,
+        message: `Basé sur votre audit du ${auditDate}, nous avons présélectionné ${improveCount} document(s) < 80% de conformité et ${missingCount} document(s) manquant(s) pour compléter votre système de management MASE. Ajustez cette sélection selon vos besoins.`,
         icon: '🎯'
       };
     } else if (improveCount > 0) {
       return {
         type: 'improve',
-        message: `Basé sur votre audit du ${auditDate}, nous avons présélectionné ${improveCount} document(s) < 80% de conformité sur les ${totalAudited} documents audités. Ajustez cette sélection selon vos besoins.`,
+        message: `Basé sur votre audit du ${auditDate}, nous avons présélectionné ${improveCount} document(s) < 80% de conformité pour compléter votre système de management MASE. Ajustez cette sélection selon vos besoins.`,
         icon: '📈'
       };
     } else if (missingCount > 0) {
       return {
         type: 'missing',
-        message: `Nous avons identifié ${missingCount} document(s) MASE obligatoire(s) manquant(s) de votre système documentaire. Ces documents sont présélectionnés pour création.`,
+        message: `Basé sur votre audit du ${auditDate}, nous avons présélectionné ${missingCount} document(s) manquant(s) pour compléter votre système de management MASE. Ajustez cette sélection selon vos besoins.`,
         icon: '📋'
       };
     }
@@ -582,80 +618,70 @@ Personnalisez le contenu selon les spécificités de l'entreprise [${companyProf
     };
   }, []);
 
-  // useEffect séparé pour forcer la présélection quand on arrive en mode post-audit
+  // useEffect pour gérer la présélection quand on navigue directement depuis MASE CHECKER
+  useEffect(() => {
+    // Vérifier si on doit aller directement à l'étape 2 en mode post-audit
+    const navigationMode = MaseStateManager.getNavigationMode();
+    if (navigationMode === 'post-audit-direct' && currentStep === 'mode') {
+      console.log('Navigation directe vers mode post-audit');
+      MaseStateManager.clearNavigationMode();
+      
+      if (hasAuditHistory && latestAudit) {
+        // Appliquer la présélection intelligente
+        const selectedDocs = getIntelligentPreselection();
+        console.log('Documents présélectionnés pour navigation directe:', selectedDocs);
+        
+        setConfig({ 
+          ...config, 
+          mode: 'post-audit',
+          selectedDocs: selectedDocs.length > 0 ? selectedDocs : ['politique-sse', 'analyse-risques', 'plan-formation', 'consignes-securite'],
+          generationType: 'personalized',
+          personalizedInstructions: {}
+        });
+        setCurrentStep('selection');
+      }
+    }
+  }, [currentStep, hasAuditHistory, latestAudit]);
+
+  // useEffect pour présélectionner les documents quand on arrive à l'étape de sélection
   useEffect(() => {
     if (currentStep === 'selection' && config.mode === 'post-audit' && latestAudit && config.selectedDocs.length === 0) {
-      console.log('Forçage de la présélection en mode post-audit');
+      console.log('Déclenchement de la présélection intelligente');
+      const intelligentSelection = getIntelligentPreselection();
       
-      // Méthode alternative : présélection simple et directe
-      const documentsToSelect: string[] = [];
-      
-      // Stratégie 1: Sélectionner automatiquement quelques documents clés
-      const keyDocuments = ['politique-sse', 'plan-formation', 'analyse-risques', 'consignes-securite'];
-      documentsToSelect.push(...keyDocuments);
-      
-      // Stratégie 2: Si on a des résultats d'audit, essayer de matcher
-      if (latestAudit.analysisResults && latestAudit.analysisResults.length > 0) {
-        // Sélectionner les 3 premiers documents de l'audit (approche simple)
-        const auditDocIds = latestAudit.analysisResults.slice(0, 3).map((result: any, index: number) => {
-          // Mapper vers des IDs de templates connus
-          const templateIds = ['politique-sse', 'organigramme', 'plan-formation', 'analyse-risques', 'consignes-securite'];
-          return templateIds[index] || 'politique-sse';
-        });
-        documentsToSelect.push(...auditDocIds);
+      if (intelligentSelection.length > 0) {
+        console.log('Application de la présélection intelligente:', intelligentSelection);
+        setConfig(prev => ({
+          ...prev,
+          selectedDocs: intelligentSelection
+        }));
+      } else {
+        console.log('Pas de documents trouvés, utilisation du fallback');
+        const fallback = ['politique-sse', 'analyse-risques', 'plan-formation', 'consignes-securite'];
+        setConfig(prev => ({
+          ...prev,
+          selectedDocs: fallback
+        }));
       }
-      
-      // Supprimer les doublons et limiter à 5 documents max
-      const uniqueDocuments = Array.from(new Set(documentsToSelect));
-      const finalSelection = uniqueDocuments.slice(0, 5);
-      
-      console.log('Documents présélectionnés:', finalSelection);
-      
-      setConfig(prev => ({
-        ...prev,
-        selectedDocs: finalSelection
-      }));
     }
-  }, [currentStep, config.mode, latestAudit, config.selectedDocs.length]);
-
-  // useEffect avec timeout pour présélection forcée (méthode alternative #2)
-  useEffect(() => {
-    if (currentStep === 'selection' && config.mode === 'post-audit' && latestAudit) {
-      // Déclencher la présélection après un délai pour s'assurer que le DOM est prêt
-      const timer = setTimeout(() => {
-        if (config.selectedDocs.length === 0) {
-          console.log('Présélection forcée avec timeout');
-          
-          // Sélection simple et garantie : toujours les mêmes 4 documents
-          const guaranteedSelection = [
-            'politique-sse',     // Document le plus important
-            'analyse-risques',   // DUER - obligatoire
-            'plan-formation',    // Formation - clé pour MASE
-            'consignes-securite' // Sécurité opérationnelle
-          ];
-          
-          setConfig(prev => ({
-            ...prev,
-            selectedDocs: guaranteedSelection
-          }));
-          
-          console.log('Documents forcés:', guaranteedSelection);
-        }
-      }, 500); // 500ms de délai
-      
-      return () => clearTimeout(timer);
-    }
-  }, [currentStep, config.mode, config.selectedDocs.length, latestAudit]);
+  }, [currentStep, config.mode, latestAudit]); // Ne pas inclure config.selectedDocs pour éviter les boucles
 
   // Plus besoin du code pour documentsForImprovement
 
   // Step 1: Mode Selection
   const handleModeSelection = (mode: GenerationConfig['mode']) => {
-    let selectedDocs = config.selectedDocs;
+    let selectedDocs: string[] = [];
     
     // Si mode post-audit, utiliser la présélection intelligente
     if (mode === 'post-audit' && latestAudit) {
       selectedDocs = getIntelligentPreselection();
+      console.log('Présélection intelligente appliquée:', selectedDocs);
+      
+      // Fallback si aucun document trouvé
+      if (selectedDocs.length === 0) {
+        selectedDocs = ['politique-sse', 'analyse-risques', 'plan-formation', 'consignes-securite'];
+        console.log('Présélection fallback appliquée:', selectedDocs);
+      }
     }
     
     // Toujours en génération personnalisée maintenant
@@ -910,15 +936,15 @@ Date de génération: ${new Date().toLocaleDateString()}`;
       'info': 4,
       'personalization': 5, // Toujours présent maintenant
       'generation': 6,
-      'results': 6
+      'results': 7
     };
     
     return stepMapping[currentStep] || 1;
   };
   
   const getTotalSteps = () => {
-    // Toujours 6 étapes maintenant (avec personnalisation obligatoire)
-    return 6;
+    // 7 étapes avec personnalisation obligatoire
+    return 7;
   };
 
   // Vérifier s'il y a des résultats en mémoire (côté client uniquement)
@@ -1209,7 +1235,6 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                 
                 return (
                   <Alert className={`mb-4 ${alertColorClass}`}>
-                    <CheckCircle2 className="h-4 w-4" />
                     <AlertTitle className="flex items-center gap-2">
                       <span>{contextualMessage.icon}</span>
                       Présélection intelligente

@@ -125,8 +125,9 @@ export default function DashboardPage() {
         conformeDocuments={dashboardData.conformeDocuments}
         nonConformeDocuments={dashboardData.nonCompliantDocuments}
         documentsRequis={dashboardData.documentsRequis}
-        auditScore={dashboardData.globalScore}
+        auditScore={dashboardData.auditScore}
         hasAudit={dashboardData.lastAuditDate !== null}
+        axisScores={dashboardData.axisScores}
       />
 
       {/* Priority Actions & Recent Activity - Limitées à 5 items */}

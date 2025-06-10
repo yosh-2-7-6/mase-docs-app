@@ -63,6 +63,8 @@ export default function DocumentsPage() {
 
   const loadDocuments = () => {
     setLoading(true);
+    
+    // Chargement immédiat pour l'usage normal
     const filteredDocs = DocumentManager.getFilteredDocuments({
       type: typeFilter,
       source: sourceFilter,
@@ -79,6 +81,31 @@ export default function DocumentsPage() {
     setDocuments(searchFiltered);
     setReports(DocumentManager.getAllReports());
     setLoading(false);
+  };
+
+  const forceRefresh = () => {
+    setLoading(true);
+    
+    // Forcer le rechargement des données depuis le stockage
+    DocumentManager.forceReload();
+    
+    setTimeout(() => {
+      const filteredDocs = DocumentManager.getFilteredDocuments({
+        type: typeFilter,
+        source: sourceFilter,
+        dateRange: dateFilter
+      });
+      
+      const searchFiltered = searchTerm 
+        ? filteredDocs.filter(doc => 
+            doc.name.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+        : filteredDocs;
+      
+      setDocuments(searchFiltered);
+      setReports(DocumentManager.getAllReports());
+      setLoading(false);
+    }, 600); // Délai pour l'actualisation forcée
   };
 
   // Recherche
@@ -171,6 +198,21 @@ export default function DocumentsPage() {
     documents.forEach(docItem => handleDownload(docItem));
   };
 
+  const handleDownloadReport = (report: MaseReport) => {
+    // Télécharger le rapport
+    const content = DocumentManager.getReportContent(report.id) || 
+      `Rapport ${report.type === 'audit' ? 'd\'audit' : 'de génération'}\n\n${report.summary}\n\nGénéré le ${formatDate(report.date)}`;
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const dateStr = new Date(report.date).toISOString().split('T')[0];
+    a.download = `rapport-${report.type}-${dateStr}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const getDocumentStats = () => {
     const allDocs = DocumentManager.getAllDocuments();
     return {
@@ -202,10 +244,11 @@ export default function DocumentsPage() {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => loadDocuments()}
+            onClick={() => forceRefresh()}
+            disabled={loading}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Actualiser
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Actualisation...' : 'Actualiser'}
           </Button>
           <Button 
             size="sm"
@@ -215,6 +258,22 @@ export default function DocumentsPage() {
             <Package className="h-4 w-4 mr-2" />
             Tout télécharger
           </Button>
+          {/* Bouton de test en développement */}
+          {process.env.NODE_ENV === 'development' && (
+            <Button 
+              variant="destructive" 
+              size="sm"
+              onClick={() => {
+                if (confirm('Vider tous les documents ? (Test seulement)')) {
+                  DocumentManager.clearAllDocuments();
+                  forceRefresh();
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Test: Vider
+            </Button>
+          )}
         </div>
       </div>
 
@@ -459,7 +518,12 @@ export default function DocumentsPage() {
                     <span className="text-sm text-muted-foreground">
                       {formatDate(report.date)}
                     </span>
-                    <Button variant="ghost" size="sm">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDownloadReport(report)}
+                      title="Télécharger le rapport"
+                    >
                       <Download className="h-4 w-4" />
                     </Button>
                   </div>

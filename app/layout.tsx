@@ -1,7 +1,10 @@
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { StagewiseToolbar } from '@stagewise/toolbar-next';
 import "./globals.css";
+
+// Temporarily disable Stagewise toolbar to fix chunk loading error
+const isDev = false; // process.env.NODE_ENV === 'development';
+let StagewiseToolbar: any = () => null;
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
@@ -32,11 +35,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <StagewiseToolbar
-          config={{
-            plugins: [], // Add your custom plugins here
-          }}
-          />
+          {isDev && (
+            <StagewiseToolbar
+              config={{
+                plugins: [], // Add your custom plugins here
+              }}
+            />
+          )}
           {children}
         </ThemeProvider>
       </body>

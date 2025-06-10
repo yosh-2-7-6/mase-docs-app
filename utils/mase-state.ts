@@ -65,10 +65,19 @@ const VIEW_MODE_KEY = 'mase_view_mode';
 const GENERATION_KEY = 'mase_generation_history';
 const GENERATION_VIEW_KEY = 'mase_generation_view_mode';
 
+// Utilitaire pour vérifier la disponibilité de localStorage
+const isLocalStorageAvailable = (): boolean => {
+  return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+};
+
 export class MaseStateManager {
   // Sauvegarder les résultats d'audit
   static saveAuditResults(results: MaseAuditResult): void {
     try {
+      if (!isLocalStorageAvailable()) {
+        console.warn('localStorage non disponible, impossible de sauvegarder');
+        return;
+      }
       const existingHistory = this.getAuditHistory();
       const updatedHistory = [results, ...existingHistory.slice(0, 4)]; // Garder les 5 derniers
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
@@ -80,6 +89,9 @@ export class MaseStateManager {
   // Récupérer l'historique des audits
   static getAuditHistory(): MaseAuditResult[] {
     try {
+      if (!isLocalStorageAvailable()) {
+        return [];
+      }
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
@@ -90,12 +102,18 @@ export class MaseStateManager {
 
   // Vérifier s'il y a eu au moins un audit complété
   static hasCompletedAudit(): boolean {
+    if (!isLocalStorageAvailable()) {
+      return false;
+    }
     const history = this.getAuditHistory();
     return history.some(audit => audit.completed);
   }
 
   // Récupérer le dernier audit complété
   static getLatestAudit(): MaseAuditResult | null {
+    if (!isLocalStorageAvailable()) {
+      return null;
+    }
     const history = this.getAuditHistory();
     const latestCompleted = history.find(audit => audit.completed);
     return latestCompleted || null;

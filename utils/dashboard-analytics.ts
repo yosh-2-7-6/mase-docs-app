@@ -58,6 +58,7 @@ export interface ActivityItem {
 
 export interface SimplifiedDashboardData {
   globalScore: number | null;
+  auditScore: number | null;  // Score d'audit réel calculé dans MASE CHECKER
   maseStatus: string;
   lastAuditDate: string | null;
   existingDocuments: number;
@@ -65,6 +66,7 @@ export interface SimplifiedDashboardData {
   nonCompliantDocuments: number;
   conformeDocuments: number;
   documentsRequis: number;
+  axisScores: AxisScore[] | null;  // Scores des 5 axes MASE
   priorityActions: PriorityAction[];
   recentActivity: ActivityItem[];
 }
@@ -72,31 +74,26 @@ export interface SimplifiedDashboardData {
 export class DashboardAnalytics {
   
   /**
-   * Calcule le score global de conformité MASE
+   * Récupère le score global de l'audit MASE (calculé dans MASE CHECKER)
+   */
+  static getAuditGlobalScore(): number | null {
+    const auditResults = MaseStateManager.getLatestAudit();
+    if (!auditResults) return null;
+    
+    // Utilise directement le score calculé dans MASE CHECKER
+    return auditResults.globalScore;
+  }
+
+  /**
+   * Calcule le score global de conformité MASE (pour la conformité globale)
    */
   static calculateGlobalScore(): number | null {
     const auditResults = MaseStateManager.getLatestAudit();
     if (!auditResults) return null;
 
-    // Pondération des axes MASE
-    const axisWeights = {
-      'Engagement de la direction': 0.25,
-      'Compétences et qualifications': 0.20,
-      'Préparation et organisation des interventions': 0.20,
-      'Réalisation des interventions': 0.20,
-      'Retour d\'expérience et amélioration continue': 0.15
-    };
-
-    let totalScore = 0;
-    let totalWeight = 0;
-
-    auditResults.axisScores.forEach(axis => {
-      const weight = axisWeights[axis.name as keyof typeof axisWeights] || 0;
-      totalScore += axis.score * weight;
-      totalWeight += weight;
-    });
-
-    return totalWeight > 0 ? Math.round(totalScore / totalWeight) : null;
+    // Pour la conformité globale MASE, on utilise le score d'audit
+    // mais cela pourrait être ajusté avec d'autres facteurs à l'avenir
+    return auditResults.globalScore;
   }
 
   /**
@@ -279,7 +276,7 @@ export class DashboardAnalytics {
     // Activité d'audit
     const auditResults = MaseStateManager.getLatestAudit();
     if (auditResults) {
-      const globalScore = this.calculateGlobalScore();
+      const auditScore = this.getAuditGlobalScore(); // Utilise le vrai score d'audit
       activities.push({
         id: 'audit-' + auditResults.date,
         type: 'audit',
@@ -287,7 +284,7 @@ export class DashboardAnalytics {
         description: 'Analyse complète de vos documents SSE',
         timestamp: auditResults.date,
         metadata: {
-          score: globalScore || undefined,
+          score: auditScore || undefined,
           documentsCount: auditResults.analysisResults?.length
         }
       });
@@ -363,6 +360,7 @@ export class DashboardAnalytics {
    */
   static getSimplifiedDashboardData(): SimplifiedDashboardData {
     const globalScore = this.calculateGlobalScore();
+    const auditScore = this.getAuditGlobalScore(); // Vrai score d'audit
     const auditResults = MaseStateManager.getLatestAudit();
     
     let existingDocuments = 0;
@@ -385,6 +383,7 @@ export class DashboardAnalytics {
     
     return {
       globalScore,
+      auditScore, // Ajouter le vrai score d'audit
       maseStatus: this.getMaseStatus(globalScore),
       lastAuditDate: auditResults?.date || null,
       existingDocuments,
@@ -392,6 +391,7 @@ export class DashboardAnalytics {
       nonCompliantDocuments,
       conformeDocuments,
       documentsRequis,
+      axisScores: this.getAxisScores(), // Ajouter les scores des axes
       priorityActions: this.generatePriorityActions().slice(0, 5), // Limiter à 5
       recentActivity: this.getRecentActivity().slice(0, 5) // Limiter à 5
     };

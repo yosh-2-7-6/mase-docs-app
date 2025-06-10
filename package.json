@@ -31,7 +31,7 @@
     "recharts": "^2.15.3"
   },
   "devDependencies": {
-    "@stagewise/toolbar": "^0.4.4",
+    "@stagewise/toolbar": "^0.4.5",
     "@stagewise/toolbar-next": "^0.4.4",
     "@types/node": "22.10.2",
     "@types/react": "^19.0.2",
