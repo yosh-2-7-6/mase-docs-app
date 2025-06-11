@@ -1112,3 +1112,139 @@ npm run build
 5. **Retour d'expérience et amélioration continue**
 
 **Infrastructure prête** : Le système de mocking respecte parfaitement les contraintes MASE et sera facilement remplaçable par l'IA réelle. 🚀
+
+---
+
+## Correction Vue SQL : `audit_session_stats` (Janvier 2025)
+
+### **🐛 Problème Reporté - Valeurs Aberrantes dans les Statistiques**
+
+L'utilisateur a signalé des valeurs incohérentes dans `audit_session_stats` :
+- **952 documents_conformes** (au lieu de ~7)
+- **1360 documents_a_ameliorer** (au lieu de ~10)  
+- **0 documents_non_conformes** (correct)
+
+Pour 17 documents analysés, ces valeurs étaient **aberrantes**.
+
+### **🔍 Diagnostic du Problème**
+
+#### **Investigation via MCP Supabase**
+```sql
+-- Découverte : audit_session_stats est une VUE, pas une table
+SELECT table_name, table_type FROM information_schema.tables 
+WHERE table_name = 'audit_session_stats';
+→ Result: VIEW
+
+-- Analyse de la vue SQL
+SELECT pg_get_viewdef('audit_session_stats'::regclass, true);
+```
+
+#### **Cause Racine Identifiée**
+La vue SQL faisait un `LEFT JOIN` entre `audit_documents` et `audit_results`, causant une **multiplication incorrecte** :
+
+- **17 documents** × **8 critères par document** = **136 audit_results**
+- **Chaque document conforme** compté **8 fois** (une fois par critère)
+- **Documents conformes** : ~7 × 8 = **56** → mais logique SQL défaillante donnait **952**
+
+**Vue défaillante (AVANT) :**
+```sql
+-- Problème : COUNT() sans DISTINCT sur les documents
+COUNT(CASE WHEN ad.conformity_score >= 80 THEN 1 ELSE NULL END) AS documents_conformes
+-- Ceci comptait les critères, pas les documents !
+```
+
+### **✅ Correction Appliquée - Vue SQL Corrigée**
+
+#### **Vue corrigée (APRÈS) :**
+```sql
+DROP VIEW IF EXISTS audit_session_stats;
+
+CREATE VIEW audit_session_stats AS
+SELECT 
+    aud_sess.id AS audit_session_id,
+    aud_sess.user_id,
+    aud_sess.status,
+    aud_sess.global_score,
+    COUNT(DISTINCT ad.id) AS nombre_documents,
+    COUNT(DISTINCT ar.id) AS nombre_criteres_evalues,
+    AVG(ad.conformity_score) AS score_moyen_documents,
+    -- CORRECTION: Compter les DOCUMENTS (pas les critères)
+    COUNT(DISTINCT CASE 
+        WHEN ad.conformity_score >= 80 THEN ad.id 
+        ELSE NULL 
+    END) AS documents_conformes,
+    COUNT(DISTINCT CASE 
+        WHEN ad.conformity_score < 80 AND ad.conformity_score >= 60 THEN ad.id 
+        ELSE NULL 
+    END) AS documents_a_ameliorer,
+    COUNT(DISTINCT CASE 
+        WHEN ad.conformity_score < 60 THEN ad.id 
+        ELSE NULL 
+    END) AS documents_non_conformes
+FROM audit_sessions aud_sess
+LEFT JOIN audit_documents ad ON ad.audit_session_id = aud_sess.id
+LEFT JOIN audit_results ar ON ar.audit_session_id = aud_sess.id
+GROUP BY aud_sess.id, aud_sess.user_id, aud_sess.status, aud_sess.global_score;
+```
+
+**Changement clé** : Ajout de `DISTINCT` dans les `COUNT(CASE...)` pour compter les documents uniques, pas les critères.
+
+### **📊 Validation de la Correction**
+
+#### **Résultats AVANT correction :**
+```
+documents_conformes: 952 ❌
+documents_a_ameliorer: 1360 ❌  
+documents_non_conformes: 0 ✓
+```
+
+#### **Résultats APRÈS correction :**
+```
+documents_conformes: 7 ✅
+documents_a_ameliorer: 10 ✅
+documents_non_conformes: 0 ✅
+Total: 17 documents ✅
+```
+
+#### **Vérification manuelle :**
+```sql
+-- Comptage manuel pour validation
+SELECT 
+  COUNT(*) FILTER (WHERE conformity_score >= 80) as conformes,
+  COUNT(*) FILTER (WHERE conformity_score < 80 AND conformity_score >= 60) as a_ameliorer,
+  COUNT(*) FILTER (WHERE conformity_score < 60) as non_conformes
+FROM audit_documents WHERE audit_session_id = 'fc615be3-0401-44e5-afbb-5c5f9a8b39dd';
+
+→ Result: 7, 10, 0 ✅ (identique à la vue corrigée)
+```
+
+### **🔍 Analyse d'Impact sur le Codebase**
+
+**Recherche exhaustive des usages** via l'agent :
+- ✅ **Aucun fichier de code** n'utilise directement `audit_session_stats`
+- ✅ **`utils/dashboard-analytics.ts`** utilise `MaseStateManager` (pas la vue)
+- ✅ **`utils/supabase/database.ts`** a `getDashboardStats()` mais n'utilise pas la vue
+- ✅ **Compilation successful** : `npm run build` → 0 erreurs
+
+### **📋 Signification des Champs Clarifiée**
+
+La vue `audit_session_stats` compte maintenant correctement :
+
+| Champ | Signification | Seuils |
+|-------|---------------|---------|
+| **`documents_conformes`** | Documents avec score satisfaisant | ≥ 80% |
+| **`documents_a_ameliorer`** | Documents nécessitant des améliorations | 60% - 79% |
+| **`documents_non_conformes`** | Documents nécessitant une refonte | < 60% |
+| **`nombre_documents`** | Total de documents analysés | - |
+| **`nombre_criteres_evalues`** | Total de critères MASE évalués | - |
+
+### **🎯 Résultat Final**
+
+**Problème résolu** : Les statistiques de `audit_session_stats` affichent maintenant les **vrais compteurs de documents** au lieu des compteurs de critères multipliés.
+
+**Cohérence garantie** : 
+- Les valeurs correspondent aux documents réels
+- La vue respecte la logique métier MASE
+- Aucun impact sur le code existant
+
+**Vue prête** : La vue corrigée peut maintenant être utilisée de manière fiable pour les analytics et rapports. 📊✅
