@@ -91,7 +91,7 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }: Onboard
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={() => {}} modal={true}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">
@@ -202,29 +202,24 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }: Onboard
                 </p>
               </div>
 
-              {/* Boutons d'action */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onClose}
-                  className="sm:w-auto"
-                >
-                  Ignorer pour le moment
-                </Button>
+              {/* Boutons d'action - ONBOARDING OBLIGATOIRE */}
+              <div className="flex flex-col gap-3 pt-4">
                 <Button
                   type="submit"
                   disabled={!isFormValid() || isSubmitting}
-                  className="sm:flex-1"
+                  className="w-full"
                 >
-                  {isSubmitting ? 'Enregistrement...' : 'Enregistrer et continuer'}
+                  {isSubmitting ? 'Enregistrement...' : 'Compléter l\'inscription'}
                 </Button>
               </div>
 
-              <p className="text-xs text-muted-foreground text-center pt-2">
-                Ces informations vous permettront de générer des documents personnalisés. 
-                Vous pourrez les modifier à tout moment dans vos paramètres.
-              </p>
+              <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mt-4">
+                <p className="text-xs text-amber-800 dark:text-amber-200 text-center">
+                  ⚠️ <strong>Inscription obligatoire</strong><br/>
+                  Ces informations sont nécessaires pour accéder à la plateforme MASE Docs. 
+                  Vous pourrez les modifier à tout moment dans vos paramètres.
+                </p>
+              </div>
             </form>
           </CardContent>
         </Card>

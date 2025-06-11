@@ -26,11 +26,12 @@ export default function DashboardWrapper({ children }: DashboardWrapperProps) {
         if (currentUser) {
           setUser(currentUser);
           
-          // Vérifier si c'est la première visite après inscription
-          const isFirstVisit = await UserProfileManager.isFirstVisitAfterSignup(currentUser.email || '');
+          // Vérifier le statut d'onboarding depuis la base de données
+          const userProfile = await UserProfileManager.getUserProfile();
           
-          if (isFirstVisit) {
-            // Attendre un peu pour que la page se charge avant d'afficher la modale
+          // Forcer l'onboarding si pas complété
+          if (!userProfile || !userProfile.isOnboardingCompleted) {
+            console.log('Onboarding required for user:', currentUser.id);
             setTimeout(() => {
               setShowOnboarding(true);
             }, 500);
@@ -50,7 +51,7 @@ export default function DashboardWrapper({ children }: DashboardWrapperProps) {
     if (user) {
       try {
         // Sauvegarder le profil dans Supabase
-        await UserProfileManager.saveUserProfile(user.id, user.email || '', profileData);
+        await UserProfileManager.saveUserProfile(user.id, profileData);
         
         // Fermer la modale
         setShowOnboarding(false);
@@ -65,11 +66,10 @@ export default function DashboardWrapper({ children }: DashboardWrapperProps) {
   };
 
   const handleOnboardingClose = () => {
-    // L'utilisateur ferme la modale sans compléter
-    setShowOnboarding(false);
-    
-    // Optionnel: enregistrer qu'il a ignoré l'onboarding
-    // mais ne pas marquer comme complété
+    // ONBOARDING OBLIGATOIRE : Empêcher la fermeture
+    // L'utilisateur ne peut pas accéder à la plateforme sans compléter
+    console.log('Onboarding is mandatory - cannot close without completing');
+    // Ne pas fermer la modale
   };
 
   // Ne rien afficher pendant le chargement

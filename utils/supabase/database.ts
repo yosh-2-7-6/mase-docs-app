@@ -53,7 +53,6 @@ export interface ContenuDocumentCle {
 export interface UserProfile {
   id: string
   user_id: string | null
-  email: string
   full_name: string | null
   company_name: string | null
   sector: string | null
@@ -465,6 +464,8 @@ export class MaseDatabase {
 
     return data.publicUrl
   }
+
+  // User Profile Management methods are defined earlier in the class (around line 205)
 }
 
 // Export singleton instance

@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/client'
 
 export interface UserProfile {
   id: string;
-  email: string;
+  email: string; // Récupéré depuis auth.users (NOT stored in user_profiles table)
   fullName: string;
   companyName: string;
   sector: string;
@@ -29,11 +29,18 @@ const ONBOARDING_COMPLETED_KEY = 'mase_onboarding_completed';
 
 export class UserProfileManager {
   // Sauvegarder le profil utilisateur
-  static async saveUserProfile(userId: string, email: string, profileData: UserProfileData): Promise<UserProfile> {
+  static async saveUserProfile(userId: string, profileData: UserProfileData): Promise<UserProfile> {
+    // Récupérer l'email depuis auth.users
+    const supabase = createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error('User must be authenticated to save profile');
+    }
+
     try {
+
       const dbProfile: Omit<DBUserProfile, 'id' | 'created_at' | 'updated_at'> = {
         user_id: userId,
-        email: email,
         full_name: profileData.fullName,
         company_name: profileData.companyName,
         sector: profileData.sector,
@@ -42,11 +49,19 @@ export class UserProfileManager {
         is_onboarding_completed: true
       };
 
-      const savedProfile = await maseDB.createUserProfile(dbProfile);
+      // Try to update existing profile first, or create new one if it doesn't exist
+      let savedProfile;
+      try {
+        savedProfile = await maseDB.updateUserProfile(userId, dbProfile);
+      } catch (error) {
+        // If update fails (profile doesn't exist), create a new one
+        console.log('Profile does not exist, creating new profile');
+        savedProfile = await maseDB.createUserProfile(dbProfile);
+      }
       
       const profile: UserProfile = {
         id: savedProfile.id,
-        email: savedProfile.email,
+        email: user.email || '', // Email depuis auth.users
         fullName: savedProfile.full_name || '',
         companyName: savedProfile.company_name || '',
         sector: savedProfile.sector || '',
@@ -65,11 +80,15 @@ export class UserProfileManager {
     } catch (error) {
       console.error('Error saving user profile to database:', error);
       
-      // Fallback to localStorage only
+      // Fallback to localStorage only  
       const profile: UserProfile = {
         id: userId,
-        email: email,
-        ...profileData,
+        email: user.email || '', // Email depuis auth.users même en fallback
+        fullName: profileData.fullName,
+        companyName: profileData.companyName,
+        sector: profileData.sector,
+        companySize: profileData.companySize,
+        mainActivities: profileData.mainActivities,
         isOnboardingCompleted: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -99,7 +118,7 @@ export class UserProfileManager {
       if (dbProfile) {
         const profile: UserProfile = {
           id: dbProfile.id,
-          email: dbProfile.email,
+          email: user.email || '', // Email depuis auth.users
           fullName: dbProfile.full_name || '',
           companyName: dbProfile.company_name || '',
           sector: dbProfile.sector || '',
@@ -157,7 +176,7 @@ export class UserProfileManager {
       
       const updatedProfile: UserProfile = {
         id: dbProfile.id,
-        email: dbProfile.email,
+        email: user.email || '', // Email depuis auth.users
         fullName: dbProfile.full_name || '',
         companyName: dbProfile.company_name || '',
         sector: dbProfile.sector || '',

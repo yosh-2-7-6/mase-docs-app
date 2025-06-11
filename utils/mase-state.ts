@@ -167,7 +167,10 @@ export class MaseStateManager {
           analyzedDocuments.forEach(doc => {
             const savedAxis = doc.analysis_results?.axis || 'Axe non défini';
             const axis = MASE_AXES.includes(savedAxis) ? savedAxis : 'Engagement de la direction';
-            const score = Math.round(doc.conformity_score || 0);
+            
+            // Sécuriser le score - éviter NaN
+            const rawScore = doc.conformity_score;
+            const score = (rawScore === null || rawScore === undefined || isNaN(rawScore)) ? 0 : Math.round(rawScore);
             
             if (!axisScoresMap.has(axis)) {
               axisScoresMap.set(axis, { totalScore: 0, count: 0, documentsCount: 0 });
@@ -179,11 +182,19 @@ export class MaseStateManager {
             axisData.documentsCount++;
           });
           
-          const axisScores = Array.from(axisScoresMap.entries()).map(([name, data]) => ({
-            name,
-            score: data.count > 0 ? Math.round(data.totalScore / data.count) : 0,
-            documentsCount: data.documentsCount
-          }));
+          const axisScores = Array.from(axisScoresMap.entries()).map(([name, data]) => {
+            // Triple sécurité pour éviter NaN dans les calculs d'axisScores
+            const safeCount = Math.max(data.count, 1); // Au moins 1 pour éviter division par 0
+            const safeTotalScore = isNaN(data.totalScore) ? 0 : data.totalScore;
+            const averageScore = safeTotalScore / safeCount;
+            const finalScore = isNaN(averageScore) ? 0 : Math.round(averageScore);
+            
+            return {
+              name,
+              score: Math.max(0, Math.min(100, finalScore)), // Score entre 0 et 100
+              documentsCount: data.documentsCount
+            };
+          });
           
           results.push({
             id: session.id,

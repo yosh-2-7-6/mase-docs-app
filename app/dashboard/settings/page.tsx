@@ -41,6 +41,7 @@ const COMPANY_SIZES = [
 export default function SettingsPage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userEmail, setUserEmail] = useState<string>('');
+  const [currentUserId, setCurrentUserId] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -61,6 +62,7 @@ export default function SettingsPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           setUserEmail(user.email || '');
+          setCurrentUserId(user.id); // Set the current user ID
         }
 
         // Récupérer le profil sauvegardé
@@ -105,7 +107,7 @@ export default function SettingsPage() {
         }
       } else {
         // Créer un nouveau profil
-        const newProfile = await UserProfileManager.saveUserProfile('user-temp-id', userEmail, formData);
+        const newProfile = await UserProfileManager.saveUserProfile(currentUserId, formData);
         setUserProfile(newProfile);
       }
 
