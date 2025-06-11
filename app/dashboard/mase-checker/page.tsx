@@ -352,7 +352,6 @@ export default function MaseCheckerPage() {
         
         // Update document in database with analysis results
         await maseDB.updateAuditDocument(auditDoc.id, {
-          document_cle_id: matchedDocument?.id || null,
           status: 'analyzed',
           conformity_score: score,
           analysis_results: {
@@ -368,8 +367,7 @@ export default function MaseCheckerPage() {
               "Détailler les procédures d'évacuation",
               "Définir des KPI mesurables"
             ].slice(0, Math.floor(Math.random() * 3) + 1)
-          },
-          findings: []
+          }
         });
         
         analysisResults.push({
