@@ -1091,11 +1091,30 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                             variant="ghost"
                             size="sm"
                             className="absolute top-2 right-2 h-6 w-6 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/50 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 rounded-md"
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
-                              MaseStateManager.clearHistory();
-                              setHasAuditHistory(false);
-                              setLatestAudit(null);
+                              if (confirm('Êtes-vous sûr de vouloir supprimer ces résultats d\'audit ?')) {
+                                try {
+                                  console.log('Starting audit history deletion from MASE GENERATOR...');
+                                  
+                                  // Clear history via MaseStateManager
+                                  await MaseStateManager.clearHistory();
+                                  console.log('MaseStateManager.clearHistory() completed from MASE GENERATOR');
+                                  
+                                  // Update local state immediately
+                                  setHasAuditHistory(false);
+                                  setLatestAudit(null);
+                                  
+                                  console.log('Local state cleared, redirecting to dashboard...');
+                                  
+                                  // Force full page reload to refresh all components including dashboard
+                                  window.location.href = '/dashboard';
+                                } catch (error) {
+                                  console.error('Error clearing audit history from MASE GENERATOR:', error);
+                                  console.error('Error details:', JSON.stringify(error, null, 2));
+                                  alert('Erreur lors de la suppression: ' + (error instanceof Error ? error.message : 'Erreur inconnue'));
+                                }
+                              }
                             }}
                             title="Supprimer l'historique d'audit"
                           >

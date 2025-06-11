@@ -148,17 +148,36 @@ export class MaseDatabase {
   }
 
   async getCriteria(chapterNumber?: string): Promise<MaseCriterion[]> {
+    console.log('MaseDatabase.getCriteria() called');
+    
+    // Check current user session
+    const { data: { user }, error: userError } = await this.supabase.auth.getUser();
+    console.log('Current user in getCriteria:', user ? user.id : 'No user');
+    if (userError) {
+      console.error('User authentication error in getCriteria:', userError);
+    }
+    
     let query = this.supabase
       .from('criteres_mase')
       .select('*')
 
     if (chapterNumber) {
+      console.log(`Filtering by chapter number: ${chapterNumber}`);
       query = query.eq('chapitre_numero', chapterNumber)
     }
 
+    console.log('Executing criteria query...');
     const { data, error } = await query.order('numero_critere', { ascending: true })
 
-    if (error) throw error
+    if (error) {
+      console.error('❌ Error fetching criteria:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      console.error('Error details:', error.details);
+      throw error;
+    }
+    
+    console.log(`✓ Successfully fetched ${(data || []).length} criteria`);
     return data || []
   }
 
@@ -332,6 +351,16 @@ export class MaseDatabase {
 
     if (error) throw error
     return data || []
+  }
+
+  async getAuditResultsCount(sessionId: string): Promise<number> {
+    const { count, error } = await this.supabase
+      .from('audit_results')
+      .select('*', { count: 'exact', head: true })
+      .eq('audit_session_id', sessionId)
+
+    if (error) throw error
+    return count || 0
   }
 
   // Generation Sessions

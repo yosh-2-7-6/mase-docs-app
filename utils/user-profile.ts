@@ -32,6 +32,7 @@ export class UserProfileManager {
   static async saveUserProfile(userId: string, email: string, profileData: UserProfileData): Promise<UserProfile> {
     try {
       const dbProfile: Omit<DBUserProfile, 'id' | 'created_at' | 'updated_at'> = {
+        user_id: userId,
         email: email,
         full_name: profileData.fullName,
         company_name: profileData.companyName,
@@ -46,12 +47,12 @@ export class UserProfileManager {
       const profile: UserProfile = {
         id: savedProfile.id,
         email: savedProfile.email,
-        fullName: savedProfile.full_name,
-        companyName: savedProfile.company_name,
-        sector: savedProfile.sector,
-        companySize: savedProfile.company_size,
-        mainActivities: savedProfile.main_activities,
-        isOnboardingCompleted: savedProfile.is_onboarding_completed,
+        fullName: savedProfile.full_name || '',
+        companyName: savedProfile.company_name || '',
+        sector: savedProfile.sector || '',
+        companySize: savedProfile.company_size || '',
+        mainActivities: savedProfile.main_activities || '',
+        isOnboardingCompleted: savedProfile.is_onboarding_completed || false,
         createdAt: savedProfile.created_at,
         updatedAt: savedProfile.updated_at
       };
@@ -99,12 +100,12 @@ export class UserProfileManager {
         const profile: UserProfile = {
           id: dbProfile.id,
           email: dbProfile.email,
-          fullName: dbProfile.full_name,
-          companyName: dbProfile.company_name,
-          sector: dbProfile.sector,
-          companySize: dbProfile.company_size,
-          mainActivities: dbProfile.main_activities,
-          isOnboardingCompleted: dbProfile.is_onboarding_completed,
+          fullName: dbProfile.full_name || '',
+          companyName: dbProfile.company_name || '',
+          sector: dbProfile.sector || '',
+          companySize: dbProfile.company_size || '',
+          mainActivities: dbProfile.main_activities || '',
+          isOnboardingCompleted: dbProfile.is_onboarding_completed || false,
           createdAt: dbProfile.created_at,
           updatedAt: dbProfile.updated_at
         };
@@ -157,12 +158,12 @@ export class UserProfileManager {
       const updatedProfile: UserProfile = {
         id: dbProfile.id,
         email: dbProfile.email,
-        fullName: dbProfile.full_name,
-        companyName: dbProfile.company_name,
-        sector: dbProfile.sector,
-        companySize: dbProfile.company_size,
-        mainActivities: dbProfile.main_activities,
-        isOnboardingCompleted: dbProfile.is_onboarding_completed,
+        fullName: dbProfile.full_name || '',
+        companyName: dbProfile.company_name || '',
+        sector: dbProfile.sector || '',
+        companySize: dbProfile.company_size || '',
+        mainActivities: dbProfile.main_activities || '',
+        isOnboardingCompleted: dbProfile.is_onboarding_completed || false,
         createdAt: dbProfile.created_at,
         updatedAt: dbProfile.updated_at
       };

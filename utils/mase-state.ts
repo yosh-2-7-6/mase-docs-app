@@ -76,45 +76,37 @@ export class MaseStateManager {
   // Sauvegarder les résultats d'audit
   static async saveAuditResults(results: MaseAuditResult): Promise<void> {
     try {
-      // Get current user
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      console.log('=== SAVING AUDIT RESULTS TO LOCALSTORAGE ===');
+      console.log('Audit session ID:', results.id);
+      console.log('Documents analyzed:', results.documentsAnalyzed);
+      console.log('Global score:', results.globalScore);
       
-      if (!user) {
-        console.warn('User not authenticated, cannot save audit results');
-        return;
-      }
-
-      // Save to database
-      const auditSession: Omit<AuditSession, 'id' | 'created_at' | 'updated_at'> = {
-        user_id: user.id,
-        session_name: `Audit du ${new Date(results.date).toLocaleDateString()}`,
-        status: results.completed ? 'completed' : 'analysis',
-        global_score: results.globalScore,
-        axis_scores: results.axisScores.reduce((acc, axis) => {
-          acc[axis.name] = axis.score;
-          return acc;
-        }, {} as Record<string, number>),
-        uploaded_documents_count: results.documentsAnalyzed,
-        analyzed_documents_count: results.documentsAnalyzed
-      };
-
-      await maseDB.createAuditSession(auditSession);
-
-      // Backup to localStorage for offline access
+      // NOTE: Ne pas créer de nouvelle session dans la DB !
+      // La session existe déjà dans la DB avec les documents associés
+      // On sauvegarde seulement dans localStorage pour la navigation
+      
       if (isLocalStorageAvailable()) {
         const existingHistory = await this.getAuditHistory();
         const updatedHistory = [results, ...existingHistory.slice(0, 4)];
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
+        console.log('✓ Audit results saved to localStorage');
+        console.log('✓ Session ID in localStorage:', results.id);
+      } else {
+        console.warn('localStorage not available');
       }
     } catch (error) {
-      console.warn('Impossible de sauvegarder les résultats d\'audit:', error);
+      console.error('❌ Error saving audit results to localStorage:', error);
       
       // Fallback to localStorage only
       if (isLocalStorageAvailable()) {
-        const existingHistory = await this.getAuditHistory();
-        const updatedHistory = [results, ...existingHistory.slice(0, 4)];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
+        try {
+          const existingHistory = await this.getAuditHistory();
+          const updatedHistory = [results, ...existingHistory.slice(0, 4)];
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
+          console.log('✓ Fallback save to localStorage successful');
+        } catch (fallbackError) {
+          console.error('❌ Fallback save also failed:', fallbackError);
+        }
       }
     }
   }
@@ -138,26 +130,96 @@ export class MaseStateManager {
       // Get from database
       const auditSessions = await maseDB.getAuditSessions(user.id);
       
-      // Convert to MaseAuditResult format
-      const results: MaseAuditResult[] = auditSessions.map(session => ({
-        id: session.id,
-        date: session.created_at,
-        documentsAnalyzed: session.analyzed_documents_count,
-        globalScore: session.global_score || 0,
-        axisScores: Object.entries(session.axis_scores).map(([name, score]) => ({
-          name,
-          score,
-          documentsCount: 0 // This would need to be calculated from audit_documents
-        })),
-        missingDocuments: [], // This would need to be calculated from analysis
-        completed: session.status === 'completed'
-      }));
+      // Convert to MaseAuditResult format with DB as SINGLE SOURCE OF TRUTH
+      const results: MaseAuditResult[] = [];
+      
+      for (const session of auditSessions.filter(s => s.status === 'completed')) {
+        try {
+          console.log(`MaseStateManager: Processing session ${session.id}`);
+          
+          // Get ALL documents for this session (not just analyzed ones)
+          const allDocuments = await maseDB.getAuditDocuments(session.id);
+          const analyzedDocuments = allDocuments.filter(d => d.status === 'analyzed');
+          
+          console.log(`Session ${session.id}: ${allDocuments.length} total docs, ${analyzedDocuments.length} analyzed`);
+          
+          // Skip sessions without documents (orphaned sessions)
+          if (analyzedDocuments.length === 0) {
+            console.warn(`⚠️ Skipping session ${session.id} - no analyzed documents`);
+            continue;
+          }
+          
+          // Use analyzedDocuments.length for consistency (this is what we actually process)
+          const documentsAnalyzed = analyzedDocuments.length;
+          
+          // Calculate axis scores using the actual analysis results
+          const axisScoresMap = new Map<string, { totalScore: number; count: number; documentsCount: number }>();
+          
+          analyzedDocuments.forEach(doc => {
+            const axis = doc.analysis_results?.axis || 'Axe non défini';
+            const score = Math.round(doc.conformity_score || 0);
+            
+            if (!axisScoresMap.has(axis)) {
+              axisScoresMap.set(axis, { totalScore: 0, count: 0, documentsCount: 0 });
+            }
+            
+            const axisData = axisScoresMap.get(axis)!;
+            axisData.totalScore += score;
+            axisData.count++;
+            axisData.documentsCount++;
+          });
+          
+          const axisScores = Array.from(axisScoresMap.entries()).map(([name, data]) => ({
+            name,
+            score: data.count > 0 ? Math.round(data.totalScore / data.count) : 0,
+            documentsCount: data.documentsCount
+          }));
+          
+          results.push({
+            id: session.id,
+            date: session.completed_at || session.created_at,
+            documentsAnalyzed: documentsAnalyzed, // COHÉRENT avec les documents traités
+            globalScore: Math.round(session.global_score || 0),
+            axisScores: axisScores, // CALCULÉ depuis les vraies données
+            missingDocuments: analyzedDocuments
+              .filter(d => (d.conformity_score || 0) < 80)
+              .map(d => d.document_name), // NOM ORIGINAL
+            completed: true,
+            analysisResults: analyzedDocuments.map(d => ({
+              documentId: d.id,
+              documentName: d.document_name, // NOM ORIGINAL du fichier
+              axis: d.analysis_results?.axis || 'Axe non défini',
+              score: Math.round(d.conformity_score || 0),
+              gaps: d.analysis_results?.gaps || [],
+              recommendations: d.analysis_results?.recommendations || []
+            })),
+            uploadedDocuments: analyzedDocuments.map(d => ({
+              id: d.id,
+              name: d.document_name, // NOM ORIGINAL du fichier
+              content: '',
+              type: d.document_type || 'application/pdf',
+              size: d.file_size || 0,
+              uploadDate: d.created_at,
+              score: d.conformity_score || undefined,
+              recommendations: (d.conformity_score || 0) < 80 ? 
+                d.analysis_results?.recommendations : undefined
+            }))
+          });
+          
+          console.log(`✓ Session ${session.id} processed: ${documentsAnalyzed} documents, score ${session.global_score}%`);
+          
+        } catch (sessionError) {
+          console.error(`Error processing session ${session.id}:`, sessionError);
+          // Continue avec les autres sessions
+        }
+      }
 
       // Update localStorage backup
       if (isLocalStorageAvailable()) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(results.slice(0, 5)));
       }
-
+      
+      console.log(`MaseStateManager.getAuditHistory: Returning ${results.length} audit results`);
       return results;
     } catch (error) {
       console.warn('Impossible de récupérer l\'historique d\'audit:', error);
@@ -186,7 +248,13 @@ export class MaseStateManager {
   static async getLatestAudit(): Promise<MaseAuditResult | null> {
     try {
       const history = await this.getAuditHistory();
+      console.log(`MaseStateManager.getLatestAudit: Found ${history.length} audit(s) in history`);
       const latestCompleted = history.find(audit => audit.completed);
+      if (latestCompleted) {
+        console.log(`Latest audit found: ${latestCompleted.id} from ${latestCompleted.date}`);
+      } else {
+        console.log('No completed audit found');
+      }
       return latestCompleted || null;
     } catch (error) {
       console.warn('Error getting latest audit:', error);
@@ -206,11 +274,147 @@ export class MaseStateManager {
   }
 
   // Effacer l'historique (pour reset)
-  static clearHistory(): void {
+  static async clearHistory(): Promise<void> {
     try {
-      localStorage.removeItem(STORAGE_KEY);
+      console.log('=== STARTING AUDIT HISTORY CLEANUP ===');
+      
+      // Clear localStorage first
+      if (isLocalStorageAvailable()) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(NAVIGATION_KEY);
+        localStorage.removeItem(VIEW_MODE_KEY);
+        console.log('✓ Cleared localStorage audit data');
+      }
+      
+      // Clear from Supabase
+      const supabase = createClient();
+      const { data: { user }, error: getUserError } = await supabase.auth.getUser();
+      
+      if (getUserError) {
+        console.error('Error getting current user:', getUserError);
+        throw new Error(`Authentication error: ${getUserError.message}`);
+      }
+      
+      if (!user) {
+        console.warn('User not authenticated, only cleared localStorage');
+        return;
+      }
+      
+      console.log(`User authenticated: ${user.id}`);
+      
+      // Get all audit sessions for this user
+      const auditSessions = await maseDB.getAuditSessions(user.id);
+      console.log(`Found ${auditSessions.length} audit sessions to delete`);
+      
+      if (auditSessions.length === 0) {
+        console.log('No audit sessions to delete');
+        return;
+      }
+      
+      // Use a batch delete approach for better performance and consistency
+      const sessionIds = auditSessions.map(s => s.id);
+      console.log('Session IDs to delete:', sessionIds);
+      
+      // Step 1: Delete all files from storage
+      console.log('Step 1: Deleting files from storage...');
+      for (const session of auditSessions) {
+        try {
+          const auditDocuments = await maseDB.getAuditDocuments(session.id);
+          console.log(`Session ${session.id}: Found ${auditDocuments.length} documents`);
+          
+          // Delete files from Supabase Storage in batch
+          const filePaths = auditDocuments
+            .filter(doc => doc.file_path)
+            .map(doc => doc.file_path!);
+          
+          if (filePaths.length > 0) {
+            const { error: storageError } = await supabase.storage
+              .from('documents')
+              .remove(filePaths);
+            
+            if (storageError) {
+              console.warn(`Storage deletion error for session ${session.id}:`, storageError);
+            } else {
+              console.log(`✓ Deleted ${filePaths.length} files for session ${session.id}`);
+            }
+          }
+        } catch (storageError) {
+          console.warn(`Could not delete files for session ${session.id}:`, storageError);
+        }
+      }
+      
+      // Step 2: Delete database records in correct order (FK constraints)
+      console.log('Step 2: Deleting database records...');
+      console.log('Sessions to delete:', sessionIds);
+      
+      // Check current user for RLS
+      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !currentUser) {
+        throw new Error(`Authentication required for deletion: ${authError?.message || 'No user'}`);
+      }
+      console.log('Current user for deletion:', currentUser.id);
+      
+      // Delete audit_results first (foreign key to audit_documents)
+      console.log('Deleting audit_results...');
+      const { error: resultsError, count: resultsCount } = await supabase
+        .from('audit_results')
+        .delete({ count: 'exact' })
+        .in('audit_session_id', sessionIds);
+      
+      if (resultsError) {
+        console.error('❌ Error deleting audit_results:', resultsError);
+        console.error('Error code:', resultsError.code);
+        console.error('Error message:', resultsError.message);
+        console.error('Error details:', resultsError.details);
+        throw new Error(`Failed to delete audit results: ${resultsError.message}`);
+      }
+      console.log(`✓ Deleted ${resultsCount || 0} audit_results records`);
+      
+      // Delete audit_documents second (foreign key to audit_sessions)
+      console.log('Deleting audit_documents...');
+      const { error: documentsError, count: documentsCount } = await supabase
+        .from('audit_documents')
+        .delete({ count: 'exact' })
+        .in('audit_session_id', sessionIds);
+      
+      if (documentsError) {
+        console.error('❌ Error deleting audit_documents:', documentsError);
+        console.error('Error code:', documentsError.code);
+        console.error('Error message:', documentsError.message);
+        console.error('Error details:', documentsError.details);
+        throw new Error(`Failed to delete audit documents: ${documentsError.message}`);
+      }
+      console.log(`✓ Deleted ${documentsCount || 0} audit_documents records`);
+      
+      // Delete audit_sessions last
+      console.log('Deleting audit_sessions...');
+      const { error: sessionsError, count: sessionsCount } = await supabase
+        .from('audit_sessions')
+        .delete({ count: 'exact' })
+        .in('id', sessionIds);
+      
+      if (sessionsError) {
+        console.error('❌ Error deleting audit_sessions:', sessionsError);
+        console.error('Error code:', sessionsError.code);
+        console.error('Error message:', sessionsError.message);
+        console.error('Error details:', sessionsError.details);
+        throw new Error(`Failed to delete audit sessions: ${sessionsError.message}`);
+      }
+      console.log(`✓ Deleted ${sessionsCount || 0} audit_sessions records`);
+      
+      console.log('=== AUDIT HISTORY CLEANUP COMPLETED SUCCESSFULLY ===');
+      console.log(`Summary: Deleted ${sessionsCount} sessions, ${documentsCount} documents, ${resultsCount} results`);
+      
     } catch (error) {
-      console.warn('Impossible d\'effacer l\'historique:', error);
+      console.error('=== AUDIT HISTORY CLEANUP FAILED ===');
+      console.error('Error during audit history cleanup:', error);
+      
+      // Re-throw with more context
+      if (error instanceof Error) {
+        throw new Error(`Audit cleanup failed: ${error.message}`);
+      } else {
+        throw new Error('Audit cleanup failed with unknown error');
+      }
     }
   }
 

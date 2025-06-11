@@ -79,6 +79,7 @@ export class DashboardAnalytics {
    */
   static async getAuditGlobalScore(): Promise<number | null> {
     const auditResults = await MaseStateManager.getLatestAudit();
+    console.log('DashboardAnalytics.getAuditGlobalScore - audit results:', auditResults ? 'found' : 'null');
     if (!auditResults) return null;
     
     // Utilise directement le score calculé dans MASE CHECKER
@@ -128,8 +129,10 @@ export class DashboardAnalytics {
    */
   static async getCheckerModuleData(): Promise<ModuleData> {
     const auditResults = await MaseStateManager.getLatestAudit();
+    console.log('DashboardAnalytics.getCheckerModuleData - audit results:', auditResults ? 'found' : 'null');
     
     if (!auditResults) {
+      console.log('No audit results found, returning empty state');
       return {
         hasData: false,
         status: "Aucun audit effectué",
@@ -360,9 +363,17 @@ export class DashboardAnalytics {
    * Compile les données simplifiées du dashboard
    */
   static async getSimplifiedDashboardData(): Promise<SimplifiedDashboardData> {
+    console.log('=== DashboardAnalytics.getSimplifiedDashboardData START ===');
     const globalScore = await this.calculateGlobalScore();
     const auditScore = await this.getAuditGlobalScore(); // Vrai score d'audit
     const auditResults = await MaseStateManager.getLatestAudit();
+    
+    console.log('Dashboard data compilation:', {
+      globalScore,
+      auditScore,
+      hasAuditResults: !!auditResults,
+      auditDate: auditResults?.date || 'none'
+    });
     
     let existingDocuments = 0;
     let missingDocuments = 0;
