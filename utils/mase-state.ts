@@ -1,4 +1,6 @@
-// Utilitaire pour gérer l'état partagé entre MASE CHECKER et MASE GENERATOR
+// Utilitaire pour gérer l'état partagé entre MASE CHECKER et MASE GENERATOR avec Supabase
+import { maseDB, AuditSession, GenerationSession, AuditDocument } from '@/utils/supabase/database'
+import { createClient } from '@/utils/supabase/client'
 
 // Types pour les documents uploadés
 export interface UploadedDocument {
@@ -72,57 +74,135 @@ const isLocalStorageAvailable = (): boolean => {
 
 export class MaseStateManager {
   // Sauvegarder les résultats d'audit
-  static saveAuditResults(results: MaseAuditResult): void {
+  static async saveAuditResults(results: MaseAuditResult): Promise<void> {
     try {
-      if (!isLocalStorageAvailable()) {
-        console.warn('localStorage non disponible, impossible de sauvegarder');
+      // Get current user
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.warn('User not authenticated, cannot save audit results');
         return;
       }
-      const existingHistory = this.getAuditHistory();
-      const updatedHistory = [results, ...existingHistory.slice(0, 4)]; // Garder les 5 derniers
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
+
+      // Save to database
+      const auditSession: Omit<AuditSession, 'id' | 'created_at' | 'updated_at'> = {
+        user_id: user.id,
+        session_name: `Audit du ${new Date(results.date).toLocaleDateString()}`,
+        status: results.completed ? 'completed' : 'analysis',
+        global_score: results.globalScore,
+        axis_scores: results.axisScores.reduce((acc, axis) => {
+          acc[axis.name] = axis.score;
+          return acc;
+        }, {} as Record<string, number>),
+        uploaded_documents_count: results.documentsAnalyzed,
+        analyzed_documents_count: results.documentsAnalyzed
+      };
+
+      await maseDB.createAuditSession(auditSession);
+
+      // Backup to localStorage for offline access
+      if (isLocalStorageAvailable()) {
+        const existingHistory = await this.getAuditHistory();
+        const updatedHistory = [results, ...existingHistory.slice(0, 4)];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
+      }
     } catch (error) {
       console.warn('Impossible de sauvegarder les résultats d\'audit:', error);
+      
+      // Fallback to localStorage only
+      if (isLocalStorageAvailable()) {
+        const existingHistory = await this.getAuditHistory();
+        const updatedHistory = [results, ...existingHistory.slice(0, 4)];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedHistory));
+      }
     }
   }
 
   // Récupérer l'historique des audits
-  static getAuditHistory(): MaseAuditResult[] {
+  static async getAuditHistory(): Promise<MaseAuditResult[]> {
     try {
-      if (!isLocalStorageAvailable()) {
+      // Get current user
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // Fallback to localStorage if not authenticated
+        if (isLocalStorageAvailable()) {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          return stored ? JSON.parse(stored) : [];
+        }
         return [];
       }
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
+
+      // Get from database
+      const auditSessions = await maseDB.getAuditSessions(user.id);
+      
+      // Convert to MaseAuditResult format
+      const results: MaseAuditResult[] = auditSessions.map(session => ({
+        id: session.id,
+        date: session.created_at,
+        documentsAnalyzed: session.analyzed_documents_count,
+        globalScore: session.global_score || 0,
+        axisScores: Object.entries(session.axis_scores).map(([name, score]) => ({
+          name,
+          score,
+          documentsCount: 0 // This would need to be calculated from audit_documents
+        })),
+        missingDocuments: [], // This would need to be calculated from analysis
+        completed: session.status === 'completed'
+      }));
+
+      // Update localStorage backup
+      if (isLocalStorageAvailable()) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(results.slice(0, 5)));
+      }
+
+      return results;
     } catch (error) {
       console.warn('Impossible de récupérer l\'historique d\'audit:', error);
+      
+      // Fallback to localStorage
+      if (isLocalStorageAvailable()) {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [];
+      }
       return [];
     }
   }
 
   // Vérifier s'il y a eu au moins un audit complété
-  static hasCompletedAudit(): boolean {
-    if (!isLocalStorageAvailable()) {
+  static async hasCompletedAudit(): Promise<boolean> {
+    try {
+      const history = await this.getAuditHistory();
+      return history.some(audit => audit.completed);
+    } catch (error) {
+      console.warn('Error checking completed audit:', error);
       return false;
     }
-    const history = this.getAuditHistory();
-    return history.some(audit => audit.completed);
   }
 
   // Récupérer le dernier audit complété
-  static getLatestAudit(): MaseAuditResult | null {
-    if (!isLocalStorageAvailable()) {
+  static async getLatestAudit(): Promise<MaseAuditResult | null> {
+    try {
+      const history = await this.getAuditHistory();
+      const latestCompleted = history.find(audit => audit.completed);
+      return latestCompleted || null;
+    } catch (error) {
+      console.warn('Error getting latest audit:', error);
       return null;
     }
-    const history = this.getAuditHistory();
-    const latestCompleted = history.find(audit => audit.completed);
-    return latestCompleted || null;
   }
 
   // Obtenir les documents manquants du dernier audit
-  static getMissingDocuments(): string[] {
-    const latestAudit = this.getLatestAudit();
-    return latestAudit?.missingDocuments || [];
+  static async getMissingDocuments(): Promise<string[]> {
+    try {
+      const latestAudit = await this.getLatestAudit();
+      return latestAudit?.missingDocuments || [];
+    } catch (error) {
+      console.warn('Error getting missing documents:', error);
+      return [];
+    }
   }
 
   // Effacer l'historique (pour reset)
@@ -153,12 +233,12 @@ export class MaseStateManager {
   }
 
   // Optimisé: Configuration instantanée pour navigation directe
-  static setInstantNavigationToGenerator(): void {
+  static async setInstantNavigationToGenerator(): Promise<void> {
     try {
       // Préparer toutes les données nécessaires en une fois
       localStorage.setItem(NAVIGATION_KEY, 'post-audit-direct');
       // Précharger l'audit dans la cache pour accès instantané
-      const latestAudit = this.getLatestAudit();
+      const latestAudit = await this.getLatestAudit();
       if (latestAudit) {
         // Marquer comme prêt pour navigation instantanée
         sessionStorage.setItem('mase_instant_nav_ready', 'true');

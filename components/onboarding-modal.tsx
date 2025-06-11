@@ -72,10 +72,9 @@ export default function OnboardingModal({ isOpen, onClose, onComplete }: Onboard
     setIsSubmitting(true);
 
     try {
-      // Simuler un délai d'enregistrement
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      onComplete(formData);
+      // The actual save will be handled by the parent component (DashboardWrapper)
+      // which has access to the user ID from Supabase
+      await onComplete(formData);
     } catch (error) {
       console.error('Erreur lors de l\'enregistrement:', error);
     } finally {

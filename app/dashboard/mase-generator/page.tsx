@@ -535,9 +535,9 @@ Personnalisez le contenu selon les spécificités de l'entreprise [${companyProf
 
   // Vérifier l'historique d'audit et charger le profil utilisateur au chargement
   useEffect(() => {
-    const checkAuditHistory = () => {
-      const hasCompleted = MaseStateManager.hasCompletedAudit();
-      const latest = MaseStateManager.getLatestAudit();
+    const checkAuditHistory = async () => {
+      const hasCompleted = await MaseStateManager.hasCompletedAudit();
+      const latest = await MaseStateManager.getLatestAudit();
       
       setHasAuditHistory(hasCompleted);
       setLatestAudit(latest);
@@ -555,9 +555,9 @@ Personnalisez le contenu selon les spécificités de l'entreprise [${companyProf
       }
     };
 
-    const loadUserProfile = () => {
+    const loadUserProfile = async () => {
       // Charger le profil utilisateur depuis les paramètres
-      const profile = UserProfileManager.getCompanyProfileForGenerator();
+      const profile = await UserProfileManager.getCompanyProfileForGenerator();
       setCompanyProfile(profile);
     };
 

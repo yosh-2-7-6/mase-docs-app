@@ -64,7 +64,7 @@ export default function SettingsPage() {
         }
 
         // Récupérer le profil sauvegardé
-        const profile = UserProfileManager.getUserProfile();
+        const profile = await UserProfileManager.getUserProfile();
         if (profile) {
           setUserProfile(profile);
           setFormData({
@@ -99,13 +99,13 @@ export default function SettingsPage() {
 
       if (userProfile) {
         // Mettre à jour le profil existant
-        const updatedProfile = UserProfileManager.updateUserProfile(formData);
+        const updatedProfile = await UserProfileManager.updateUserProfile(formData);
         if (updatedProfile) {
           setUserProfile(updatedProfile);
         }
       } else {
         // Créer un nouveau profil
-        const newProfile = UserProfileManager.saveUserProfile('user-temp-id', userEmail, formData);
+        const newProfile = await UserProfileManager.saveUserProfile('user-temp-id', userEmail, formData);
         setUserProfile(newProfile);
       }
 

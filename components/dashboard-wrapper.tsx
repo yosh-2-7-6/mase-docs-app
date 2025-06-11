@@ -27,7 +27,7 @@ export default function DashboardWrapper({ children }: DashboardWrapperProps) {
           setUser(currentUser);
           
           // Vérifier si c'est la première visite après inscription
-          const isFirstVisit = UserProfileManager.isFirstVisitAfterSignup(currentUser.email || '');
+          const isFirstVisit = await UserProfileManager.isFirstVisitAfterSignup(currentUser.email || '');
           
           if (isFirstVisit) {
             // Attendre un peu pour que la page se charge avant d'afficher la modale
@@ -46,16 +46,21 @@ export default function DashboardWrapper({ children }: DashboardWrapperProps) {
     checkOnboardingStatus();
   }, []);
 
-  const handleOnboardingComplete = (profileData: UserProfileData) => {
+  const handleOnboardingComplete = async (profileData: UserProfileData) => {
     if (user) {
-      // Sauvegarder le profil
-      UserProfileManager.saveUserProfile(user.id, user.email || '', profileData);
-      
-      // Fermer la modale
-      setShowOnboarding(false);
-      
-      // Optionnel: afficher une notification de succès
-      console.log('Profil utilisateur enregistré avec succès');
+      try {
+        // Sauvegarder le profil dans Supabase
+        await UserProfileManager.saveUserProfile(user.id, user.email || '', profileData);
+        
+        // Fermer la modale
+        setShowOnboarding(false);
+        
+        // Optionnel: afficher une notification de succès
+        console.log('Profil utilisateur enregistré avec succès');
+      } catch (error) {
+        console.error('Erreur lors de la sauvegarde du profil:', error);
+        // Vous pourriez afficher une notification d'erreur ici
+      }
     }
   };
 

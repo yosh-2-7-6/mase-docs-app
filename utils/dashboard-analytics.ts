@@ -2,6 +2,7 @@
 
 import { MaseStateManager, type MaseGenerationResult } from './mase-state';
 import { UserProfileManager } from './user-profile';
+import { maseDB } from './supabase/database';
 
 // Interfaces pour le dashboard
 export interface DashboardData {
@@ -76,8 +77,8 @@ export class DashboardAnalytics {
   /**
    * Récupère le score global de l'audit MASE (calculé dans MASE CHECKER)
    */
-  static getAuditGlobalScore(): number | null {
-    const auditResults = MaseStateManager.getLatestAudit();
+  static async getAuditGlobalScore(): Promise<number | null> {
+    const auditResults = await MaseStateManager.getLatestAudit();
     if (!auditResults) return null;
     
     // Utilise directement le score calculé dans MASE CHECKER
@@ -87,8 +88,8 @@ export class DashboardAnalytics {
   /**
    * Calcule le score global de conformité MASE (pour la conformité globale)
    */
-  static calculateGlobalScore(): number | null {
-    const auditResults = MaseStateManager.getLatestAudit();
+  static async calculateGlobalScore(): Promise<number | null> {
+    const auditResults = await MaseStateManager.getLatestAudit();
     if (!auditResults) return null;
 
     // Pour la conformité globale MASE, on utilise le score d'audit
@@ -111,8 +112,8 @@ export class DashboardAnalytics {
   /**
    * Récupère les scores par axe MASE
    */
-  static getAxisScores(): AxisScore[] | null {
-    const auditResults = MaseStateManager.getLatestAudit();
+  static async getAxisScores(): Promise<AxisScore[] | null> {
+    const auditResults = await MaseStateManager.getLatestAudit();
     if (!auditResults) return null;
 
     return auditResults.axisScores.map(axis => ({
@@ -125,8 +126,8 @@ export class DashboardAnalytics {
   /**
    * Analyse les données du module MASE CHECKER
    */
-  static getCheckerModuleData(): ModuleData {
-    const auditResults = MaseStateManager.getLatestAudit();
+  static async getCheckerModuleData(): Promise<ModuleData> {
+    const auditResults = await MaseStateManager.getLatestAudit();
     
     if (!auditResults) {
       return {
@@ -136,7 +137,7 @@ export class DashboardAnalytics {
       };
     }
 
-    const globalScore = this.calculateGlobalScore();
+    const globalScore = await this.calculateGlobalScore();
     const documentCount = auditResults.analysisResults?.length || 0;
     
     return {
@@ -187,10 +188,10 @@ export class DashboardAnalytics {
   /**
    * Génère les actions prioritaires basées sur l'analyse
    */
-  static generatePriorityActions(): PriorityAction[] {
+  static async generatePriorityActions(): Promise<PriorityAction[]> {
     const actions: PriorityAction[] = [];
-    const auditResults = MaseStateManager.getLatestAudit();
-    const userProfile = UserProfileManager.getUserProfile();
+    const auditResults = await MaseStateManager.getLatestAudit();
+    const userProfile = await UserProfileManager.getUserProfile();
 
     // 1. Profil incomplet
     if (!userProfile || !userProfile.isOnboardingCompleted) {
@@ -270,13 +271,13 @@ export class DashboardAnalytics {
   /**
    * Récupère l'activité récente
    */
-  static getRecentActivity(): ActivityItem[] {
+  static async getRecentActivity(): Promise<ActivityItem[]> {
     const activities: ActivityItem[] = [];
     
     // Activité d'audit
-    const auditResults = MaseStateManager.getLatestAudit();
+    const auditResults = await MaseStateManager.getLatestAudit();
     if (auditResults) {
-      const auditScore = this.getAuditGlobalScore(); // Utilise le vrai score d'audit
+      const auditScore = await this.getAuditGlobalScore(); // Utilise le vrai score d'audit
       activities.push({
         id: 'audit-' + auditResults.date,
         type: 'audit',
@@ -307,7 +308,7 @@ export class DashboardAnalytics {
     });
 
     // Activité de profil
-    const userProfile = UserProfileManager.getUserProfile();
+    const userProfile = await UserProfileManager.getUserProfile();
     if (userProfile && userProfile.updatedAt) {
       activities.push({
         id: 'profile-' + userProfile.updatedAt,
@@ -327,19 +328,19 @@ export class DashboardAnalytics {
   /**
    * Compile toutes les données du dashboard
    */
-  static getDashboardData(): DashboardData {
-    const globalScore = this.calculateGlobalScore();
-    const auditResults = MaseStateManager.getLatestAudit();
+  static async getDashboardData(): Promise<DashboardData> {
+    const globalScore = await this.calculateGlobalScore();
+    const auditResults = await MaseStateManager.getLatestAudit();
     
     return {
       globalScore,
       maseStatus: this.getMaseStatus(globalScore),
       lastAuditDate: auditResults?.date || null,
-      axisScores: this.getAxisScores(),
-      checkerData: this.getCheckerModuleData(),
+      axisScores: await this.getAxisScores(),
+      checkerData: await this.getCheckerModuleData(),
       generatorData: this.getGeneratorModuleData(),
-      priorityActions: this.generatePriorityActions(),
-      recentActivity: this.getRecentActivity()
+      priorityActions: await this.generatePriorityActions(),
+      recentActivity: await this.getRecentActivity()
     };
   }
 
@@ -358,10 +359,10 @@ export class DashboardAnalytics {
   /**
    * Compile les données simplifiées du dashboard
    */
-  static getSimplifiedDashboardData(): SimplifiedDashboardData {
-    const globalScore = this.calculateGlobalScore();
-    const auditScore = this.getAuditGlobalScore(); // Vrai score d'audit
-    const auditResults = MaseStateManager.getLatestAudit();
+  static async getSimplifiedDashboardData(): Promise<SimplifiedDashboardData> {
+    const globalScore = await this.calculateGlobalScore();
+    const auditScore = await this.getAuditGlobalScore(); // Vrai score d'audit
+    const auditResults = await MaseStateManager.getLatestAudit();
     
     let existingDocuments = 0;
     let missingDocuments = 0;
@@ -391,9 +392,9 @@ export class DashboardAnalytics {
       nonCompliantDocuments,
       conformeDocuments,
       documentsRequis,
-      axisScores: this.getAxisScores(), // Ajouter les scores des axes
-      priorityActions: this.generatePriorityActions().slice(0, 5), // Limiter à 5
-      recentActivity: this.getRecentActivity().slice(0, 5) // Limiter à 5
+      axisScores: await this.getAxisScores(), // Ajouter les scores des axes
+      priorityActions: (await this.generatePriorityActions()).slice(0, 5), // Limiter à 5
+      recentActivity: (await this.getRecentActivity()).slice(0, 5) // Limiter à 5
     };
   }
   

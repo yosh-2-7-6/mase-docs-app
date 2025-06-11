@@ -19,10 +19,10 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadDashboardData = () => {
+    const loadDashboardData = async () => {
       try {
-        const data = DashboardAnalytics.getSimplifiedDashboardData();
-        const profile = UserProfileManager.getUserProfile();
+        const data = await DashboardAnalytics.getSimplifiedDashboardData();
+        const profile = await UserProfileManager.getUserProfile();
         
         setDashboardData(data);
         setUserProfile(profile);
