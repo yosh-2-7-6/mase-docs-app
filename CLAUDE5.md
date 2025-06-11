@@ -984,3 +984,131 @@ npm run build
 **Toutes les fonctionnalités CRUD sont validées** ✓ Create ✓ Read ✓ Update ✓ Delete
 
 **L'étape suivante peut maintenant être l'intégration de l'IA réelle** pour remplacer le système de mocking ! 🎯🚀
+
+---
+
+## Correction Finale : Axes MASE Obligatoires (Janvier 2025)
+
+### **🐛 Problème Reporté - Classification Hors des 5 Axes MASE**
+
+L'utilisateur a signalé que **certains documents étaient parfois classés dans des "Axe 6", "Axe 7", etc.** au lieu d'être OBLIGATOIREMENT répartis dans les 5 axes MASE officiels.
+
+#### **🔍 Diagnostic du Problème**
+
+**Cause racine identifiée** : 
+- Ligne 497 dans `mase-checker/page.tsx` : `const axis = matchedDocument?.axe_principal || MASE_AXES[i % 5];`
+- Le code utilisait `matchedDocument?.axe_principal` qui pouvait contenir des valeurs incorrectes de la DB
+- Même problème dans `MaseStateManager` lors de la reconstruction des résultats
+
+### **✅ Correction Appliquée - Distribution Garantie sur 5 Axes**
+
+#### **1. Correction dans `mase-checker/page.tsx` (Ligne 497)**
+```typescript
+// AVANT : Pouvait utiliser des axes incorrects de la DB
+const axis = matchedDocument?.axe_principal || MASE_AXES[i % 5];
+
+// APRÈS : TOUJOURS un des 5 axes MASE officiels
+// CORRECTION CRITIQUE: TOUJOURS assigner à un des 5 axes MASE officiels
+// L'IA remplacera cette logique de distribution équitable par un vrai classement intelligent
+const axis = MASE_AXES[i % 5]; // Distribution cyclique garantie sur les 5 axes MASE
+```
+
+#### **2. Sécurisation du Chargement des Résultats (Ligne 205)**
+```typescript
+// ÉTAPE 4: Reconstruire analysisResults depuis les VRAIES données DB
+const analysisResultsFromDB: AnalysisResult[] = auditDocuments.map((doc, index) => {
+  const savedAxis = doc.analysis_results?.axis || 'Axe non défini';
+  
+  // SÉCURITÉ: Vérifier que l'axe sauvegardé est valide, sinon corriger
+  const validAxis = MASE_AXES.includes(savedAxis) ? savedAxis : MASE_AXES[index % 5];
+  
+  return {
+    documentId: doc.id,
+    documentName: doc.document_name,
+    axis: validAxis, // TOUJOURS un des 5 axes MASE officiels
+    score: Math.round(doc.conformity_score || 0),
+    gaps: doc.analysis_results?.gaps || [],
+    recommendations: doc.analysis_results?.recommendations || []
+  };
+});
+```
+
+#### **3. Sécurisation dans `MaseStateManager` (utils/mase-state.ts)**
+```typescript
+// SÉCURITÉ: Définition des 5 axes MASE officiels
+const MASE_AXES = [
+  "Engagement de la direction",
+  "Compétences et qualifications", 
+  "Préparation et organisation des interventions",
+  "Réalisation des interventions",
+  "Retour d'expérience et amélioration continue"
+];
+
+analyzedDocuments.forEach(doc => {
+  const savedAxis = doc.analysis_results?.axis || 'Axe non défini';
+  const axis = MASE_AXES.includes(savedAxis) ? savedAxis : 'Engagement de la direction';
+  // ...
+});
+
+// Et dans la reconstruction des analysisResults:
+analysisResults: analyzedDocuments.map((d, index) => {
+  const savedAxis = d.analysis_results?.axis || 'Axe non défini';
+  // SÉCURITÉ: Garantir un des 5 axes MASE officiels (réutilise la définition locale)
+  const validAxis = MASE_AXES.includes(savedAxis) ? savedAxis : MASE_AXES[index % 5];
+  
+  return {
+    documentId: d.id,
+    documentName: d.document_name,
+    axis: validAxis, // TOUJOURS un des 5 axes MASE officiels
+    score: Math.round(d.conformity_score || 0),
+    gaps: d.analysis_results?.gaps || [],
+    recommendations: d.analysis_results?.recommendations || []
+  };
+}),
+```
+
+### **🔧 Stratégie de Distribution Temporaire**
+
+**Approche actuelle (Mocking)** :
+- **Distribution cyclique** : `MASE_AXES[i % 5]` garantit une répartition équitable
+- **Document 1** → Axe 1 (Engagement de la direction)
+- **Document 2** → Axe 2 (Compétences et qualifications)  
+- **Document 3** → Axe 3 (Préparation et organisation des interventions)
+- **Document 4** → Axe 4 (Réalisation des interventions)
+- **Document 5** → Axe 5 (Retour d'expérience et amélioration continue)
+- **Document 6** → Axe 1 (cycle recommence)
+
+**Approche future (IA)** :
+- **Classification intelligente** basée sur le contenu réel des documents
+- **Analyse sémantique** pour déterminer l'axe MASE le plus approprié
+- **Validation** que chaque document reste dans les 5 axes officiels
+
+### **📊 Validation de la Correction**
+
+#### **Build Test** ✅
+```bash
+npm run build
+→ ✓ Compiled successfully in 15.0s
+→ ✓ Linting and checking validity of types
+→ ✓ Production build créé sans erreurs
+```
+
+#### **Garanties Implémentées** ✅
+1. **Nouveaux audits** : Toujours distribués sur les 5 axes MASE officiels
+2. **Audits existants** : Axes invalides automatiquement corrigés lors du chargement
+3. **Cohérence globale** : Aucun document ne peut être affiché hors des 5 axes
+4. **Préparation IA** : Structure prête pour le remplacement par classification intelligente
+
+### **🎯 Résultat Final**
+
+**Problème résolu** : Plus aucun document ne sera affiché dans des "Axe 6", "Axe 7", etc.
+
+**Distribution garantie** : Tous les documents sont maintenant OBLIGATOIREMENT répartis dans les 5 axes MASE officiels :
+
+1. **Engagement de la direction**
+2. **Compétences et qualifications**
+3. **Préparation et organisation des interventions**  
+4. **Réalisation des interventions**
+5. **Retour d'expérience et amélioration continue**
+
+**Infrastructure prête** : Le système de mocking respecte parfaitement les contraintes MASE et sera facilement remplaçable par l'IA réelle. 🚀

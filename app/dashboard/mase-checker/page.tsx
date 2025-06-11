@@ -203,14 +203,21 @@ export default function MaseCheckerPage() {
       console.log('Documents loaded from DB:', documentsFromDB.map(d => ({ name: d.name, size: d.size })));
       
       // ÉTAPE 4: Reconstruire analysisResults depuis les VRAIES données DB
-      const analysisResultsFromDB: AnalysisResult[] = auditDocuments.map(doc => ({
-        documentId: doc.id,
-        documentName: doc.document_name, // NOM ORIGINAL (pas le nom classifié)
-        axis: doc.analysis_results?.axis || 'Axe non défini',
-        score: Math.round(doc.conformity_score || 0),
-        gaps: doc.analysis_results?.gaps || [],
-        recommendations: doc.analysis_results?.recommendations || []
-      }));
+      const analysisResultsFromDB: AnalysisResult[] = auditDocuments.map((doc, index) => {
+        const savedAxis = doc.analysis_results?.axis || 'Axe non défini';
+        
+        // SÉCURITÉ: Vérifier que l'axe sauvegardé est valide, sinon corriger
+        const validAxis = MASE_AXES.includes(savedAxis) ? savedAxis : MASE_AXES[index % 5];
+        
+        return {
+          documentId: doc.id,
+          documentName: doc.document_name, // NOM ORIGINAL (pas le nom classifié)
+          axis: validAxis, // TOUJOURS un des 5 axes MASE officiels
+          score: Math.round(doc.conformity_score || 0),
+          gaps: doc.analysis_results?.gaps || [],
+          recommendations: doc.analysis_results?.recommendations || []
+        };
+      });
       
       console.log('Analysis results reconstructed from DB:', {
         count: analysisResultsFromDB.length,
@@ -494,7 +501,10 @@ export default function MaseCheckerPage() {
         
         // Use matched document name or a reasonable classification
         const documentName = matchedDocument?.nom_document || classifyDocumentByName(auditDoc.document_name || 'document');
-        const axis = matchedDocument?.axe_principal || MASE_AXES[i % 5];
+        
+        // CORRECTION CRITIQUE: TOUJOURS assigner à un des 5 axes MASE officiels
+        // L'IA remplacera cette logique de distribution équitable par un vrai classement intelligent
+        const axis = MASE_AXES[i % 5]; // Distribution cyclique garantie sur les 5 axes MASE
         
         console.log(`Processing document ${i + 1}/${auditDocuments.length}: ${auditDoc.document_name} -> ${documentName} (${axis})`);
         

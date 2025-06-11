@@ -155,8 +155,18 @@ export class MaseStateManager {
           // Calculate axis scores using the actual analysis results
           const axisScoresMap = new Map<string, { totalScore: number; count: number; documentsCount: number }>();
           
+          // SÉCURITÉ: Définition des 5 axes MASE officiels
+          const MASE_AXES = [
+            "Engagement de la direction",
+            "Compétences et qualifications", 
+            "Préparation et organisation des interventions",
+            "Réalisation des interventions",
+            "Retour d'expérience et amélioration continue"
+          ];
+          
           analyzedDocuments.forEach(doc => {
-            const axis = doc.analysis_results?.axis || 'Axe non défini';
+            const savedAxis = doc.analysis_results?.axis || 'Axe non défini';
+            const axis = MASE_AXES.includes(savedAxis) ? savedAxis : 'Engagement de la direction';
             const score = Math.round(doc.conformity_score || 0);
             
             if (!axisScoresMap.has(axis)) {
@@ -185,14 +195,20 @@ export class MaseStateManager {
               .filter(d => (d.conformity_score || 0) < 80)
               .map(d => d.document_name), // NOM ORIGINAL
             completed: true,
-            analysisResults: analyzedDocuments.map(d => ({
-              documentId: d.id,
-              documentName: d.document_name, // NOM ORIGINAL du fichier
-              axis: d.analysis_results?.axis || 'Axe non défini',
-              score: Math.round(d.conformity_score || 0),
-              gaps: d.analysis_results?.gaps || [],
-              recommendations: d.analysis_results?.recommendations || []
-            })),
+            analysisResults: analyzedDocuments.map((d, index) => {
+              const savedAxis = d.analysis_results?.axis || 'Axe non défini';
+              // SÉCURITÉ: Garantir un des 5 axes MASE officiels (réutilise la définition locale)
+              const validAxis = MASE_AXES.includes(savedAxis) ? savedAxis : MASE_AXES[index % 5];
+              
+              return {
+                documentId: d.id,
+                documentName: d.document_name, // NOM ORIGINAL du fichier
+                axis: validAxis, // TOUJOURS un des 5 axes MASE officiels
+                score: Math.round(d.conformity_score || 0),
+                gaps: d.analysis_results?.gaps || [],
+                recommendations: d.analysis_results?.recommendations || []
+              };
+            }),
             uploadedDocuments: analyzedDocuments.map(d => ({
               id: d.id,
               name: d.document_name, // NOM ORIGINAL du fichier
