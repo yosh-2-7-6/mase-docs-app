@@ -1,6 +1,6 @@
 "use client";
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, LabelList } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
@@ -86,52 +86,52 @@ export function GlobalScoreChart({
   
   // ===== ÉTAPE 3: FONCTIONS DE NETTOYAGE =====
   
+  // Liste des 5 axes MASE officiels
+  const MASE_AXES_NAMES = [
+    'Engagement de la direction',
+    'Compétences et qualifications',
+    'Préparation et organisation des interventions',
+    'Réalisation des interventions',
+    'Retour d\'expérience et amélioration continue'
+  ];
+
   // Nettoyer et valider les données d'axisScores pour éviter les erreurs NaN
   const cleanAxisScores = (scores: AxisScore[] | null): AxisScore[] => {
-    if (!scores || scores.length === 0) {
-      console.log('No axisScores provided, using test data');
-      return testAxisScores;
-    }
-    
-    console.log('Cleaning axisScores, original length:', scores.length);
-    
-    // Protection spéciale pour le cas d'un seul document
-    if (totalDocuments === 1) {
-      console.log('🔍 CAS SPÉCIAL: Un seul document détecté, utilisation de données simulées');
-      // Avec un seul document, on simule une répartition équitable
-      return [
-        { name: 'Engagement de la direction', score: 85, color: 'green' },
-        { name: 'Compétences et qualifications', score: 0, color: 'gray' },
-        { name: 'Préparation et organisation des interventions', score: 0, color: 'gray' },
-        { name: 'Réalisation des interventions', score: 0, color: 'gray' },
-        { name: 'Retour d\'expérience et amélioration continue', score: 0, color: 'gray' }
-      ];
-    }
-    
-    const cleaned = scores.map((axis, index) => {
-      const originalScore = axis.score;
-      let cleanedScore = 0;
+    // Toujours retourner les 5 axes MASE
+    const result: AxisScore[] = MASE_AXES_NAMES.map((axisName, index) => {
+      // Chercher le score correspondant dans les données fournies
+      const foundAxis = scores?.find(s => s.name === axisName);
       
-      if (originalScore === null || originalScore === undefined) {
-        cleanedScore = 0;
-      } else if (isNaN(originalScore)) {
-        console.warn(`⚠️ NaN detected in axis ${axis.name}, setting to 0`);
-        cleanedScore = 0;
-      } else if (originalScore < 0) {
-        cleanedScore = 0;
+      if (foundAxis) {
+        const originalScore = foundAxis.score;
+        let cleanedScore = -1; // -1 pour N/A
+        
+        if (originalScore === null || originalScore === undefined || originalScore < 0) {
+          cleanedScore = -1; // N/A
+        } else if (isNaN(originalScore)) {
+          console.warn(`⚠️ NaN detected in axis ${axisName}, setting to N/A`);
+          cleanedScore = -1;
+        } else {
+          cleanedScore = Math.min(100, Math.round(originalScore));
+        }
+        
+        return {
+          name: axisName,
+          score: cleanedScore,
+          color: cleanedScore >= 0 ? (cleanedScore >= 80 ? 'green' : cleanedScore >= 60 ? 'yellow' : 'red') : 'gray'
+        };
       } else {
-        cleanedScore = Math.min(100, Math.round(originalScore));
+        // Axe non trouvé dans les données, afficher N/A
+        return {
+          name: axisName,
+          score: -1, // -1 pour N/A
+          color: 'gray'
+        };
       }
-      
-      console.log(`  Axis ${index + 1}: ${axis.name} - Original: ${originalScore} → Cleaned: ${cleanedScore}`);
-      
-      return {
-        ...axis,
-        score: cleanedScore
-      };
     });
     
-    return cleaned;
+    console.log('Cleaned axis scores with all 5 MASE axes:', result);
+    return result;
   };
   
   // ===== ÉTAPE 4: TRAITEMENT DES DONNÉES =====
@@ -422,55 +422,62 @@ export function GlobalScoreChart({
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
                   data={displayAxisScores.map((axis, index) => {
-                    const safeMappedScore = safeNumber(axis.score, 0);
-                    console.log(`BarChart mapping - Axe ${index + 1}: ${axis.name} → score: ${safeMappedScore}`);
-                    
-                    // Triple protection pour BarChart
-                    const finalScore = isNaN(safeMappedScore) ? 0 : Math.max(0, Math.min(100, safeMappedScore));
+                    const safeMappedScore = axis.score;
+                    const isNA = safeMappedScore < 0;
                     
                     return {
                       name: `Axe ${index + 1}`,
                       fullName: axis.name,
-                      score: finalScore,
-                      color: axisColors[index] || '#6b7280'
+                      score: isNA ? 1 : safeMappedScore, // 1 au lieu de 0 pour avoir une petite barre visible
+                      actualScore: isNA ? 0 : safeMappedScore, // Score réel pour l'affichage
+                      displayScore: isNA ? 'N/A' : `${safeMappedScore}%`,
+                      isNA: isNA,
+                      color: isNA ? '#e5e7eb' : axisColors[index]
                     };
-                  }).filter(item => {
-                    // Filtrer tout item avec des valeurs invalides
-                    const isValid = typeof item.score === 'number' && !isNaN(item.score) && isFinite(item.score);
-                    if (!isValid) {
-                      console.error(`❌ Item invalide filtré: ${item.name} - score: ${item.score}`);
-                    }
-                    return isValid;
                   })}
-                  layout="horizontal"
-                  margin={{ top: 20, right: 30, left: 80, bottom: 20 }}
+                  margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
                 >
                   <XAxis 
-                    type="number" 
+                    dataKey="name"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
                     domain={[0, 100]}
                     tickFormatter={(value) => `${value}%`}
                     tick={{ fontSize: 12 }}
                   />
-                  <YAxis 
-                    type="category" 
-                    dataKey="name"
-                    width={60}
-                    tick={{ fontSize: 12 }}
-                  />
                   <Tooltip 
-                    formatter={(value, name) => [`${value}%`, 'Score']}
-                    labelFormatter={(label) => {
-                      const item = displayAxisScores.find((_, index) => `Axe ${index + 1}` === label);
-                      return item ? displayAxisScores[displayAxisScores.indexOf(item)].name : label;
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-white dark:bg-gray-800 p-3 border rounded-lg shadow-lg">
+                            <p className="font-medium">{data.name}</p>
+                            <p className="text-xs text-muted-foreground mb-1">{data.fullName}</p>
+                            <p className="text-sm font-bold">
+                              Score: {data.isNA ? 'N/A' : `${data.actualScore}%`}
+                            </p>
+                            {data.isNA && (
+                              <p className="text-xs text-muted-foreground mt-1">Aucun document audité pour cet axe</p>
+                            )}
+                          </div>
+                        );
+                      }
+                      return null;
                     }}
                   />
                   <Bar 
                     dataKey="score" 
-                    radius={[0, 4, 4, 0]}
+                    radius={[4, 4, 0, 0]}
                   >
                     {displayAxisScores.map((axis, index) => (
-                      <Cell key={`cell-${index}`} fill={axisColors[index] || '#6b7280'} />
+                      <Cell key={`cell-${index}`} fill={axis.score < 0 ? '#e5e7eb' : axisColors[index]} />
                     ))}
+                    <LabelList 
+                      dataKey="displayScore"
+                      position="top"
+                      style={{ fontSize: '12px', fontWeight: 'bold' }}
+                    />
                   </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -481,37 +488,54 @@ export function GlobalScoreChart({
                   return (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
-                        data={testAxisScores.map((axis, index) => ({
+                        data={MASE_AXES_NAMES.map((axisName, index) => ({
                           name: `Axe ${index + 1}`,
-                          fullName: axis.name,
-                          score: axis.score,
-                          color: axisColors[index] || '#6b7280'
+                          fullName: axisName,
+                          score: 1, // 1 pour avoir une petite barre visible
+                          actualScore: 0,
+                          displayScore: 'N/A',
+                          isNA: true,
+                          color: '#e5e7eb'
                         }))}
-                        layout="horizontal"
-                        margin={{ top: 20, right: 30, left: 80, bottom: 20 }}
+                        margin={{ top: 20, right: 20, left: 20, bottom: 20 }}
                       >
                         <XAxis 
-                          type="number" 
+                          dataKey="name"
+                          tick={{ fontSize: 12 }}
+                        />
+                        <YAxis 
                           domain={[0, 100]}
                           tickFormatter={(value) => `${value}%`}
                           tick={{ fontSize: 12 }}
                         />
-                        <YAxis 
-                          type="category" 
-                          dataKey="name"
-                          width={60}
-                          tick={{ fontSize: 12 }}
-                        />
                         <Tooltip 
-                          formatter={(value, name) => [`${value}%`, 'Score']}
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              const data = payload[0].payload;
+                              return (
+                                <div className="bg-white dark:bg-gray-800 p-3 border rounded-lg shadow-lg">
+                                  <p className="font-medium">{data.name}</p>
+                                  <p className="text-xs text-muted-foreground mb-1">{data.fullName}</p>
+                                  <p className="text-sm font-bold">Score: N/A</p>
+                                  <p className="text-xs text-muted-foreground mt-1">Aucun document audité</p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
                         />
                         <Bar 
                           dataKey="score" 
-                          radius={[0, 4, 4, 0]}
+                          radius={[4, 4, 0, 0]}
                         >
-                          {testAxisScores.map((axis, index) => (
-                            <Cell key={`cell-${index}`} fill={axisColors[index] || '#6b7280'} />
+                          {MASE_AXES_NAMES.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill="#e5e7eb" />
                           ))}
+                          <LabelList 
+                            dataKey="displayScore"
+                            position="top"
+                            style={{ fontSize: '12px', fontWeight: 'bold' }}
+                          />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -541,13 +565,14 @@ export function GlobalScoreChart({
               
               {/* Étiquettes des 5 axes MASE sur une ligne */}
               <div className="grid grid-cols-5 gap-1 mt-4">
-                {displayAxisScores && displayAxisScores.length > 0 ? displayAxisScores.map((axis, index) => {
-                  const color = axisColors[index] || '#6b7280';
-                  const isValidScore = axis.score >= 0;
+                {displayAxisScores && displayAxisScores.length === 5 ? displayAxisScores.map((axis, index) => {
+                  const isNA = axis.score < 0;
+                  const color = isNA ? '#9ca3af' : axisColors[index]; // gray-400 si N/A
+                  const bgColor = isNA ? '#f3f4f6' : `${axisColors[index]}10`; // gray-100 si N/A
                   return (
-                    <div key={axis.name} className="text-center p-2 rounded-lg border" style={{ backgroundColor: `${color}10` }}>
+                    <div key={axis.name} className="text-center p-2 rounded-lg border" style={{ backgroundColor: bgColor }}>
                       <div className="text-lg font-bold" style={{ color: color }}>
-                        {isValidScore ? `${axis.score}%` : 'N/A'}
+                        {isNA ? 'N/A' : `${axis.score}%`}
                       </div>
                       <div className="text-xs">Axe {index + 1}</div>
                     </div>

@@ -49,6 +49,18 @@ const MASE_AXES = [
   "Retour d'expérience et amélioration continue"
 ];
 
+// Helper function to get axis number
+const getAxisNumber = (axisName: string): number => {
+  const index = MASE_AXES.indexOf(axisName);
+  return index !== -1 ? index + 1 : 0;
+};
+
+// Helper function to format axis with number
+const formatAxisWithNumber = (axisName: string): string => {
+  const axisNum = getAxisNumber(axisName);
+  return axisNum > 0 ? `Axe ${axisNum} - ${axisName}` : axisName;
+};
+
 // Helper function to classify documents by filename
 const classifyDocumentByName = (fileName: string): string => {
   const name = fileName.toLowerCase();
@@ -1537,7 +1549,7 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
                       {analysisResults.map((result) => (
                         <TableRow key={result.documentId}>
                           <TableCell className="font-medium">{result.documentName}</TableCell>
-                          <TableCell>{result.axis}</TableCell>
+                          <TableCell>{formatAxisWithNumber(result.axis)}</TableCell>
                           <TableCell>
                             <Badge 
                               variant={getScoreBadgeVariant(result.score)}
@@ -1609,7 +1621,7 @@ ${result.score < 60 ? "• Révision complète du contenu" : "• Améliorations
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div>
-                <DialogTitle>Plan d'action - {selectedAxis}</DialogTitle>
+                <DialogTitle>Plan d'action - {selectedAxis ? formatAxisWithNumber(selectedAxis) : ''}</DialogTitle>
                 <DialogDescription>
                   Actions recommandées pour améliorer la conformité de cet axe MASE
                 </DialogDescription>
