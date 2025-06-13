@@ -211,13 +211,13 @@ Les principales tables Supabase :
 
 ## 📱 Support et Contact
 
-- **Documentation** : [docs.mase-docs.com](https://docs.mase-docs.com)
-- **Support** : support@mase-docs.com
+- **Documentation** : [masedocs.accompagnement-mase.fr](https://masedocs.accompagnement-mase.fr)
+- **Support** : masedocs@accompagnement-mase.fr
 - **Issues** : [GitHub Issues](https://github.com/your-org/mase-docs-app/issues)
 
 ## 📄 Licence
 
-Copyright © 2024 MASE DOCS. Tous droits réservés.
+Copyright © 2025 MASE DOCS. Tous droits réservés.
 
 ---
 
