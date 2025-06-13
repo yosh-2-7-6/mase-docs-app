@@ -1,104 +1,226 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# MASE DOCS - Plateforme de Certification MASE Automatisée
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/mase-docs-logo.png" alt="MASE DOCS Logo" width="200"/>
+  
+  <h3>La solution SaaS pour automatiser votre certification MASE</h3>
+  
+  <p>
+    <strong>MASE CHECKER</strong> · <strong>MASE GENERATOR</strong> · <strong>Dashboard Intelligent</strong>
+  </p>
+</div>
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+## 🎯 Vue d'ensemble
 
-## Features
+**MASE DOCS** est une plateforme SaaS complète qui révolutionne le processus de certification MASE (Manuel d'Amélioration Sécurité des Entreprises) en automatisant l'audit documentaire et la génération de documents conformes. Conçue pour les entreprises qui souhaitent obtenir ou maintenir leur certification MASE tout en restant concentrées sur leur cœur de métier.
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Middleware
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+### 🚀 Fonctionnalités principales
 
-## Demo
+- **Audit automatisé** de vos documents HSE existants
+- **Génération intelligente** de documents conformes MASE
+- **Scoring en temps réel** selon les 5 axes MASE
+- **Dashboard interactif** avec métriques et recommandations
+- **Export multi-formats** (Word, Excel, PDF)
+- **Conformité garantie** avec le référentiel MASE 2024
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+## 📋 Modules
 
-## Deploy to Vercel
+### 🔍 MASE CHECKER - Module d'Audit Automatisé
 
-Vercel deployment will guide you through creating a Supabase account and project.
+Analysez automatiquement vos documents HSE et identifiez les écarts par rapport au référentiel MASE.
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+**Fonctionnalités :**
+- Upload simple par drag & drop (PDF, Word, Excel)
+- Analyse IA de conformité selon 250+ critères MASE
+- Scoring par document et par axe (5 axes MASE)
+- Identification précise des écarts et non-conformités
+- Génération de rapports d'audit détaillés
+- Plans d'action prioritisés et personnalisés
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+**Processus en 4 phases :**
+1. **Classification** - Identification automatique du type de document
+2. **Analyse des écarts** - Comparaison avec les exigences MASE
+3. **Scoring** - Calcul des scores de conformité (B/V/VD)
+4. **Plan d'actions** - Recommandations priorisées
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+### 📝 MASE GENERATOR - Module de Génération de Documents
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+Générez automatiquement tous vos documents MASE conformes et personnalisés.
 
-## Clone and run locally
+**Fonctionnalités :**
+- Génération de 41 documents MASE obligatoires
+- Deux modes : Post-audit ou From scratch
+- Personnalisation avec vos données d'entreprise
+- Instructions SSE spécifiques intégrables
+- Templates conformes au référentiel MASE 2024
+- Export multi-formats selon vos besoins
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+**Documents générés (exemples) :**
+- Politique SSE
+- Document Unique d'Évaluation des Risques (DUER)
+- Plan d'actions SSE
+- Procédures de sécurité
+- Registres obligatoires
+- Bilans et rapports annuels
 
-2. Create a Next.js app using the Supabase Starter template npx command
+### 📊 Dashboard Intelligent
 
+Pilotez votre conformité MASE en temps réel avec des indicateurs clés.
+
+**Métriques affichées :**
+- Score global de conformité
+- Scores détaillés par axe MASE
+- État d'avancement de la certification
+- Actions prioritaires recommandées
+- Historique des audits et générations
+- Timeline d'activité
+
+## 🏗️ Architecture Technique
+
+### Stack Technologique
+
+- **Frontend** : Next.js 14 (App Router) + TypeScript
+- **UI/UX** : shadcn/ui + Tailwind CSS
+- **Base de données** : Supabase (PostgreSQL)
+- **Authentification** : Supabase Auth
+- **État** : React Hooks + Context API
+- **Stockage** : Supabase Storage pour les documents
+
+### Structure du Projet
+
+```
+mase-docs-app/
+├── app/
+│   ├── (public)/          # Pages publiques (landing, auth)
+│   ├── dashboard/         # Application principale
+│   │   ├── page.tsx      # Dashboard principal
+│   │   ├── mase-checker/ # Module d'audit
+│   │   ├── mase-generator/ # Module de génération
+│   │   ├── settings/     # Paramètres utilisateur
+│   │   └── billing/      # Gestion abonnement
+│   └── api/              # API Routes
+├── components/
+│   ├── ui/               # Composants shadcn/ui
+│   ├── app-sidebar.tsx   # Navigation principale
+│   └── dashboard/        # Composants dashboard
+├── utils/
+│   ├── supabase/         # Configuration Supabase
+│   ├── mase-state.ts     # Gestion état MASE
+│   └── user-profile.ts   # Gestion profils
+└── public/               # Assets statiques
+```
+
+## 🚀 Installation et Démarrage
+
+### Prérequis
+
+- Node.js 18+ et npm/yarn/pnpm
+- Compte Supabase (gratuit sur [supabase.com](https://supabase.com))
+- Git
+
+### Installation
+
+1. **Cloner le repository**
    ```bash
-   npx create-next-app --example with-supabase with-supabase-app
+   git clone https://github.com/your-org/mase-docs-app.git
+   cd mase-docs-app
    ```
 
+2. **Installer les dépendances**
    ```bash
-   yarn create next-app --example with-supabase with-supabase-app
+   npm install
+   # ou
+   yarn install
+   # ou
+   pnpm install
    ```
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
+3. **Configuration environnement**
+   
+   Copier `.env.example` vers `.env.local` et renseigner :
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
    ```
 
-3. Use `cd` to change into the app's directory
+4. **Configuration base de données**
+   
+   Exécuter les migrations Supabase (voir `/supabase/migrations/`)
 
-   ```bash
-   cd with-supabase-app
-   ```
-
-4. Rename `.env.example` to `.env.local` and update the following:
-
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
-   ```
-
-   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://app.supabase.com/project/_/settings/api)
-
-5. You can now run the Next.js local development server:
-
+5. **Lancer l'application**
    ```bash
    npm run dev
    ```
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+   L'application sera accessible sur [http://localhost:3000](http://localhost:3000)
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+## 📊 Référentiel MASE 2024
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+L'application s'appuie sur le référentiel officiel MASE structuré en :
 
-## Feedback and issues
+### 5 Axes d'Évaluation
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+1. **Axe 1** - Engagement de la direction (855 points)
+2. **Axe 2** - Compétences et qualifications (640 points)
+3. **Axe 3** - Préparation et organisation (1300 points)
+4. **Axe 4** - Mise en œuvre (980 points)
+5. **Axe 5** - Contrôles et amélioration (475 points)
 
-## More Supabase examples
+**Score total** : 4250 points | **Seuil certification** : 70%
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+### Système de Scoring
+
+- **Critères Binaires (B)** : 0 ou score max
+- **Critères Variables (V)** : Score proportionnel 0-100%
+- **Critères Variables Doublés (VD)** : Score x2 si excellence
+
+### Seuils de Conformité
+
+- 🟢 **≥80%** : Document conforme
+- 🟡 **60-79%** : À améliorer
+- 🔴 **<60%** : Non conforme
+
+## 🔒 Sécurité et Conformité
+
+- **Isolation des données** : Chaque entreprise accède uniquement à ses données
+- **Chiffrement** : Communications et stockage chiffrés
+- **Row Level Security** : Protection au niveau base de données
+- **Audit trail** : Traçabilité complète des actions
+- **RGPD** : Conforme aux réglementations européennes
+
+## 🛠️ Développement
+
+### Scripts disponibles
+
+```bash
+npm run dev      # Développement avec hot-reload
+npm run build    # Build de production
+npm run start    # Lancer la production
+npm run lint     # Vérification du code
+npm run test     # Tests unitaires
+```
+
+### Structure des Données
+
+Les principales tables Supabase :
+- `user_profiles` - Profils entreprises
+- `audit_sessions` - Sessions d'audit
+- `audit_documents` - Documents analysés
+- `audit_results` - Résultats détaillés
+- `generated_documents` - Documents générés
+
+## 📱 Support et Contact
+
+- **Documentation** : [docs.mase-docs.com](https://docs.mase-docs.com)
+- **Support** : support@mase-docs.com
+- **Issues** : [GitHub Issues](https://github.com/your-org/mase-docs-app/issues)
+
+## 📄 Licence
+
+Copyright © 2024 MASE DOCS. Tous droits réservés.
+
+---
+
+<div align="center">
+  <p>Développé avec ❤️ pour simplifier votre certification MASE</p>
+</div>
