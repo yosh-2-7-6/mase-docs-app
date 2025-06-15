@@ -1,12 +1,12 @@
 # Guide de Dépôt INPI - Enveloppe eSoleau MASE DOCS
-## **Projet démarré le 12/04/2025 à 21:48:04 - Dépôt le 15/06/2025**
+## **Projet démarré le 12/04/2025 à 21:48:04 - Dépôt le 16/06/2025**
 
 ## 📋 **LISTE COMPLÈTE DES DOCUMENTS À INCLURE**
 
 ### **1. DOCUMENTS DE PROTECTION PRINCIPAUX** ✅
 - `Dossier_Protection_MASE_DOCS_INPI.md` (+ version PDF obligatoire)
 - `Historique_Projet_MASE_DOCS.md` (+ version PDF)
-- `checksums_mase_docs_20250615.txt` (preuves d'intégrité)
+- `checksums_mase_docs_20250616.txt` (preuves d'intégrité)
 
 ### **2. ARCHITECTURE TECHNIQUE** ✅
 - `schema_base_donnees_mase_docs.sql` (schéma complet PostgreSQL)
@@ -91,7 +91,7 @@
 
 **Projet 9 - mase-docs-app (ACTUEL)**
 - **04/06/2025 15:31:25** : Version finale production-ready
-- **15/06/2025** : Préparation dossier INPI
+- **16/06/2025** : Préparation dossier INPI
 
 **TOTAL : 64 jours de développement continu documenté**
 
@@ -102,7 +102,7 @@ MASE_DOCS_INPI_2025/
 ├── 01_DOSSIER_PROTECTION/
 │   ├── Dossier_Protection_MASE_DOCS_INPI.pdf
 │   ├── Historique_Projet_MASE_DOCS.pdf
-│   └── checksums_mase_docs_20250615.txt
+│   └── checksums_mase_docs_20250616.txt
 ├── 02_ARCHITECTURE_TECHNIQUE/
 │   ├── schema_base_donnees_mase_docs.sql
 │   └── architecture_technique_mase_docs.pdf
@@ -195,7 +195,7 @@ git log --stat > git_log_detailed.txt
 
 ### **Dates et Horodatages**
 - **Date de début** : 12 avril 2025 à 21:48:04 (première migration Supabase)
-- **Date de dépôt** : 15 juin 2025
+- **Date de dépôt** : 16 juin 2025
 - **Durée totale** : 64 jours de développement documentés
 - Mettre en évidence tous les horodatages automatiques
 
@@ -206,7 +206,7 @@ git log --stat > git_log_detailed.txt
 - **Lisibilité** : Tous les documents doivent être facilement consultables
 
 ### **Intégrité et Sécurité**
-- **Checksums** : Preuves d'intégrité des fichiers au 15/06/2025
+- **Checksums** : Preuves d'intégrité des fichiers au 16/06/2025
 - **Cohérence** : Vérifier que toutes les dates concordent
 - **Sauvegarde** : Conserver une copie complète en local
 
@@ -218,20 +218,26 @@ git log --stat > git_log_detailed.txt
 
 ## 🛡️ **ÉLÉMENTS CRITIQUES PROTÉGÉS**
 
-### **Innovation Algorithmique**
-- Algorithme de scoring MASE propriétaire avec pondération dynamique
-- Système de détection automatique des écarts réglementaires
-- Moteur de génération contextuelle de documents
+### **Innovation Algorithmique et Architecturale**
+- **Architecture hiérarchique MASE 2024** avec table axes_mase pour contenus enrichis
+- **Algorithme de scoring avancé** avec pondération dynamique et exploitation de la structure complète
+- **Système de détection automatique** des écarts basé sur 270+ critères
+- **Moteur de génération contextuelle** exploitant descriptions et objectifs d'axes
+- **Relations hiérarchiques** : axes → chapitres → critères avec clés étrangères
 
-### **Architecture Technique Unique**
-- Intégration complète audit-génération-pilotage
-- Système multi-tenant avec Row Level Security (RLS)
-- Pipelines d'analyse et de génération intelligents
+### **Architecture Technique Unique Avancée**
+- **Intégration complète** audit-génération-pilotage avec base hiérarchique
+- **Système multi-tenant** avec Row Level Security (RLS) sur toutes les tables
+- **Structure de données innovante** : axes_mase → chapitres_mase → criteres_mase
+- **Pipelines d'analyse intelligents** exploitant la hiérarchie complète
+- **Génération avancée** intégrant contenus préambulaires et objectifs d'axes
 
-### **Base de Connaissances Structurée**
-- 263 critères MASE 2024 organisés et mappés
-- 41 templates de documents MASE personnalisables
-- Système de correspondance critères-documents automatisé
+### **Base de Connaissances Structurée Hiérarchique**
+- **Architecture avancée** : 5 axes → 24 chapitres → 270+ critères MASE 2024
+- **Table axes_mase** : Contenus préambulaires et objectifs enrichis par axe
+- **270+ critères** MASE 2024 organisés et mappés hiérarchiquement
+- **41 templates** de documents MASE personnalisables avec intégration des contenus d'axes
+- **Système de correspondance** critères-chapitres-axes automatisé
 
 ## 📈 **PROTECTION COMPLÉMENTAIRE RECOMMANDÉE**
 
@@ -261,9 +267,10 @@ Au-delà de l'enveloppe eSoleau :
 
 **Votre dossier MASE DOCS dispose d'une antériorité solide avec :**
 - **Date de début prouvée** : 12 avril 2025 à 21:48:04
-- **Développement continu** : 64 jours documentés
-- **9 projets successifs** : Évolution itérative complète
-- **Preuves techniques** : Horodatages automatiques irréfutables
-- **Innovation documentée** : Architecture et algorithmes propriétaires
+- **Développement continu** : 64+ jours documentés avec évolutions récentes
+- **9 projets successifs** : Évolution itérative complète jusqu'à l'architecture hiérarchique
+- **Preuves techniques** : Horodatages automatiques irréfutables + évolutions base de données
+- **Innovation documentée** : Architecture hiérarchique et algorithmes propriétaires avancés
+- **Évolutions récentes** : Création table axes_mase et optimisations (juin 2025)
 
 **L'enveloppe eSoleau vous donnera une preuve d'antériorité datée et certifiée, essentielle en cas de litige. Votre dossier est très complet et couvre tous les aspects innovants de votre solution.**

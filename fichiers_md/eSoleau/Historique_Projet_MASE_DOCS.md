@@ -87,17 +87,34 @@
 **Application fonctionnelle avec :**
 - Architecture multi-tenant sécurisée
 - Algorithme de scoring propriétaire
-- Base de connaissances MASE complète (263 critères, 41 documents)
+- Base de connaissances MASE complète (270+ critères, 24 chapitres, 5 axes, 41 documents)
+- **Architecture hiérarchique avancée** : Table axes_mase avec contenus préambulaires enrichis
 - Interface utilisateur moderne et intuitive
-- Système de génération documentaire intelligent
+- Système de génération documentaire intelligent exploitant la structure complète
 
 ### Innovation et Propriété Intellectuelle
 
 **Éléments innovants protégés :**
-1. Algorithme de scoring MASE avec pondération dynamique
-2. Système de détection automatique des écarts réglementaires
-3. Moteur de génération contextuelle de documents
-4. Architecture intégrée audit-génération-pilotage
+1. **Architecture hiérarchique MASE 2024** : Table axes_mase avec contenus préambulaires enrichis
+2. **Algorithme de scoring avancé** avec pondération dynamique et exploitation de la structure hiérarchique
+3. **Système de détection automatique** des écarts réglementaires basé sur 270+ critères
+4. **Moteur de génération contextuelle** exploitant les descriptions et objectifs d'axes
+5. **Architecture intégrée** audit-génération-pilotage avec base de données relationnelle complète
+
+### Évolutions Récentes de la Base de Données (Juin 2025)
+
+**Création de la table axes_mase :**
+- **Date** : Juin 2025
+- **Objectif** : Intégrer les contenus préambulaires du référentiel MASE non utilisés
+- **Structure** : 5 axes avec descriptions détaillées, objectifs et scores totaux
+- **Relations** : Clés étrangères avec chapitres_mase via axe_numero
+- **Innovation** : Architecture hiérarchique complète axes → chapitres → critères
+
+**Corrections et optimisations :**
+- **Correction des critères axes 4 et 5** : Remplacement des données erronées par les vraies données du référentiel MASE 2024
+- **Nombre final de critères** : 270+ critères (au lieu de 263 initialement prévus)
+- **Politiques RLS** : Sécurisation de la nouvelle table avec Row Level Security
+- **Index de performance** : Optimisation des requêtes sur les relations hiérarchiques
 5. Base de connaissances structurée du référentiel MASE 2024
 
 ### Évolution Architecturale et Motivations des Migrations

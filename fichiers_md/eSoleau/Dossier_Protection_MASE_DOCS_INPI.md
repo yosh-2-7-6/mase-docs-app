@@ -42,13 +42,13 @@ La divulgation, reproduction ou utilisation de tout ou partie de ce document san
 
 MASE DOCS est une plateforme Software as a Service (SaaS) révolutionnaire qui automatise intégralement le processus de certification MASE (Manuel d'Amélioration Sécurité des Entreprises) grâce à l'intelligence artificielle et aux technologies d'automatisation avancées.
 
-La certification MASE, référentiel international de sécurité industrielle, requiert la production et la conformité de 41 documents obligatoires selon 263 critères stricts répartis sur 5 axes. Le processus traditionnel nécessite 15 jours d'accompagnement consultant et plusieurs jours de remédiation post-audit, représentant un investissement de 23 600€ en moyenne par certification.
+La certification MASE, référentiel international de sécurité industrielle, requiert la production et la conformité de 41 documents obligatoires selon 270+ critères stricts répartis sur 5 axes organisés en 24 chapitres. Le processus traditionnel nécessite 15 jours d'accompagnement consultant et plusieurs jours de remédiation post-audit, représentant un investissement de 23 600€ en moyenne par certification.
 
 ### 1.2 Innovation apportée
 
 MASE DOCS résout cette problématique par trois innovations majeures :
 
-1. **Audit documentaire automatisé intelligent** : Analyse sémantique automatique des documents existants avec scoring en temps réel selon les 263 critères MASE
+1. **Audit documentaire automatisé intelligent** : Analyse sémantique automatique des documents existants avec scoring en temps réel selon les 270+ critères MASE
 2. **Génération documentaire personnalisée** : Création automatique de documents conformes au référentiel MASE 2024 avec personnalisation contextuelle
 3. **Système de pilotage intégré** : Tableaux de bord en temps réel pour le suivi de conformité et la préparation aux audits
 
@@ -57,7 +57,7 @@ MASE DOCS résout cette problématique par trois innovations majeures :
 - **Réduction de 90%** du temps de préparation documentaire (de 25 jours à 1,5 jour)
 - **Économie moyenne** de 13 212€ par certification (ROI de 268%)
 - **Taux de conformité** de 100% des documents générés
-- **Automatisation complète** de l'évaluation selon les 263 critères MASE
+- **Automatisation complète** de l'évaluation selon les 270+ critères MASE
 
 ### 1.4 Vision d'extension
 
@@ -80,13 +80,13 @@ Le référentiel MASE (Manuel d'Amélioration Sécurité des Entreprises) est de
 
 Le référentiel MASE présente une complexité technique importante :
 
-- **Structure hiérarchique** : 5 axes, 24 chapitres, 263 critères d'évaluation
+- **Structure hiérarchique** : 5 axes, 24 chapitres, 270+ critères d'évaluation
 - **Documents obligatoires** : 41 documents spécifiques requis
 - **Système de scoring complexe** :
-  - 161 critères binaires (B) : 0 ou maximum de points
-  - 72 critères variables (V) : scoring de 0 à 100%
-  - 30 critères variables doublés (VD) : coefficient multiplicateur x2 uniquement lors d'un audit de renouvellement
-- **Score total** : 5 000 points maximum
+  - Environ 160+ critères binaires (B) : 0 ou maximum de points
+  - Environ 80+ critères variables (V) : scoring de 0 à 100%
+  - Environ 30+ critères variables doublés (VD) : coefficient multiplicateur x2 uniquement lors d'un audit de renouvellement
+- **Score total** : 5 000 points maximum (selon référentiel MASE 2024)
 - **Seuil de certification** : Il n’existe pas de « seuil » chiffré universel (comme une note sur 20 ou un pourcentage) : la décision est basée sur la conformité globale au référentiel et la capacité de l’entreprise à démontrer l’efficacité de son système de management SSE sur le terrain
 
 ### 2.3 Limites des solutions existantes
@@ -111,9 +111,9 @@ Quelques outils proposent des fonctionnalités limitées :
 
 Aucune solution existante ne propose :
 - Analyse automatique du contenu documentaire
-- Scoring automatisé selon les 263 critères MASE
+- Scoring automatisé selon les 270+ critères MASE
 - Génération documentaire personnalisée et contextuelle
-- Intégration complète audit-génération-pilotage
+- Intégration complète audit-génération-pilotage avec base de données hiérarchique (axes → chapitres → critères)
 - Mise à jour automatique selon l'évolution du référentiel
 
 ---
@@ -122,7 +122,7 @@ Aucune solution existante ne propose :
 
 ### 3.1 Automatisation de l'analyse documentaire MASE
 
-**Problème** : L'évaluation manuelle de la conformité documentaire selon 263 critères MASE nécessite une expertise approfondie et un temps considérable.
+**Problème** : L'évaluation manuelle de la conformité documentaire selon 270+ critères MASE nécessite une expertise approfondie et un temps considérable.
 
 **Solution technique** : Développement d'un moteur d'analyse sémantique spécialisé capable de :
 - Extraire le contenu de documents multi-formats (PDF, Word, Excel)
@@ -135,10 +135,11 @@ Aucune solution existante ne propose :
 **Problème** : La création de documents conformes MASE nécessite une connaissance experte du référentiel et une adaptation au contexte spécifique de chaque entreprise.
 
 **Solution technique** : Système de génération documentaire basé sur :
-- Templates intelligents intégrant les 263 critères MASE
+- Templates intelligents intégrant les 270+ critères MASE organisés hiérarchiquement
 - Moteur de personnalisation contextuelle (secteur, taille, activités)
 - Système d'instructions SSE personnalisées par l'utilisateur
 - Génération multi-format (Word, Excel, PDF) avec mise en forme automatique
+- Architecture avec table `axes_mase` pour contenus préambulaires enrichis
 
 ### 3.3 Intégration audit-génération en workflow continu
 
@@ -200,9 +201,10 @@ Le module MASE CHECKER constitue le cœur de l'innovation d'audit automatisé. I
 - Reconnaissance de signatures et validations documentaires
 - Gestion des documents scannés avec OCR intégré
 
-**Système de scoring intelligent**
+**Système de scoring intelligent avec architecture hiérarchique**
 - Algorithme propriétaire d'évaluation par critère MASE
-- Prise en compte des nuances et du contexte sectoriel
+- Base de données structurée : axes_mase → chapitres_mase → criteres_mase
+- Prise en compte des contenus préambulaires enrichis par axe
 - Calibrage automatique selon la taille et l'activité de l'entreprise
 - Détection des contradictions inter-documents
 
@@ -257,10 +259,11 @@ Le module MASE GENERATOR automatise la création de documents conformes au réf�
 
 #### 4.2.3 Innovations du système de génération
 
-**Templates dynamiques et adaptatifs**
-- Base de 41 templates couvrant l'intégralité du référentiel MASE
-- Système de variables contextuelles dynamiques
+**Templates dynamiques et adaptatifs avec architecture avancée**
+- Base de 41 templates couvrant l'intégralité du référentiel MASE 2024
+- Système de variables contextuelles dynamiques intégrant les contenus d'axes
 - Adaptation automatique du contenu selon le secteur et la taille
+- Exploitation des préambules et objectifs stockés dans la table axes_mase
 - Mise à jour automatique lors d'évolution du référentiel
 
 **Moteur de personnalisation par instructions SSE**
@@ -964,19 +967,22 @@ MASE DOCS est conçu comme une plateforme évolutive permettant l'extension à l
 **Revendication 1** : Système informatique d'analyse automatique de documents pour l'évaluation de conformité selon le référentiel MASE, caractérisé par :
 - Un moteur d'extraction et d'analyse de contenu multi-format (PDF, Word, Excel)
 - Un algorithme de classification automatique des documents selon la nomenclature MASE
-- Un système de scoring automatique selon les 263 critères du référentiel MASE 2024
+- Un système de scoring automatique selon les 270+ critères du référentiel MASE 2024
+- Une architecture hiérarchique avec table axes_mase pour contenus préambulaires enrichis
 - Une interface de visualisation des résultats avec navigation interactive par axe MASE
 
 **Revendication 2** : Procédé d'évaluation automatique de la conformité documentaire caractérisé par :
 - L'analyse sémantique du contenu documentaire spécialisée pour le domaine SSE
 - L'application automatique des règles de pondération MASE (critères B, V, VD)
+- L'exploitation de la structure hiérarchique axes → chapitres → critères
 - La génération automatique de plans d'action prioritaires selon l'impact sur le score
 - Le calcul en temps réel des métriques de progression vers la certification
 
 #### 11.1.2 Système de génération documentaire personnalisée MASE
 
 **Revendication 3** : Système de génération automatique de documents conformes MASE, caractérisé par :
-- Des templates adaptatifs intégrant les 263 critères MASE 2024
+- Des templates adaptatifs intégrant les 270+ critères MASE 2024 organisés hiérarchiquement
+- L'exploitation des contenus préambulaires stockés dans la table axes_mase
 - Un moteur de personnalisation par instructions utilisateur en langage naturel
 - Un système de variables contextuelles adaptées au secteur et à la taille de l'entreprise
 - Une génération multi-format avec cohérence inter-documents garantie
@@ -1066,56 +1072,49 @@ MASE DOCS est conçu comme une plateforme évolutive permettant l'extension à l
 
 #### 12.1.1 Structure hiérarchique complète
 
+**ARCHITECTURE HIÉRARCHIQUE MASE 2024 (TOTAUX RÉELS)**
+
 **AXE 1 : ENGAGEMENT DE LA DIRECTION (900 points maximum)**
-- Chapitre 1.1	Engagement SÉCURITÉ SANTÉ ENVIRONNEMENT de l'employeur (150 points)
-- Chapitre 1.2	Politique SÉCURITÉ SANTÉ ENVIRONNEMENT (40 points)
-- Chapitre 1.3	Objectifs SÉCURITÉ SANTÉ ENVIRONNEMENT (100 points)
-- Chapitre 1.4	Indicateurs SÉCURITÉ SANTÉ ENVIRONNEMENT (90 points)
-- Chapitre 1.5	Organisation SÉCURITÉ SANTÉ ENVIRONNEMENT (285 points)
-- Chapitre 1.6	Planification, documentation et moyens (130 points)
-- Chapitre 1.6.1	Planification (105 points)
-- Chapitre 1.6.2	Documentation et moyens SÉCURITÉ SANTÉ ENVIRONNEMENT (25 points)
-- Chapitre 1.7	Information et animation SÉCURITÉ SANTÉ ENVIRONNEMENT (105 points)
+- Chapitres détaillés selon référentiel MASE 2024
 
-**AXE 2 : COMPÉTENCES ET FORMATIONS (800 points maximum)**
-- Chapitre 2.1	« SAVOIR» (recrutement/affectation des personnels) (150 points)
-- Chapitre 2.2	« SAVOIR-FAIRE » (Parrain / Tuteur, Accueil SÉCURITÉ SANTÉ ENVIRONNEMENT, Formations, Autorisations/Habilitations) (480 points)
-- Chapitre 2.2.1	Parrain / Tuteur (105 points)
-- Chapitre 2.2.2	Accueil SÉCURITÉ SANTÉ ENVIRONNEMENT (160 points)
-- Chapitre 2.2.3	Formations, Autorisations/Habilitations, Aptitudes médicales (215 points)
-- Chapitre 2.3	« SAVOIR-ETRE » (culture SÉCURITÉ SANTÉ ENVIRONNEMENT/facteur humain) (170 points)   
+**AXE 2 : COMPÉTENCES ET QUALIFICATIONS (800 points maximum)**
+- Chapitres détaillés selon référentiel MASE 2024
 
-**AXE 3 : PRÉPARATION DU TRAVAIL (1 300 points maximum)**
-- Chapitre 3.1	Analyse des risques SÉCURITÉ, SANTÉ et ENVIRONNEMENT et moyens de prévention associés (455 points)
-- Chapitre 3.2	Préparation (305 points)
-- Chapitre 3.3	Réalisation (390 points)
-- Chapitre 3.4	Le bilan et le retour d'expérience SÉCURITÉ SANTÉ ENVIRONNEMENT (150 points)
+**AXE 3 : PRÉPARATION ET ORGANISATION DU TRAVAIL (1300 points maximum)**
+- Chapitres détaillés selon référentiel MASE 2024
 
-**AXE 4 : MISE EN ŒUVRE (1 100 points maximum)**
-- Chapitre 4.1	Analyse des situations dangereuses, des presqu'accidents et des accidents, des maladies professionnelles et des impacts environnementaux (320 points)
-- Chapitre 4.2	Les audits terrain SÉCURITÉ SANTÉ ENVIRONNEMENT (250 points)
-- Chapitre 4.3	L'audit du système de management SÉCURITÉ SANTÉ ENVIRONNEMENT (530 points)
+**AXE 4 : CONTRÔLES ET AMÉLIORATION CONTINUE (1100 points maximum)**
+- Chapitres détaillés selon référentiel MASE 2024
 
-**AXE 5 : CONTRÔLE ET ÉVALUATION (900 points maximum)**
-- Chapitre 5.1	Bilan SÉCURITÉ SANTÉ ENVIRONNEMENT (525 points)
-- Chapitre 5.2	Actions d'amélioration SÉCURITÉ SANTÉ ENVIRONNEMENT (375 points)
+**AXE 5 : BILAN ET AMÉLIORATION CONTINUE (900 points maximum)**
+- Chapitres détaillés selon référentiel MASE 2024
+
+**TOTAL GÉNÉRAL : 5 000 POINTS MAXIMUM**
+**ORGANISATION : 24 CHAPITRES RÉPARTIS SUR 5 AXES**
 
 #### 12.1.2 Types de critères et pondération
 
-**Critères Binaires (B) - 161 critères**
+**RÉPARTITION ACTUELLE DES CRITÈRES (270+ TOTAL)**
+
+**Critères Binaires (B) - Environ 160 critères**
 - Évaluation : 0 ou maximum de points attribués
 - Principe : Présence/Absence de l'élément requis
 - Exemples : Existence d'un document, signature d'un responsable
 
-**Critères Variables (V) - 72 critères**
+**Critères Variables (V) - Environ 80 critères**
 - Évaluation : De 0 à 100% des points attribués
 - Principe : Qualité et complétude de l'élément évalué
 - Exemples : Qualité d'une analyse de risque, exhaustivité d'une formation
 
-**Critères Variables Doublés (VD) - 30 critères**
+**Critères Variables Doublés (VD) - Environ 30 critères**
 - Évaluation : De 0 à 100% avec coefficient multiplicateur x2 uniquement lors d'un audit de renouvellement
 - Principe : Critères à fort impact sur la sécurité
 - Exemples : Plan de prévention, analyse des risques critiques
+
+**INNOVATION ARCHITECTURALE**
+- Table `axes_mase` : Stockage des préambules et objectifs par axe
+- Relation hiérarchique : axes → chapitres → critères
+- Contenu enrichi pour personnalisation documentaire
 
 ### 12.2 Documents obligatoires MASE (41 documents)
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script de génération des checksums pour dossier INPI
 # MASE DOCS - Projet démarré le 12/04/2025 à 21:48:04 (Bolt.new)
-# Date de dépôt INPI : 15/06/2025
+# Date de dépôt INPI : 16/06/2025
 
 echo "=== Génération des checksums MD5 et SHA256 ==="
 echo "Date: $(date)"

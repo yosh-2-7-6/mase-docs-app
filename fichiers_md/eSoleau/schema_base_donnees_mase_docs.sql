@@ -1,15 +1,26 @@
 -- MASE DOCS - Schéma complet de la base de données
 -- Projet démarré le 12/04/2025 à 21:48:04 (Bolt.new)
--- Protection INPI - Date de dépôt : 15/06/2025
+-- Protection INPI - Date de dépôt : 16/06/2025
 -- ================================================
 
 -- 1. TABLES DU RÉFÉRENTIEL MASE
 -- ================================================
 
+-- Table des axes MASE (5 axes avec contenus préambulaires enrichis)
+CREATE TABLE axes_mase (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    axe_numero TEXT UNIQUE NOT NULL,
+    axe_nom TEXT NOT NULL,
+    axe_description TEXT NOT NULL,
+    objectif TEXT NOT NULL,
+    score_total INTEGER NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Table des chapitres MASE (24 chapitres organisés en 5 axes)
 CREATE TABLE chapitres_mase (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    axe_numero INTEGER NOT NULL,
+    axe_numero TEXT NOT NULL REFERENCES axes_mase(axe_numero),
     axe_nom TEXT NOT NULL,
     chapitre_numero TEXT NOT NULL,
     chapitre_titre TEXT NOT NULL,
@@ -18,11 +29,12 @@ CREATE TABLE chapitres_mase (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Table des critères MASE (263 critères d'évaluation)
+-- Table des critères MASE (270+ critères d'évaluation)
 CREATE TABLE criteres_mase (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     chapitre_id UUID REFERENCES chapitres_mase(id),
     numero_critere TEXT NOT NULL,
+    chapitre_numero TEXT NOT NULL,
     description TEXT NOT NULL,
     type_scoring TEXT CHECK (type_scoring IN ('B', 'V', 'VD')),
     score_max INTEGER NOT NULL,
@@ -196,6 +208,8 @@ CREATE POLICY "Users can update own audit sessions" ON audit_sessions
     FOR UPDATE USING (auth.uid() = user_id);
 
 -- Politiques pour les tables référentielles (lecture seule)
+CREATE POLICY "Authenticated users can read MASE axes" ON axes_mase
+    FOR SELECT USING (auth.uid() IS NOT NULL);
 CREATE POLICY "Authenticated users can read MASE chapters" ON chapitres_mase
     FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "Authenticated users can read MASE criteria" ON criteres_mase
@@ -224,7 +238,9 @@ CREATE TRIGGER on_auth_user_created
 -- 8. INDEX POUR OPTIMISATION
 -- ================================================
 
+CREATE INDEX idx_chapitres_axe ON chapitres_mase(axe_numero);
 CREATE INDEX idx_criteres_chapitre ON criteres_mase(chapitre_id);
+CREATE INDEX idx_criteres_chapitre_numero ON criteres_mase(chapitre_numero);
 CREATE INDEX idx_audit_documents_session ON audit_documents(session_id);
 CREATE INDEX idx_audit_results_session ON audit_results(session_id);
 CREATE INDEX idx_audit_results_critere ON audit_results(critere_id);
@@ -233,9 +249,12 @@ CREATE INDEX idx_generated_documents_session ON generated_documents(session_id);
 -- 9. COMMENTAIRES DE DOCUMENTATION
 -- ================================================
 
+COMMENT ON TABLE axes_mase IS 'Référentiel des 5 axes MASE avec contenus préambulaires enrichis - TOTAL 5000 points';
 COMMENT ON TABLE chapitres_mase IS 'Référentiel des 24 chapitres MASE organisés en 5 axes';
-COMMENT ON TABLE criteres_mase IS 'Les 263 critères d''évaluation MASE avec leur système de scoring';
+COMMENT ON TABLE criteres_mase IS 'Les 270+ critères d''évaluation MASE avec leur système de scoring';
 COMMENT ON TABLE documents_cles IS 'Les 41 documents clés du référentiel MASE';
 COMMENT ON TABLE audit_sessions IS 'Sessions d''audit documentaire MASE';
 COMMENT ON TABLE audit_results IS 'Résultats détaillés d''audit par critère MASE';
 COMMENT ON COLUMN criteres_mase.type_scoring IS 'B=Binaire (0 ou max), V=Variable, VD=Variable Doublé';
+COMMENT ON COLUMN axes_mase.axe_description IS 'Description détaillée et préambule de l''axe MASE';
+COMMENT ON COLUMN axes_mase.objectif IS 'Objectif principal de l''axe selon le référentiel MASE 2024';

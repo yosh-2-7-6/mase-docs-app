@@ -1,6 +1,6 @@
 # Architecture Technique MASE DOCS
 ## Document de Protection INPI
-## Projet démarré le 12/04/2025 à 21:48:04 (Bolt.new) - Date de dépôt : 15/06/2025
+## Projet démarré le 12/04/2025 à 21:48:04 (Bolt.new) - Date de dépôt : 16/06/2025
 
 ## 1. Architecture Globale
 
@@ -164,20 +164,29 @@ RESPONSE TO USER
 
 ## 6. Innovation Technique
 
+### Architecture Hiérarchique MASE 2024
+- **Table axes_mase** : 5 axes avec contenus préambulaires enrichis
+- **Table chapitres_mase** : 24 chapitres liés aux axes
+- **Table criteres_mase** : 270+ critères liés aux chapitres
+- **Relations** : axes → chapitres → critères avec clés étrangères
+
 ### Algorithme de Scoring Propriétaire
 - Pondération dynamique selon type de critère (B/V/VD)
 - Calcul en cascade : critère → chapitre → axe → global
+- Exploitation des contenus préambulaires des axes
 - Détection automatique des écarts critiques
 
-### Moteur de Génération Contextuelle
+### Moteur de Génération Contextuelle Avancé
 - Templates intelligents basés sur le secteur
+- Intégration des descriptions et objectifs d'axes
 - Adaptation au niveau de maturité SSE
 - Intégration des résultats d'audit
+- Exploitation de l'architecture hiérarchique complète
 
 ### Architecture Scalable
 - Server Components pour performance
-- Caching intelligent
-- Optimisation des requêtes DB
+- Caching intelligent avec structure hiérarchique
+- Optimisation des requêtes DB avec index sur relations
 
 ## 7. Stack Technologique
 
@@ -202,7 +211,8 @@ RESPONSE TO USER
 ## 8. Points d'Extension
 
 Le système est conçu pour permettre :
-- Ajout de nouveaux référentiels (ISO, etc.)
-- Intégration APIs tierces
-- Modules complémentaires (formation, etc.)
-- Personnalisation par secteur d'activité
+- **Extension de l'architecture hiérarchique** à d'autres référentiels (ISO, etc.)
+- **Réplication du modèle axes-chapitres-critères** pour nouvelles normes
+- Intégration APIs tierces avec structure de données enrichie
+- Modules complémentaires exploitant les contenus préambulaires
+- Personnalisation avancée par secteur d'activité via table axes_mase
