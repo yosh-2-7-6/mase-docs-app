@@ -1,0 +1,617 @@
+commit a03d39eadb02b0ba8452f5c73dd27ae40db905cd
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Sat Jun 14 10:56:32 2025 +0200
+
+    Préparation Enveloppe eSoleau + Déplacement Fichiers MD dans dossier séparé (sauf README)
+
+ CLAUDE.md => fichiers_md/CLAUDE.md                 |    0
+ CLAUDE2.md => fichiers_md/CLAUDE2.md               |    0
+ CLAUDE3.md => fichiers_md/CLAUDE3.md               |    0
+ CLAUDE4.md => fichiers_md/CLAUDE4.md               |    0
+ CLAUDE5.md => fichiers_md/CLAUDE5.md               |    0
+ .../DELETION_TEST_INSTRUCTIONS.md                  |    0
+ fichiers_md/Dossier_Protection_MASE_DOCS_INPI.md   | 1307 ++++++++++++++++++++
+ fichiers_md/Enveloppe_eSoleau.md                   |   79 ++
+ .../GUIDE_UTILISATION_MASE_DOCS.md                 |    0
+ .../ONBOARDING_GUIDE.md                            |    0
+ .../Resume_Executif_Backend.md                     |    0
+ fichiers_md/details_projet.md                      |  191 +++
+ .../chapitres_mase_rows.sql                        |    0
+ .../contenu_documents_cles_rows.sql                |    0
+ .../criteres_mase_rows.sql                         |    0
+ .../documents_cles_rows.sql                        |    0
+ 16 files changed, 1577 insertions(+)
+
+commit ca31d9b3955fa0563d6f3e57fbba8c2911e1c0cb
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Fri Jun 13 17:46:37 2025 +0200
+
+    MAJ #2 readme.md
+
+ README.md | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+commit 7897ffa95956ffcc5dc070bba81e2feaedc790c4
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Fri Jun 13 13:40:50 2025 +0200
+
+    MAJ readme.md
+
+ README.md | 276 ++++++++++++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 199 insertions(+), 77 deletions(-)
+
+commit 1630a88c8ef582bbd74805677869cab224cf3cbf
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Fri Jun 13 00:18:52 2025 +0200
+
+    MAJ Dashboard & Clarification Résultats Mase Checker
+
+ CLAUDE5.md                                  | 391 +++++++++++++++++++++++++++-
+ app/dashboard/mase-checker/page.tsx         |  16 +-
+ components/dashboard/global-score-chart.tsx | 203 ++++++++-------
+ 3 files changed, 518 insertions(+), 92 deletions(-)
+
+commit bfbb45abbadfe5bf7e2a0701f79174eb3d7c5cbd
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Thu Jun 12 01:23:49 2025 +0200
+
+    Table Supabase user_profile OK + Correction Dashboard OK (bug avec NaN) + Correction Cache Corrompu
+
+ CLAUDE5.md                                  | 572 +++++++++++++++++++++++++++-
+ app/dashboard/settings/page.tsx             |   4 +-
+ components/dashboard-wrapper.tsx            |  20 +-
+ components/dashboard/global-score-chart.tsx | 289 +++++++++++---
+ components/onboarding-modal.tsx             |  29 +-
+ utils/mase-state.ts                         |  23 +-
+ utils/supabase/database.ts                  |   3 +-
+ utils/supabase/middleware.ts                |  36 +-
+ utils/user-profile.ts                       |  39 +-
+ 9 files changed, 908 insertions(+), 107 deletions(-)
+
+commit cce176cf25076455686af7f1b9f545224e55ed2d
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Wed Jun 11 23:45:16 2025 +0200
+
+    Table Supabase audit_session_stats MAJ
+
+ CLAUDE5.md | 138 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 137 insertions(+), 1 deletion(-)
+
+commit 63493c8a616f0c35e040ce82a9cbcc7a2773b70a
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Wed Jun 11 23:35:01 2025 +0200
+
+    Mase Checker fonctionnel avec Supabase
+
+ CLAUDE5.md                          | 130 +++++++++++++++++++++++++++++++++++-
+ app/dashboard/mase-checker/page.tsx |  28 +++++---
+ utils/mase-state.ts                 |  34 +++++++---
+ 3 files changed, 173 insertions(+), 19 deletions(-)
+
+commit 0188771128415834371cdef724847c15763612b7
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Wed Jun 11 23:15:27 2025 +0200
+
+    #3 Corrections Erreurs Mase Checker (probleme RLS résolu avec ajout "insert", "delete")
+
+ CLAUDE4.md                            | 467 ++++++++++++++++
+ CLAUDE5.md                            | 986 ++++++++++++++++++++++++++++++++++
+ DELETION_TEST_INSTRUCTIONS.md         |  78 +++
+ app/dashboard/mase-checker/page.tsx   | 617 ++++++++++++++++++---
+ app/dashboard/mase-generator/page.tsx |  27 +-
+ test-audit.md                         |  43 ++
+ test-deletion.js                      |  59 ++
+ utils/dashboard-analytics.ts          |  11 +
+ utils/mase-state.ts                   | 298 ++++++++--
+ utils/supabase/database.ts            |  31 +-
+ utils/user-profile.ts                 |  37 +-
+ 11 files changed, 2512 insertions(+), 142 deletions(-)
+
+commit 7022b07b9c1cc1041a23285ee154b897a0035929
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Wed Jun 11 14:54:06 2025 +0200
+
+    #2 Corrections Erreurs Mase Checker
+
+ app/dashboard/mase-checker/page.tsx | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+commit e94fb93a383f6ad73fa4f186071d2a7597af0f37
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Wed Jun 11 10:58:05 2025 +0200
+
+    #1 Correction Erreurs Mase Checker
+
+ CLAUDE4.md                            | 175 +++++++++++
+ app/dashboard/mase-checker/page.tsx   | 544 +++++++++++++++++++++++-----------
+ app/dashboard/mase-generator/page.tsx |  10 +-
+ app/dashboard/page.tsx                |   6 +-
+ app/dashboard/settings/page.tsx       |   6 +-
+ components/dashboard-wrapper.tsx      |  25 +-
+ components/onboarding-modal.tsx       |   7 +-
+ utils/dashboard-analytics.ts          |  61 ++--
+ utils/mase-referential.ts             | 341 +++++++++++++++++++++
+ utils/mase-state.ts                   | 130 ++++++--
+ utils/supabase/database.ts            | 442 +++++++++++++++++++++++++++
+ utils/user-profile.ts                 | 250 ++++++++++++----
+ 12 files changed, 1686 insertions(+), 311 deletions(-)
+
+commit f459af102ab08b92e305e09bb4d0e8090db50ef7
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Tue Jun 10 20:00:24 2025 +0200
+
+    Implementation Tables Supabase
+
+ .mcp.json                      |   9 +-
+ CLAUDE4.md                     | 215 +++++++++++++++++++++++++++++++++
+ donnees/criteres_mase_rows.sql | 265 ++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 483 insertions(+), 6 deletions(-)
+
+commit 71832cfb3af21635cf961d41a6de39999b8bab65
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Tue Jun 10 15:47:45 2025 +0200
+
+    MCP Ready
+
+ .mcp.json                                        | 15 +++++++++++++++
+ donnees/CLAUDE4.md => Resume_Executif_Backend.md |  0
+ 2 files changed, 15 insertions(+)
+
+commit e033299dd678a0a08f924ab6239b5f4e1b69c87d
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Tue Jun 10 15:25:40 2025 +0200
+
+    Résumé exécutif Backend
+
+ donnees/CLAUDE4.md                      | 247 ++++++++++++++++++++++++++++++
+ donnees/chapitres_mase_rows.csv         |  36 -----
+ donnees/chapitres_mase_rows.sql         |  12 ++
+ donnees/contenu_documents_cles_rows.csv |  20 ---
+ donnees/contenu_documents_cles_rows.sql |   1 +
+ donnees/criteres_mase_rows.csv          | 264 --------------------------------
+ donnees/criteres_mase_rows.sql          |   1 +
+ donnees/documents_cles_rows.csv         |  42 -----
+ donnees/documents_cles_rows.sql         |   1 +
+ 9 files changed, 262 insertions(+), 362 deletions(-)
+
+commit 5feb6e604f7c27322fc7062b04e944ce16e96550
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Tue Jun 10 14:43:47 2025 +0200
+
+    Prêt à commencer le backend
+
+ CLAUDE4.md                                  | 278 ++++++++++++++++++++++++++++
+ app/dashboard/documents/page.tsx            |  72 ++++++-
+ app/dashboard/mase-generator/page.tsx       | 171 +++++++++--------
+ app/dashboard/page.tsx                      |   3 +-
+ app/layout.tsx                              |  19 +-
+ components/dashboard/global-score-chart.tsx | 251 +++++++++++++++++++------
+ donnees/chapitres_mase_rows.csv             |  36 ++++
+ donnees/contenu_documents_cles_rows.csv     |  20 ++
+ donnees/criteres_mase_rows.csv              | 264 ++++++++++++++++++++++++++
+ donnees/documents_cles_rows.csv             |  42 +++++
+ next.config.ts                              |  25 +++
+ package-lock.json                           |  17 +-
+ package.json                                |   2 +-
+ utils/dashboard-analytics.ts                |  44 ++---
+ utils/document-manager.ts                   |  81 ++++++++
+ utils/mase-state.ts                         |  18 ++
+ 16 files changed, 1173 insertions(+), 170 deletions(-)
+
+commit faf785c0d457f6b40a5ac231df5eb8f90731b202
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Tue Jun 10 00:36:36 2025 +0200
+
+    Présélection Automatique MASE Generator + guide utilisateurs
+
+ GUIDE_UTILISATION_MASE_DOCS.md        | 369 ++++++++++++++++++++++++++++++++++
+ app/dashboard/mase-checker/page.tsx   |   8 +-
+ app/dashboard/mase-generator/page.tsx |  88 +++++++-
+ utils/mase-state.ts                   |  16 ++
+ 4 files changed, 467 insertions(+), 14 deletions(-)
+
+commit 428b0d3335a33239e469437ea5ed7fa564cf6b70
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Mon Jun 9 18:03:45 2025 +0200
+
+    Résolution caractères manquants
+
+ app/dashboard/mase-generator/page.tsx | 30 ++++++++++++++++++++++--------
+ 1 file changed, 22 insertions(+), 8 deletions(-)
+
+commit 15485318acda14ec715ff8959c457280047f8744
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Mon Jun 9 17:56:11 2025 +0200
+
+    Optimisation Mase Generator (étape 5)
+
+ app/dashboard/mase-checker/page.tsx   |  17 +++-
+ app/dashboard/mase-generator/page.tsx | 153 +++++++++++++++++++++++++++-------
+ utils/dashboard-analytics.ts          |   2 +-
+ 3 files changed, 136 insertions(+), 36 deletions(-)
+
+commit 7555de050e2d21814e2167d4008e114c082c4c6e
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Mon Jun 9 16:53:11 2025 +0200
+
+    Optimisation Mase Generator + Logique Globale
+
+ CLAUDE3.md                            | 178 ++++++++-
+ app/dashboard/mase-checker/page.tsx   |  41 +-
+ app/dashboard/mase-generator/page.tsx | 703 ++++++++++++++++++++--------------
+ utils/mase-state.ts                   |   4 +-
+ 4 files changed, 628 insertions(+), 298 deletions(-)
+
+commit 91431d0aa551c77d2b71d94a14bfce6ee9c8b491
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Mon Jun 9 14:08:13 2025 +0200
+
+    Intégration Module Amélioration Documents / Optimisation Dashboard
+
+ CLAUDE3.md                            |  282 +++-
+ app/dashboard/documents/page.tsx      |  769 +++++----
+ app/dashboard/mase-checker/page.tsx   |   99 +-
+ app/dashboard/mase-generator/page.tsx |  162 +-
+ app/dashboard/page.tsx                |   39 +-
+ app/layout.tsx                        |    6 +
+ next.config.ts                        |    2 +-
+ package-lock.json                     |  795 ++++-----
+ package.json                          |    4 +-
+ pnpm-lock.yaml                        | 2939 +++++++++++++++++++++++++++++++++
+ utils/document-manager.ts             |  359 ++++
+ utils/mase-state.ts                   |   16 +-
+ 12 files changed, 4548 insertions(+), 924 deletions(-)
+
+commit d6d5b56e8c2f1410192c2d1595b76270e1485642
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Sun Jun 8 20:04:55 2025 +0200
+
+    Correction trash icon MASE CHECKER
+
+ app/dashboard/mase-checker/page.tsx   | 111 ++++++++++++++++++----------------
+ app/dashboard/mase-generator/page.tsx |   8 +--
+ 2 files changed, 64 insertions(+), 55 deletions(-)
+
+commit 0d9a9d79613aab7b9b817caa03022548915b2b90
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Sun Jun 8 18:55:08 2025 +0200
+
+    Optimisations 21-24
+
+ CLAUDE3.md                                  | 575 ++++++++++------------------
+ app/dashboard/documents/page.tsx            |  32 +-
+ app/dashboard/mase-checker/page.tsx         | 106 +++--
+ app/dashboard/mase-generator/page.tsx       |  31 +-
+ app/dashboard/page.tsx                      |  76 +---
+ components/app-sidebar.tsx                  |  37 +-
+ components/dashboard/global-score-chart.tsx | 212 ++++++----
+ components/dashboard/priority-actions.tsx   |  29 +-
+ public/icons/trash_icon.jpg                 | Bin 0 -> 1683 bytes
+ 9 files changed, 520 insertions(+), 578 deletions(-)
+
+commit 4a5dfe3871c7707f8c1e5b4c03a6c8edc101dbf6
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Sun Jun 8 01:48:59 2025 +0200
+
+    Nouveau Dashboard + Ajout Mes Documents (Optimisations 19-20)
+
+ CLAUDE3.md                                  | 427 +++++++++++++++++++++
+ app/dashboard/documents/page.tsx            | 485 ++++++++++++++++++++++++
+ app/dashboard/mase-checker/page.tsx         |  29 +-
+ app/dashboard/page.tsx                      | 139 ++++---
+ components/app-sidebar.tsx                  |   6 +
+ components/dashboard/axis-progress-bars.tsx | 110 ------
+ components/dashboard/compliance-gauge.tsx   | 145 -------
+ components/dashboard/global-score-chart.tsx | 199 ++++++++++
+ components/dashboard/module-status-card.tsx | 150 --------
+ components/ui/select.tsx                    | 160 ++++++++
+ package-lock.json                           | 569 +++++++++++++++++++++++++++-
+ package.json                                |   5 +-
+ utils/dashboard-analytics.ts                |  56 ++-
+ 13 files changed, 1995 insertions(+), 485 deletions(-)
+
+commit c69398f2428162fcb292ee9b3fac072e93a70b5a
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Fri Jun 6 15:34:29 2025 +0200
+
+    Optimisations 14-17
+
+ CLAUDE2.md                                  | 346 +++++++++++++++++++++++++++-
+ app/dashboard/mase-checker/page.tsx         |  22 +-
+ app/dashboard/mase-generator/page.tsx       |  46 +++-
+ app/dashboard/page.tsx                      |   4 +-
+ components/dashboard/compliance-gauge.tsx   |   9 +-
+ components/dashboard/module-status-card.tsx |  39 ++--
+ components/dashboard/priority-actions.tsx   | 123 ++++++----
+ utils/dashboard-analytics.ts                |  54 ++---
+ 8 files changed, 526 insertions(+), 117 deletions(-)
+
+commit 75e752fd5578585dce0a8881bc7810aae019b38f
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Fri Jun 6 11:30:32 2025 +0200
+
+    Dashboard créé
+
+ CLAUDE.md                                   | 185 ++---------
+ CLAUDE2.md                                  | 469 ++++++++++++++++++++++++++++
+ app/dashboard/mase-generator/page.tsx       |   6 +-
+ app/dashboard/page.tsx                      | 220 ++++++++-----
+ components/dashboard/activity-timeline.tsx  | 161 ++++++++++
+ components/dashboard/axis-progress-bars.tsx | 110 +++++++
+ components/dashboard/compliance-gauge.tsx   | 140 +++++++++
+ components/dashboard/module-status-card.tsx | 137 ++++++++
+ components/dashboard/priority-actions.tsx   | 146 +++++++++
+ utils/dashboard-analytics.ts                | 381 ++++++++++++++++++++++
+ utils/mase-state.ts                         |   2 +-
+ 11 files changed, 1722 insertions(+), 235 deletions(-)
+
+commit d4d287e6e5eaf8efb9b9da264693f964358f2f76
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Fri Jun 6 10:29:20 2025 +0200
+
+    optimisations 12-13 frontend
+
+ CLAUDE.md                             | 165 +++++++++++++++++++++++++++++++++-
+ app/dashboard/mase-checker/page.tsx   |   8 +-
+ app/dashboard/mase-generator/page.tsx | 108 +++++++++++++++++++++-
+ utils/mase-state.ts                   | 124 +++++++++++++++++++++++++
+ 4 files changed, 398 insertions(+), 7 deletions(-)
+
+commit 95de2c620b7181f524c52c12fb9b14d5b6c990b5
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Fri Jun 6 01:38:38 2025 +0200
+
+    optimisation 11 + modal onboarding
+
+ CLAUDE.md                             | 225 ++++++++++++++++-
+ ONBOARDING_GUIDE.md                   | 163 +++++++++++++
+ app/dashboard/layout.tsx              |  37 +--
+ app/dashboard/mase-generator/page.tsx |  43 +++-
+ app/dashboard/settings/page.tsx       | 448 ++++++++++++++++++++++++++++------
+ components/dashboard-wrapper.tsx      |  87 +++++++
+ components/onboarding-modal.tsx       | 235 ++++++++++++++++++
+ utils/user-profile.ts                 | 127 ++++++++++
+ 8 files changed, 1254 insertions(+), 111 deletions(-)
+
+commit fee124d09dff1f7a99d3ecc277338015e4a3b201
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Fri Jun 6 00:57:44 2025 +0200
+
+    Optimisation 10 frontend
+
+ CLAUDE.md                             | 122 +++++++++++++++++++++++++++++++++-
+ app/dashboard/mase-checker/page.tsx   |  29 +++++++-
+ app/dashboard/mase-generator/page.tsx |  56 ++++++++--------
+ 3 files changed, 175 insertions(+), 32 deletions(-)
+
+commit ce32a8b5df0dbf1933565dcb4b86ff1f51990de5
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Fri Jun 6 00:20:10 2025 +0200
+
+    Optimisations 7-9 frontend
+
+ CLAUDE.md                             | 110 +++++++++++++++++++++++++++++-
+ app/dashboard/mase-checker/page.tsx   | 123 +++++++++++++++++++++-------------
+ app/dashboard/mase-generator/page.tsx | 109 ++++++++++++++++++++----------
+ utils/mase-state.ts                   |  31 +++++++++
+ 4 files changed, 289 insertions(+), 84 deletions(-)
+
+commit 61d6e295632f528b57bb1b96590d3c007b89464d
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Thu Jun 5 23:08:11 2025 +0200
+
+    Optimisations 3-6 frontend
+
+ CLAUDE.md                             | 158 ++++++++-
+ app/dashboard/mase-checker/page.tsx   | 613 ++++++++++++++++++++++++++++------
+ app/dashboard/mase-generator/page.tsx | 363 ++++++++++++++++----
+ utils/mase-state.ts                   | 113 +++++++
+ 4 files changed, 1076 insertions(+), 171 deletions(-)
+
+commit 7e1dbda03cb3664bc6e266c65446e212c1157211
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Thu Jun 5 19:31:42 2025 +0200
+
+    optimisation #2 frontend
+
+ app/dashboard/mase-generator/page.tsx | 469 +++++++++++++++++++++++++---------
+ 1 file changed, 342 insertions(+), 127 deletions(-)
+
+commit 1b5399a48afc1fdbfc26fef778ec7ccf5ee0dd23
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Thu Jun 5 18:54:06 2025 +0200
+
+    1ere interface mockée MASE GENERATOR
+
+ app/dashboard/mase-checker/page.tsx   |   36 +-
+ app/dashboard/mase-generator/page.tsx | 1001 ++++++++++++++++++++++++++++++---
+ components/ui/textarea.tsx            |   22 +
+ 3 files changed, 965 insertions(+), 94 deletions(-)
+
+commit 3728c4fdc03389e0f894677b673828a6025a89ba
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Thu Jun 5 18:02:18 2025 +0200
+
+    1ere Interface mockée MASE CHECKER
+
+ CLAUDE.md                           |  36 ++-
+ app/dashboard/mase-checker/page.tsx | 554 ++++++++++++++++++++++++++++++++----
+ components/ui/alert.tsx             |  59 ++++
+ components/ui/dialog.tsx            | 122 ++++++++
+ components/ui/progress.tsx          |  28 ++
+ components/ui/table.tsx             | 117 ++++++++
+ components/ui/tabs.tsx              |  55 ++++
+ package-lock.json                   | 153 ++++++++++
+ package.json                        |   2 +
+ 9 files changed, 1071 insertions(+), 55 deletions(-)
+
+commit 3994c6faa548d965547e78e9673447120ab5aba1
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Thu Jun 5 10:59:31 2025 +0200
+
+    App Ready-to-work (authentification uniformisée + responsive)
+
+ CLAUDE.md                                          |  67 +++++++++++++-
+ app/(public)/(auth-pages)/forgot-password/page.tsx |  16 ++--
+ app/(public)/(auth-pages)/layout.tsx               |   6 +-
+ app/(public)/(auth-pages)/sign-in/page.tsx         |  10 +-
+ app/(public)/(auth-pages)/sign-up/page.tsx         |  18 ++--
+ app/(public)/(auth-pages)/smtp-message.tsx         |  27 ------
+ app/(public)/layout.tsx                            |  51 ++++-------
+ app/(public)/page.tsx                              |  15 +--
+ app/(public)/reset-password/page.tsx               |  26 +++---
+ components/app-sidebar.tsx                         |   5 +-
+ components/deploy-button.tsx                       |  25 -----
+ components/env-var-warning.tsx                     |  33 -------
+ components/form-message.tsx                        |  10 +-
+ components/header-auth.tsx                         |  70 --------------
+ components/hero.tsx                                |  44 ---------
+ components/next-logo.tsx                           |  46 ----------
+ components/supabase-logo.tsx                       | 102 ---------------------
+ components/tutorial/code-block.tsx                 |  61 ------------
+ components/tutorial/connect-supabase-steps.tsx     |  62 -------------
+ components/tutorial/fetch-data-steps.tsx           |  96 -------------------
+ components/tutorial/sign-up-user-steps.tsx         |  88 ------------------
+ components/tutorial/tutorial-step.tsx              |  30 ------
+ 22 files changed, 125 insertions(+), 783 deletions(-)
+
+commit 455822372537b22b2ac179f07167930478d880bd
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Thu Jun 5 00:08:58 2025 +0200
+
+    authentication (sign-in, sign-out, mdp oublié) fonctionne
+
+ CLAUDE.md                                          |  49 ++++++-
+ app/(public)/(auth-pages)/forgot-password/page.tsx |  73 +++++++---
+ app/(public)/(auth-pages)/layout.tsx               |   6 +-
+ app/(public)/(auth-pages)/sign-in/page.tsx         | 100 +++++++++----
+ app/(public)/(auth-pages)/sign-up/page.tsx         | 110 ++++++++++----
+ app/(public)/(auth-pages)/smtp-message.tsx         |  36 ++---
+ app/(public)/reset-password/page.tsx               | 161 +++++++++++++++++++++
+ app/actions.ts                                     |  11 +-
+ app/auth/reset-callback/route.ts                   |  22 +++
+ package-lock.json                                  |  33 ++++-
+ package.json                                       |   2 +-
+ 11 files changed, 490 insertions(+), 113 deletions(-)
+
+commit 733d8fa1a3a35d4919e5ca526857a2afc7a1a8ee
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Wed Jun 4 23:03:29 2025 +0200
+
+    sidebar + user menu + theme switcher fonctionnels
+
+ app/dashboard/layout.tsx              |   9 +-
+ app/dashboard/reset-password/page.tsx |  86 +++++++++-----
+ app/dashboard/settings/page.tsx       | 204 ++++++++++++++--------------------
+ components/app-sidebar.tsx            |  62 +++++++++--
+ next.config.ts                        |   4 +-
+ 5 files changed, 209 insertions(+), 156 deletions(-)
+
+commit d54697d60b3f9e7df3287c661aaf291071be1ba3
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Wed Jun 4 22:01:08 2025 +0200
+
+    Implement shadcn/ui sidebar to replace existing dashboard sidebar
+
+ CLAUDE.md                                          | 147 ++++
+ .../(auth-pages)/forgot-password/page.tsx          |   0
+ app/{ => (public)}/(auth-pages)/layout.tsx         |   0
+ app/{ => (public)}/(auth-pages)/sign-in/page.tsx   |   0
+ app/{ => (public)}/(auth-pages)/sign-up/page.tsx   |   0
+ app/{ => (public)}/(auth-pages)/smtp-message.tsx   |   0
+ app/(public)/layout.tsx                            |  48 ++
+ app/{ => (public)}/page.tsx                        |   0
+ app/actions.ts                                     |  12 +-
+ app/auth/callback/route.ts                         |   2 +-
+ app/dashboard/billing/page.tsx                     | 189 +++++
+ app/dashboard/layout.tsx                           |  27 +
+ app/dashboard/mase-checker/page.tsx                |  80 +++
+ app/dashboard/mase-generator/page.tsx              | 112 +++
+ app/dashboard/page.tsx                             |  87 +++
+ .../reset-password/page.tsx                        |   0
+ app/dashboard/settings/page.tsx                    | 133 ++++
+ app/globals.css                                    |  16 +
+ app/layout.tsx                                     |  40 +-
+ app/protected/page.tsx                             |  38 -
+ components/app-sidebar.tsx                         | 183 +++++
+ components/ui/card.tsx                             |  71 ++
+ components/ui/separator.tsx                        |  31 +
+ components/ui/sheet.tsx                            | 140 ++++
+ components/ui/sidebar.tsx                          | 780 +++++++++++++++++++++
+ components/ui/skeleton.tsx                         |  15 +
+ components/ui/tooltip.tsx                          |  30 +
+ package-lock.json                                  | 444 +++++++++++-
+ package.json                                       |   7 +-
+ tailwind.config.ts                                 | 144 ++--
+ utils/supabase/middleware.ts                       |   6 +-
+ 31 files changed, 2621 insertions(+), 161 deletions(-)
+
+commit d10c76cdc2f596f6d32f5a97ae14142dbd70dd4e
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Wed Jun 4 15:31:25 2025 +0200
+
+    test commit avec ajout clé openrouter dans .env.example
+
+ .env.example | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit 32110b5a45a14dc4b59bce7333b171d288bbffde
+Author: yosh-2-7-6 <contact@summum-agency.com>
+Date:   Wed Jun 4 14:52:47 2025 +0200
+
+    Initial commit
+
+ .env.example                                   |    4 +
+ .gitignore                                     |   41 +
+ README.md                                      |  104 +
+ app/(auth-pages)/forgot-password/page.tsx      |   37 +
+ app/(auth-pages)/layout.tsx                    |    9 +
+ app/(auth-pages)/sign-in/page.tsx              |   44 +
+ app/(auth-pages)/sign-up/page.tsx              |   51 +
+ app/(auth-pages)/smtp-message.tsx              |   25 +
+ app/actions.ts                                 |  134 +
+ app/auth/callback/route.ts                     |   24 +
+ app/favicon.ico                                |  Bin 0 -> 25931 bytes
+ app/globals.css                                |   69 +
+ app/layout.tsx                                 |   77 +
+ app/opengraph-image.png                        |  Bin 0 -> 289886 bytes
+ app/page.tsx                                   |   16 +
+ app/protected/page.tsx                         |   38 +
+ app/protected/reset-password/page.tsx          |   37 +
+ app/twitter-image.png                          |  Bin 0 -> 289886 bytes
+ components.json                                |   17 +
+ components/deploy-button.tsx                   |   25 +
+ components/env-var-warning.tsx                 |   33 +
+ components/form-message.tsx                    |   24 +
+ components/header-auth.tsx                     |   70 +
+ components/hero.tsx                            |   44 +
+ components/next-logo.tsx                       |   46 +
+ components/submit-button.tsx                   |   23 +
+ components/supabase-logo.tsx                   |  102 +
+ components/theme-switcher.tsx                  |   78 +
+ components/tutorial/code-block.tsx             |   61 +
+ components/tutorial/connect-supabase-steps.tsx |   62 +
+ components/tutorial/fetch-data-steps.tsx       |   96 +
+ components/tutorial/sign-up-user-steps.tsx     |   88 +
+ components/tutorial/tutorial-step.tsx          |   30 +
+ components/typography/inline-code.tsx          |    7 +
+ components/ui/badge.tsx                        |   36 +
+ components/ui/button.tsx                       |   56 +
+ components/ui/checkbox.tsx                     |   30 +
+ components/ui/dropdown-menu.tsx                |  200 ++
+ components/ui/input.tsx                        |   25 +
+ components/ui/label.tsx                        |   26 +
+ lib/utils.ts                                   |    6 +
+ middleware.ts                                  |   20 +
+ next.config.ts                                 |    7 +
+ package-lock.json                              | 3542 ++++++++++++++++++++++++
+ package.json                                   |   35 +
+ postcss.config.js                              |    6 +
+ tailwind.config.ts                             |   80 +
+ tsconfig.json                                  |   28 +
+ utils/supabase/check-env-vars.ts               |    6 +
+ utils/supabase/client.ts                       |    7 +
+ utils/supabase/middleware.ts                   |   62 +
+ utils/supabase/server.ts                       |   29 +
+ utils/utils.ts                                 |   16 +
+ 53 files changed, 5733 insertions(+)

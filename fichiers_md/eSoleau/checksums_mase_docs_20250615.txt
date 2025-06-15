@@ -1,0 +1,47 @@
+CHECKSUMS MASE DOCS - Protection INPI
+Généré le: Sun Jun 15 14:46:54 CEST 2025
+======================================
+
+=== DOCUMENTS DE PROTECTION ===
+Fichier: Dossier_Protection_MASE_DOCS_INPI.md
+MD5:    6aa703a6a45954b12fdac8f6c2db8603
+SHA256: c1ff2054de7c79f3e0a1dcd24b7e91e4ebd065d32524efb89897ace1ad9ae2e6
+
+=== FICHIERS TECHNIQUES CLÉS ===
+Fichier: ../../app/dashboard/mase-checker/page.tsx
+MD5:    57d629ad6de540f90cf08e0d3c989992
+SHA256: fc13d0bdc7a3102db7e34b141aca8cc54d1cd844526f73fd665ad82690d05e4e
+
+Fichier: ../../app/dashboard/mase-generator/page.tsx
+MD5:    57d6b52fbd0a333dca0ddcb5519cfb4d
+SHA256: df678b0fef94027a81c5219b2901cdeaabd807227ea892272a16ebf3ebf1a939
+
+Fichier: ../../app/dashboard/page.tsx
+MD5:    9e8de82f0024273900ef9cdec3d7eaf1
+SHA256: 46db950d04928617d49b3930cd85d4ee5007ae370b559e3ca5a4ae27a0399a97
+
+Fichier: ../../utils/mase-state.ts
+MD5:    4edd7afb149f5afcea67b8836d3e0b43
+SHA256: 9e30b9422b22e71bffa679353a800b19f896155db62cf7b5a1d5fa211333a2c7
+
+Fichier: ../../utils/user-profile.ts
+MD5:    2f943031c604292e224a0d028f2cd849
+SHA256: 5a759fb31163343b822069e1cf4a1ea475ad761925ebeee043de63f22c063d50
+
+Fichier: schema_base_donnees_mase_docs.sql
+MD5:    820e9182d693400008f0dbc31f925644
+SHA256: f500a1f01a2d1252596a146690c1e8aca757b84e08c7053b100c8fb73fd5f55f
+
+Fichier: architecture_technique_mase_docs.md
+MD5:    5ef7c1ba7068d0843c66f6ef0f276ef6
+SHA256: 38278fb6e7145af1d9aa2581001a2056e4fb449f74bf15f157fadc79fe3b5e93
+
+=== FICHIERS DE CONFIGURATION ===
+Fichier: ../../package.json
+MD5:    4e87426fd386b2ce2f51b4b9b0f8d370
+SHA256: 5b1c6026fc1402698552792da7af1e4e010efc860a04c686a8963226e8281e28
+
+Fichier: ../../middleware.ts
+MD5:    d699868af7700b8ab673051e24a13f10
+SHA256: 2fd30698eeed26fb1b45ca74217dbd32953de381a5a3c848338148bfee5bc428
+
