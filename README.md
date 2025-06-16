@@ -14,6 +14,8 @@
 
 **MASE DOCS** est une plateforme SaaS complète qui révolutionne le processus de certification MASE (Manuel d'Amélioration Sécurité des Entreprises) en automatisant l'audit documentaire et la génération de documents conformes. Conçue pour les entreprises qui souhaitent obtenir ou maintenir leur certification MASE tout en restant concentrées sur leur cœur de métier.
 
+> **Note importante** : L'application est actuellement un **prototype fonctionnel** avec une interface utilisateur complète. L'analyse IA et la génération documentaire utilisent des données simulées en attendant l'intégration complète avec les services d'intelligence artificielle.
+
 ### 🚀 Fonctionnalités principales
 
 - **Audit automatisé** de vos documents HSE existants
@@ -31,7 +33,7 @@ Analysez automatiquement vos documents HSE et identifiez les écarts par rapport
 
 **Fonctionnalités :**
 - Upload simple par drag & drop (PDF, Word, Excel)
-- Analyse IA de conformité selon 250+ critères MASE
+- Analyse IA de conformité selon 270+ critères MASE
 - Scoring par document et par axe (5 axes MASE)
 - Identification précise des écarts et non-conformités
 - Génération de rapports d'audit détaillés
@@ -160,13 +162,13 @@ L'application s'appuie sur le référentiel officiel MASE structuré en :
 
 ### 5 Axes d'Évaluation
 
-1. **Axe 1** - Engagement de la direction (855 points)
-2. **Axe 2** - Compétences et qualifications (640 points)
-3. **Axe 3** - Préparation et organisation (1300 points)
-4. **Axe 4** - Mise en œuvre (980 points)
-5. **Axe 5** - Contrôles et amélioration (475 points)
+1. **Axe 1** - Engagement de la direction (900 points)
+2. **Axe 2** - Compétences et qualifications du personnel (800 points)
+3. **Axe 3** - Préparation et organisation des interventions (1300 points)
+4. **Axe 4** - Contrôles et amélioration continue (1100 points)
+5. **Axe 5** - Bilan et amélioration continue (900 points)
 
-**Score total** : 4250 points | **Seuil certification** : 70%
+**Score total** : 5000 points | **Seuil certification** : 70%
 
 ### Système de Scoring
 
@@ -203,11 +205,44 @@ npm run test     # Tests unitaires
 ### Structure des Données
 
 Les principales tables Supabase :
+
+**Tables Référentiel (Données statiques) :**
+- `axes_mase` - 5 axes MASE avec contenus préambulaires
+- `chapitres_mase` - 24 chapitres répartis sur les 5 axes
+- `criteres_mase` - 270+ critères d'évaluation (B/V/VD)
+- `documents_cles` - 41 documents obligatoires MASE
+- `contenu_documents_cles` - Templates et structures documentaires
+
+**Tables Utilisateur (Données dynamiques) :**
 - `user_profiles` - Profils entreprises
 - `audit_sessions` - Sessions d'audit
 - `audit_documents` - Documents analysés
 - `audit_results` - Résultats détaillés
+- `generation_sessions` - Sessions de génération
 - `generated_documents` - Documents générés
+
+## 🚧 État du Développement
+
+### Actuellement Implémenté ✅
+- Interface utilisateur complète (Next.js + shadcn/ui)
+- Système d'authentification (Supabase Auth)
+- Base de données avec référentiel MASE 2024 complet
+- Workflows utilisateur (upload, analyse, génération)
+- Dashboard avec métriques et visualisations
+- Système d'onboarding et profils utilisateur
+
+### En Cours de Développement 🔄
+- Migration localStorage → Supabase pour persistance
+- Intégration de l'IA pour analyse réelle (Claude/Gemini API)
+- Génération documentaire dynamique basée sur templates
+- Export multi-format (Word, Excel, PDF)
+
+### Prochaines Étapes 📋
+1. Finaliser l'intégration backend Supabase
+2. Implémenter l'analyse sémantique par IA
+3. Développer la génération documentaire intelligente
+4. Ajouter l'OCR pour documents scannés
+5. Mettre en place le système de facturation
 
 ## 📱 Support et Contact
 

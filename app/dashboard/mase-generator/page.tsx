@@ -303,6 +303,9 @@ export default function MaseGeneratorPage() {
   
   // État pour déclencher la présélection avec un délai
   const [shouldPreselect, setShouldPreselect] = useState(false);
+  
+  // État pour éviter la re-présélection après désélection manuelle
+  const [hasManuallySelectedDocs, setHasManuallySelectedDocs] = useState(false);
 
   // Fonctions utilitaires pour la détection des documents manquants
   const findMatchingAuditedDocument = (templateId: string, auditResults: any[]) => {
@@ -645,8 +648,8 @@ Personnalisez le contenu selon les spécificités de l'entreprise [${companyProf
 
   // useEffect pour présélectionner les documents quand on arrive à l'étape de sélection
   useEffect(() => {
-    if (currentStep === 'selection' && config.mode === 'post-audit' && latestAudit && config.selectedDocs.length === 0) {
-      console.log('Déclenchement de la présélection intelligente');
+    if (currentStep === 'selection' && config.mode === 'post-audit' && latestAudit && config.selectedDocs.length === 0 && !hasManuallySelectedDocs) {
+      console.log('Déclenchement de la présélection intelligente (pas de sélection manuelle)');
       const intelligentSelection = getIntelligentPreselection();
       
       if (intelligentSelection.length > 0) {
@@ -664,13 +667,16 @@ Personnalisez le contenu selon les spécificités de l'entreprise [${companyProf
         }));
       }
     }
-  }, [currentStep, config.mode, latestAudit]); // Ne pas inclure config.selectedDocs pour éviter les boucles
+  }, [currentStep, config.mode, latestAudit, hasManuallySelectedDocs]); // Inclure hasManuallySelectedDocs
 
   // Plus besoin du code pour documentsForImprovement
 
   // Step 1: Mode Selection
   const handleModeSelection = (mode: GenerationConfig['mode']) => {
     let selectedDocs: string[] = [];
+    
+    // Réinitialiser le flag de sélection manuelle lors du changement de mode
+    setHasManuallySelectedDocs(false);
     
     // Si mode post-audit, utiliser la présélection intelligente
     if (mode === 'post-audit' && latestAudit) {
@@ -697,6 +703,7 @@ Personnalisez le contenu selon les spécificités de l'entreprise [${companyProf
 
   // Step 2: Document Selection
   const toggleDocumentSelection = (docId: string) => {
+    setHasManuallySelectedDocs(true); // Marquer comme sélection manuelle
     const selected = config.selectedDocs.includes(docId);
     if (selected) {
       setConfig({
@@ -712,13 +719,14 @@ Personnalisez le contenu selon les spécificités de l'entreprise [${companyProf
   };
 
   const selectAllByAxis = (axis: string) => {
+    setHasManuallySelectedDocs(true); // Marquer comme sélection manuelle
     const axisDocs = DOCUMENT_TEMPLATES.filter(doc => doc.axis === axis).map(doc => doc.id);
     const currentAxisDocs = config.selectedDocs.filter(id => 
       DOCUMENT_TEMPLATES.find(doc => doc.id === id)?.axis === axis
     );
     
-    if (currentAxisDocs.length === axisDocs.length) {
-      // Deselect all from this axis
+    if (currentAxisDocs.length === axisDocs.length && axisDocs.length > 0) {
+      // Tous les documents de cet axe sont sélectionnés -> les désélectionner
       setConfig({
         ...config,
         selectedDocs: config.selectedDocs.filter(id => 
@@ -726,25 +734,26 @@ Personnalisez le contenu selon les spécificités de l'entreprise [${companyProf
         )
       });
     } else {
-      // Select all from this axis
-      const newSelected = [...config.selectedDocs];
-      axisDocs.forEach(docId => {
-        if (!newSelected.includes(docId)) {
-          newSelected.push(docId);
-        }
+      // Pas tous sélectionnés -> sélectionner tous les documents de cet axe
+      const otherAxisDocs = config.selectedDocs.filter(id => 
+        DOCUMENT_TEMPLATES.find(doc => doc.id === id)?.axis !== axis
+      );
+      setConfig({ 
+        ...config, 
+        selectedDocs: [...otherAxisDocs, ...axisDocs] 
       });
-      setConfig({ ...config, selectedDocs: newSelected });
     }
   };
 
   const selectAllDocuments = () => {
+    setHasManuallySelectedDocs(true); // Marquer comme sélection manuelle
     const allDocIds = DOCUMENT_TEMPLATES.map(doc => doc.id);
-    if (config.selectedDocs.length === allDocIds.length) {
-      // Deselect all
+    if (config.selectedDocs.length === allDocIds.length && allDocIds.length > 0) {
+      // Tous sélectionnés -> tout désélectionner
       setConfig({ ...config, selectedDocs: [] });
     } else {
-      // Select all
-      setConfig({ ...config, selectedDocs: allDocIds });
+      // Pas tous sélectionnés -> tout sélectionner
+      setConfig({ ...config, selectedDocs: [...allDocIds] });
     }
   };
 
@@ -914,6 +923,9 @@ Date de génération: ${new Date().toLocaleDateString()}`;
   const resetGenerator = () => {
     // Effacer le mode de vue de génération si nécessaire
     MaseStateManager.clearGenerationViewMode();
+    
+    // Réinitialiser le flag de sélection manuelle
+    setHasManuallySelectedDocs(false);
     
     setCurrentStep('mode');
     setConfig({
@@ -1329,8 +1341,10 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                               return (
                                 <div 
                                   key={doc.id}
-                                  className={`relative flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer ${
-                                    needsImprovement ? 'border-amber-500 bg-amber-50 dark:bg-amber-950' : ''
+                                  className={`relative flex items-center space-x-3 p-3 border-2 rounded-lg hover:bg-muted/50 cursor-pointer ${
+                                    needsImprovement 
+                                      ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/50 shadow-amber-100 dark:shadow-amber-900/20 shadow-md' 
+                                      : 'border-border hover:border-muted-foreground/20'
                                   }`}
                                   onClick={() => toggleDocumentSelection(doc.id)}
                                 >
@@ -1345,10 +1359,12 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                                     </div>
                                     <p className="text-xs text-muted-foreground">{doc.description}</p>
                                     {needsImprovement && (
-                                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                                        <Shield className="h-3 w-3 inline mr-1" />
-                                        Amélioration recommandée (score faible)
-                                      </p>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900 dark:text-amber-200 dark:border-amber-700">
+                                          <Shield className="h-3 w-3 mr-1" />
+                                          Amélioration recommandée
+                                        </Badge>
+                                      </div>
                                     )}
                                     <div className="flex items-center gap-2 mt-1">
                                       <Clock className="h-3 w-3 text-muted-foreground" />
@@ -1415,8 +1431,10 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                       return (
                         <div 
                           key={doc.id}
-                          className={`relative flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer ${
-                            needsImprovement ? 'border-amber-500 bg-amber-50 dark:bg-amber-950' : ''
+                          className={`relative flex items-center space-x-3 p-3 border-2 rounded-lg hover:bg-muted/50 cursor-pointer ${
+                            needsImprovement 
+                              ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/50 shadow-amber-100 dark:shadow-amber-900/20 shadow-md' 
+                              : 'border-border hover:border-muted-foreground/20'
                           }`}
                           onClick={() => toggleDocumentSelection(doc.id)}
                         >
@@ -1431,10 +1449,12 @@ Date de génération: ${new Date().toLocaleDateString()}`;
                             </div>
                             <p className="text-xs text-muted-foreground mb-1">{enrichedDoc.description}</p>
                             {needsImprovement && (
-                              <p className="text-xs text-amber-600 dark:text-amber-400 mb-1">
-                                <Shield className="h-3 w-3 inline mr-1" />
-                                Amélioration recommandée (score faible)
-                              </p>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900 dark:text-amber-200 dark:border-amber-700">
+                                  <Shield className="h-3 w-3 mr-1" />
+                                  Amélioration recommandée
+                                </Badge>
+                              </div>
                             )}
                             <div className="flex items-center gap-2">
                               <Clock className="h-3 w-3 text-muted-foreground" />
