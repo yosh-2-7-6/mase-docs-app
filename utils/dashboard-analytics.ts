@@ -62,6 +62,8 @@ export interface SimplifiedDashboardData {
   auditScore: number | null;  // Score d'audit réel calculé dans MASE CHECKER
   maseStatus: string;
   lastAuditDate: string | null;
+  hasGeneratedDocuments: boolean;  // Nouveau : indique s'il y a des documents générés
+  lastGenerationDate: string | null;  // Nouveau : date de dernière génération
   existingDocuments: number;
   missingDocuments: number;
   nonCompliantDocuments: number;
@@ -170,21 +172,21 @@ export class DashboardAnalytics {
     }
 
     const latestGeneration = generationHistory[0];
-    const thisMonthGenerations = generationHistory.filter(gen => {
-      const genDate = new Date(gen.date);
-      const now = new Date();
-      return genDate.getMonth() === now.getMonth() && genDate.getFullYear() === now.getFullYear();
-    });
+    
+    // Calculer le total de documents générés
+    const totalDocumentsGenerated = generationHistory.reduce((sum, gen) => {
+      return sum + (gen.documentsGenerated?.length || 0);
+    }, 0);
 
     return {
       hasData: true,
       status: "Documents générés",
       metric: {
-        value: thisMonthGenerations.reduce((sum, gen) => sum + gen.documentsGenerated.length, 0),
-        label: "Documents ce mois"
+        value: totalDocumentsGenerated,
+        label: "Documents générés"
       },
       lastActivity: latestGeneration.date,
-      additionalInfo: `Dernière génération: ${latestGeneration.generationType}`
+      additionalInfo: `${generationHistory.length} génération(s) effectuée(s)`
     };
   }
 
@@ -368,36 +370,72 @@ export class DashboardAnalytics {
     const auditScore = await this.getAuditGlobalScore(); // Vrai score d'audit
     const auditResults = await MaseStateManager.getLatestAudit();
     
+    // Vérifier l'historique de génération
+    const generationHistory = MaseStateManager.getGenerationHistory();
+    const hasGeneratedDocuments = generationHistory.length > 0;
+    const lastGenerationDate = hasGeneratedDocuments ? generationHistory[0].date : null;
+    
+    // Calculer le nombre total de documents générés
+    const totalGeneratedDocuments = generationHistory.reduce((total, generation) => {
+      return total + (generation.documentsGenerated?.length || 0);
+    }, 0);
+    
     console.log('Dashboard data compilation:', {
       globalScore,
       auditScore,
       hasAuditResults: !!auditResults,
-      auditDate: auditResults?.date || 'none'
+      auditDate: auditResults?.date || 'none',
+      hasGeneratedDocuments,
+      lastGenerationDate,
+      totalGeneratedDocuments,
+      generationsCount: generationHistory.length
     });
     
     let existingDocuments = 0;
     let missingDocuments = 0;
     let nonCompliantDocuments = 0;
     let conformeDocuments = 0;
-    const documentsRequis = 20; // Nombre total de documents dans le référentiel MASE (15 requis + 5 optionnels)
+    const documentsRequis = 41; // Nombre total de documents MASE requis selon le référentiel 2024
     
     if (auditResults && auditResults.analysisResults) {
+      // Données basées sur l'audit
       existingDocuments = auditResults.analysisResults.length;
       nonCompliantDocuments = auditResults.analysisResults.filter(doc => doc.score < 80).length;
       conformeDocuments = auditResults.analysisResults.filter(doc => doc.score >= 80).length;
       
-      // Calcul des documents manquants
-      missingDocuments = Math.max(0, documentsRequis - existingDocuments);
+      // Ajouter les documents générés aux documents conformes
+      const additionalGeneratedDocs = Math.max(0, totalGeneratedDocuments - conformeDocuments);
+      conformeDocuments += additionalGeneratedDocs;
+      
+      // Recalculer les documents manquants en tenant compte des générations
+      const totalDocuments = existingDocuments + totalGeneratedDocuments;
+      missingDocuments = Math.max(0, documentsRequis - totalDocuments);
+    } else if (hasGeneratedDocuments) {
+      // Pas d'audit mais des documents générés
+      existingDocuments = 0;
+      nonCompliantDocuments = 0;
+      conformeDocuments = totalGeneratedDocuments;
+      missingDocuments = Math.max(0, documentsRequis - totalGeneratedDocuments);
     } else {
-      // Si aucun audit, tous les documents sont manquants
+      // Aucun audit ni génération
       missingDocuments = documentsRequis;
     }
     
+    // Calculer un score global estimé basé sur la conformité
+    let estimatedGlobalScore = globalScore;
+    if (!estimatedGlobalScore && (conformeDocuments > 0 || nonCompliantDocuments > 0)) {
+      const totalDocumentsAnalyzed = conformeDocuments + nonCompliantDocuments;
+      estimatedGlobalScore = totalDocumentsAnalyzed > 0 ? 
+        Math.round((conformeDocuments / totalDocumentsAnalyzed) * 100) : 0;
+    }
+    
     return {
-      globalScore,
-      auditScore, // Ajouter le vrai score d'audit
-      maseStatus: this.getMaseStatus(globalScore),
+      globalScore: estimatedGlobalScore, // Utiliser le score estimé si pas d'audit
+      auditScore, // Score réel d'audit
+      maseStatus: this.getMaseStatus(estimatedGlobalScore),
       lastAuditDate: auditResults?.date || null,
+      hasGeneratedDocuments,
+      lastGenerationDate,
       existingDocuments,
       missingDocuments,
       nonCompliantDocuments,

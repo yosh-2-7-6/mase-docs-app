@@ -64,8 +64,8 @@ export default function DashboardPage() {
     );
   }
 
-  // Handle case when no audit has been performed
-  if (!dashboardData || !dashboardData.lastAuditDate) {
+  // Handle case when no audit has been performed AND no documents generated
+  if (!dashboardData || (!dashboardData.lastAuditDate && !dashboardData.hasGeneratedDocuments)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
         <div className="max-w-md space-y-6">
