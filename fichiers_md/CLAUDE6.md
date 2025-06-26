@@ -303,3 +303,101 @@ TOTAL : 5000 POINTS MAXIMUM ✅
 **Status Corrections : COMPLÉTÉES** ✅  
 **Dashboard : PLEINEMENT FONCTIONNEL** 📊  
 **Synchronisation : PARFAITE** 🔄
+
+---
+
+## Session Continuation: Mise à Jour Documents Clés MASE (Janvier 2025)
+
+**Date :** Janvier 2025  
+**Contexte :** Evolution du référentiel MASE - Passage de 41 à 45 documents clés obligatoires
+
+### **Problématique Identifiée**
+
+L'utilisateur a révisé manuellement la liste des documents clés MASE et identifié que le nombre passe de **41 à 45 documents**, comme précisé dans le fichier :
+`/Users/MacBookPro/ai-coding/NBLM_Docs_Clés_23_06_25_liste_finale.pdf`
+
+### **Architecture Actuelle des Tables**
+
+#### **Table `documents_cles` (41 enregistrements actuels)**
+- `id` (uuid, PK)
+- `nom_document` (text)
+- `axe_principal` (text) - Axe MASE principal (1-5)
+- `axes_secondaires` (array) - Axes secondaires si applicable
+- `obligatoire` (boolean) - Par défaut true
+- `type_document` (text) - politique, plan, registre, procédure, etc.
+- `description_attendue` (text) - **Vue synthétique** du contenu attendu
+- `criteres_lies` (array) - Critères MASE liés (ex: ["1.2.1", "1.2.2"])
+- `questions_liees` (array) - Questions d'audit associées
+- `frequence_maj` (text) - Fréquence mise à jour
+- `created_at` (timestamp)
+
+#### **Table `contenu_documents_cles` (16 sections actuelles)**
+- `id` (uuid, PK)
+- `document_cle_id` (uuid, FK)
+- `section_nom` (text) - Nom de la section
+- `contenu_attendu` (text) - Contenu spécifique de cette section
+- `elements_obligatoires` (array) - Éléments requis
+- `elements_recommandes` (array) - Éléments suggérés
+- `exemples_conformes` (array) - Exemples concrets
+- `criteres_validation` (text) - Critères d'évaluation
+- `ordre_section` (integer) - Ordre d'affichage
+- `created_at` (timestamp)
+
+### **Clarifications Techniques Importantes**
+
+#### **Non-Redondance des Tables**
+Les deux tables ne sont **PAS** redondantes :
+
+1. **`documents_cles.description_attendue`** = **Vue synthétique**
+   - Description générale de ce que doit contenir le document
+   - Usage : Vue d'ensemble pour l'utilisateur et l'audit
+
+2. **`contenu_documents_cles`** = **Template de génération structuré**
+   - Structure section par section du document
+   - Décomposition granulaire pour génération automatique
+   - Usage : Template détaillé pour MASE GENERATOR
+
+#### **Vue `documents_cles_with_axis`**
+- Vue automatique qui fait une jointure avec `axes_mase`
+- Se met à jour automatiquement lors des modifications
+- Ajoute le champ `axe_nom` aux données
+
+### **Informations Requises pour Mise à Jour**
+
+Pour chaque nouveau document (4 documents à ajouter) :
+
+1. **nom_document** (text) - Titre officiel du document
+2. **axe_principal** (text) - Axe MASE principal (1, 2, 3, 4 ou 5)
+3. **axes_secondaires** (array) - Axes secondaires si applicable
+4. **type_document** (text) - Type (politique, plan, registre, procédure, fiche, analyse, rapport, etc.)
+5. **description_attendue** (text) - **Vue synthétique** du contenu attendu pour conformité MASE
+6. **criteres_lies** (array) - Critères MASE liés (format: ["X.Y.Z"])
+7. **questions_liees** (array) - Questions d'audit associées
+8. **frequence_maj** (text) - Fréquence de mise à jour (annuelle, mensuelle, continue, selon_activité, etc.)
+
+### **Plan de Mise à Jour Prévu**
+
+1. **Identification des 4 nouveaux documents** à partir du PDF fourni
+2. **Vérification des documents existants** pour modifications éventuelles
+3. **Préparation des requêtes SQL** (INSERT + UPDATE si nécessaire)
+4. **Mise à jour via MCP Supabase** :
+   - Ajouter les 4 nouveaux documents
+   - Modifier les documents existants si nécessaire
+5. **Validation finale** :
+   - Confirmer total de 45 documents
+   - Vérifier intégrité des références aux critères
+   - S'assurer que la vue `documents_cles_with_axis` se met à jour
+
+### **Outils Disponibles**
+
+- ✅ **MCP Supabase configuré** et fonctionnel
+- ✅ **Accès direct à la base** via `project_id: iberwpfdvifxpmjtpezp`
+- ✅ **Connaissance structure** des tables existantes
+
+### **État de Session**
+
+- **Statut** : En attente des détails des 4 nouveaux documents
+- **Fichier source** : `/Users/MacBookPro/ai-coding/NBLM_Docs_Clés_23_06_25_liste_finale.pdf`
+- **Prêt pour** : Exécution de la mise à jour dès réception des informations
+
+**Note importante :** Cette documentation permettra de reprendre efficacement la mise à jour lors de la prochaine session avec les détails extraits du PDF.
