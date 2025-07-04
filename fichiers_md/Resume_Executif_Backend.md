@@ -36,7 +36,7 @@ MASE DOCS représente une transformation complète du processus de certification
   - Axe 5 : 5.1.1 à 5.2.13 (26 critères)
 
 #### 3. Documents Clés Requis (`documents_cles`)
-- **41 documents obligatoires** avec métadonnées complètes :
+- **40+ documents obligatoires** avec métadonnées complètes :
   - **Types** : politique, plan, registre, procédure, fiche, analyse, rapport, etc.
   - **Axes de rattachement** : chaque document lié à 1 axe principal + axes secondaires
   - **Critères liés** : mapping précis document ↔ critères d'évaluation
@@ -204,7 +204,7 @@ interface ScoringEngine {
 
 ### Phase 3 : Génération Avancée (2-3 mois)
 **Priorité MOYENNE** - Enhancement
-- Templates complets pour les 41 documents
+- Templates complets pour les 40+ documents
 - Export multi-formats optimisé (Word/Excel/PDF)
 - Personnalisation avancée par secteur d'activité
 - Intégration workflow audit → génération automatique

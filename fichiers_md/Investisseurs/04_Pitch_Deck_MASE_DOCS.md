@@ -19,12 +19,13 @@
 ## SLIDE 2: LE PROBLÈME
 ### **La Certification MASE : Un Cauchemar Administratif**
 
-#### **6 000 entreprises** certifiées souffrent du même problème :
+#### **4 800 entreprises** certifiées souffrent du même problème :
 
-❌ **30-114 jours** selon ressources mobilisées
+❌ **64 jours** (initial) / **29 jours** (renouvellement)
 ❌ **270+ critères** à analyser un par un  
-❌ **41 documents** obligatoires à produire
-❌ **6 820€ à 29 800€** de coûts réels
+❌ **40+ documents** obligatoires à produire
+❌ **13 400€** coût moyen certification initiale
+❌ **5 600€** coût moyen renouvellement
 ❌ **80-95%** du budget perdu en administratif
 
 > **"On passe plus de temps sur la paperasse que sur l'amélioration réelle de la sécurité"**
@@ -44,7 +45,7 @@
 - Identification précise des écarts
 
 **📄 MASE GENERATOR**
-- Génération automatique des 41 documents
+- Génération automatique des 40+ documents
 - Personnalisation entreprise
 - Conformité garantie MASE 2024
 - Export multi-formats
@@ -69,39 +70,43 @@
 ---
 
 ## SLIDE 5: MARCHÉ
-### **Un Marché de 90M€ Validé (Données Réelles 2025)**
+### **Un Marché de 64M€ Validé (Données Réelles 2025)**
 
 #### **TAM - Marché Total Corrigé**
-- 6 000 entreprises certifiées (source officielle)
-- 15 000€ coût moyen réel × 6 000 = **90M€**
+- **4 800 entreprises** certifiées (David Marion 2024)
+- **6 000+ adhérents** au réseau MASE
+- **200-300 nouvelles certifications** par an
+- **1 500-1 700 renouvellements** par an
+- **5 000 audits à blanc** par an
+- 4 800 × 13 400€ moyen = **64M€**
 
 #### **SAM - Marché Adressable**  
-- 20% early adopters tech
-- 1 200 entreprises × 15 000€ = **18M€**
+- 25% early adopters tech
+- 1 200 entreprises × 3 600€ ARR = **4,3M€**
 
 #### **SOM - Objectif 3 ans**
-- 20% de pénétration SAM
-- 320 clients × 1 300€ ARR = **420K€**
+- 27% de pénétration SAM
+- 320 clients × 3 600€ ARR = **1,15M€**
 
-**Renouvellement obligatoire tous les 3 ans**
+**Renouvellement obligatoire tous les 3 ans + audits à blanc annuels**
 
 ---
 
 ## SLIDE 6: BUSINESS MODEL
 ### **SaaS Récurrent à Forte Marge**
 
-#### **Pricing Optimisé par Segment**
+#### **Pricing Optimisé par Segment (Coûts Réels Validés)**
 - 🆓 **Free** : 0€ - Test produit
-- 🟠 **TPE** : 79€ - ROI 85:1
-- 🔵 **PME** : 149€ - ROI 67:1  
-- 🟣 **ETI** : 399€ - ROI 37:1
+- 🟠 **TPE** : 79€ - ROI 85:1 (initiale) / 35:1 (renouvellement)
+- 🔵 **PME** : 149€ - ROI 67:1 (initiale) / 28:1 (renouvellement)
+- 🟣 **ETI** : 399€ - ROI 37:1 (initiale) / 15:1 (renouvellement)
 
 #### **Métriques Clés**
-- **ARPU** : 90€ → 140€ (An 5)
-- **Gross Margin** : 85%+
-- **LTV/CAC** : 3x → 15x
-- **Churn** : <3% mensuel
-- **ROI client** : 10:1 démontrable
+- **ARPU** : 300€ → 400€ (An 5)
+- **Gross Margin** : 88%+
+- **LTV/CAC** : 3x → 37x
+- **Churn** : <2% mensuel
+- **ROI client** : 85:1 (TPE) à 37:1 (ETI)
 
 ---
 
@@ -114,6 +119,8 @@
 ✅ **Base 270+ critères** MASE 2024
 ✅ **3 entreprises pilotes** engagées
 ✅ **20+ interviews** clients validées
+✅ **Données marché** actualisées (David Marion)
+✅ **Coûts réels** calculés par profil
 
 #### **Prochains Milestones (Ajustés)**
 📅 **M+3** : Intégration IA complète
@@ -130,22 +137,23 @@
 
 **1. Direct Sales (40%)**
 - Ciblage PME/ETI certifiées
-- Démos personnalisées
-- CAC : 500€
+- Démos personnalisées avec ROI calculé
+- CAC : 800€
 
-**2. Digital Marketing (35%)**
-- SEO "certification MASE"
-- LinkedIn Ads ciblées
-- Webinaires experts
+**2. Digital Marketing (25%)**
+- SEO MASE + certification HSE
+- LinkedIn ciblé décideurs HSE
+- Webinaires expertise MASE
 
-**3. Partenariats (20%)**
-- Certificateurs MASE
-- Cabinets conseil HSE
-- Assureurs
+**3. Partenariats (25%)**
+- Certificateurs MASE officiels (réseau David Marion)
+- Organismes de formation MASE
+- Cabinets conseil HSE spécialisés
 
-**4. Product-Led (5%)**
-- Freemium viral
-- Referral program
+**4. Referral (10%)**
+- Programme ambassadeurs TPE/PME
+- Incentives certification réussie
+- Réseau MASE word-of-mouth
 
 ---
 
@@ -198,13 +206,13 @@
 
 | Métrique | An 1 | An 2 | An 3 | An 5 |
 |----------|------|------|------|------|
-| **Clients** | 30 | 150 | 400 | 1200 |
-| **ARR** | 108K€ | 540K€ | 1.44M€ | 4.32M€ |
-| **EBITDA** | -320K€ | 20K€ | 420K€ | 1.8M€ |
-| **Cash** | 180K€ | 200K€ | 620K€ | 2.4M€ |
+| **Clients** | 30 | 150 | 320 | 1080 |
+| **ARR** | 108K€ | 540K€ | 1.15M€ | 5.18M€ |
+| **EBITDA** | -320K€ | 20K€ | -8K€ | 1.36M€ |
+| **Cash** | 180K€ | 200K€ | 560K€ | 2.1M€ |
 
-#### **Break-even : Mois 24**
-#### **ROI : 44-70x pour investisseur seed (conservateur)**
+#### **Break-even : Mois 30**
+#### **ROI : 35-52x pour investisseur seed (conservateur)**
 
 ---
 
@@ -285,9 +293,9 @@
 
 ✅ **Entrepreneur confirmé** : 4 ans Summum Agency + MVP 65% fonctionnel
 ✅ **Structure solide** : EURL opérationnelle, pas de création juridique
-✅ **Marché validé** : 6K entreprises, coûts réels confirmés
-✅ **ROI démontrable** : 10:1 pour clients, 44-70x pour investisseurs
-✅ **Timing parfait** : First-mover sur marché 90M€
+✅ **Marché validé** : 4 800 entreprises, coûts réels confirmés
+✅ **ROI démontrable** : 85:1 à 37:1 pour clients, 35-52x pour investisseurs
+✅ **Timing parfait** : First-mover sur marché 64M€
 ✅ **Impact positif** : Améliorer la sécurité au travail
 
 #### **Prochaines Étapes**

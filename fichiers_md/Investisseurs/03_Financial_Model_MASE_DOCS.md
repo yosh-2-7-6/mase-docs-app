@@ -6,14 +6,16 @@
 ## 1. EXECUTIVE SUMMARY FINANCIER
 **Projet porté par Summum Agency (EURL depuis avril 2021)**
 
-### **Hypothèses Clés (Ajustées 2025)**
+### **Hypothèses Clés (Ajustées 2025 - Données David Marion)**
 - **Structure porteuse** : Summum Agency EURL (4 ans d'expérience)
+- **Marché validé** : 4 800 entreprises certifiées + 6 000 adhérents
+- **Flux annuel** : 200-300 nouvelles + 1 500-1 700 renouvellements + 5 000 audits blancs
 - **Levée de fonds** : 500K€ en seed (2025)
 - **Break-even** : Mois 24
 - **Profitabilité** : Année 3
-- **ARR année 5** : 4,32M€
-- **Exit potentiel** : 22-35M€ (conservateur)
-- **TAM réel** : 90M€ (6K entreprises)
+- **ARR année 5** : 5,18M€
+- **Exit potentiel** : 26-41M€ (conservateur)
+- **TAM réel** : 64M€ (4 800 entreprises × 13 400€ moyen)
 - **Avantage** : Pas de création juridique, entrepreneur opérationnel
 
 ### **Métriques SaaS Cibles**
@@ -41,8 +43,8 @@
 | Métrique | M6 | M12 | M18 | M24 | An 3 | An 4 | An 5 |
 |----------|-----|-----|-----|-----|------|------|------|
 | **Nouveaux clients/mois** | 5 | 8 | 15 | 25 | 35 | 50 | 70 |
-| **Total clients actifs** | 20 | 50 | 120 | 250 | 500 | 1000 | 2000 |
-| **Dont payants** | 12 | 30 | 85 | 200 | 425 | 900 | 1850 |
+| **Total clients actifs** | 20 | 50 | 120 | 250 | 400 | 800 | 1200 |
+| **Dont payants** | 12 | 30 | 85 | 200 | 320 | 680 | 1080 |
 | **Taux conversion** | 60% | 60% | 70% | 80% | 85% | 90% | 92% |
 
 ### **2.3 Évolution du MRR et ARR**
@@ -53,9 +55,9 @@
 | **M12** | 21 | 90€ | 1.9K€ | 23K€ | 188% |
 | **M18** | 56 | 95€ | 5.3K€ | 64K€ | 178% |
 | **M24** | 150 | 100€ | 15K€ | 180K€ | 181% |
-| **An 3** | 320 | 110€ | 35K€ | 420K€ | 133% |
-| **An 4** | 680 | 120€ | 82K€ | 980K€ | 133% |
-| **An 5** | 1080 | 140€ | 151K€ | 1.81M€ | 85% |
+| **An 3** | 320 | 300€ | 96K€ | 1.15M€ | 133% |
+| **An 4** | 680 | 360€ | 245K€ | 2.94M€ | 155% |
+| **An 5** | 1080 | 400€ | 432K€ | 5.18M€ | 76% |
 
 ### **2.4 Churn et Retention**
 
@@ -179,9 +181,9 @@
 
 | Scénario | Hypothèses | ARR An 3 | ARR An 5 | Valorisation An 5 |
 |----------|------------|----------|----------|-------------------|
-| **Pessimiste** | -30% acquisition | 1.0M€ | 4.2M€ | 21-30M€ |
-| **Base Case** | Plan actuel | 1.5M€ | 6.0M€ | 30-48M€ |
-| **Optimiste** | +50% acquisition | 2.2M€ | 9.0M€ | 45-72M€ |
+| **Pessimiste** | -30% acquisition | 800K€ | 3.6M€ | 18-29M€ |
+| **Base Case** | Plan actuel | 1.15M€ | 5.18M€ | 26-41M€ |
+| **Optimiste** | +50% acquisition | 1.7M€ | 7.8M€ | 39-62M€ |
 
 ### **6.2 Impact des Variables Clés**
 
@@ -269,32 +271,40 @@
 
 ## 9. CONCLUSIONS FINANCIÈRES
 
-### **Points Clés pour Investisseurs**
+### **Points Clés pour Investisseurs (Impact Données Actualisées)**
 
-1. **Rentabilité Rapide**
+1. **Marché Validé et Mesuré**
+   - 4 800 entreprises certifiées (David Marion 2024)
+   - 20% TPE (<10 salariés) = opportunité digitale prioritaire
+   - Taux de refus 6% = besoin d'accompagnement démontré
+   - Impact sécurité prouvé : Accidents divisés par 3, gravité par 2
+
+2. **Rentabilité Rapide**
    - Break-even opérationnel : Mois 18
    - Cash-flow positif : Année 3
    - EBITDA >25% : Année 5
 
-2. **Unit Economics Solides**
+3. **Unit Economics Solides**
    - LTV/CAC >3x dès année 1
    - Payback <6 mois
    - Gross margin >80%
+   - ROI client mesuré : 85:1 (TPE) à 37:1 (ETI)
 
-3. **Croissance Soutenue**
-   - CAGR revenus : >100% sur 5 ans
+4. **Croissance Soutenue (Ajustée Marché Réel)**
+   - CAGR revenus : 140% sur 5 ans (4 800 entreprises TAM)
    - Net Revenue Retention >110%
    - Rule of 40 >40% dès année 3
+   - Pénétration cible : 25% marché certifié (vs 33% initial)
 
-4. **Capital Efficiency**
+5. **Capital Efficiency (Optimisé)**
    - Seulement 1.25M€ pour atteindre rentabilité
-   - ARR/Capital investi >4x
-   - Exit multiple potentiel >40x seed
+   - ARR/Capital investi >4x (5.18M€ ARR / 1.25M€)
+   - Exit multiple potentiel 35-52x seed (26-41M€ valorisation)
 
 ### **Investment Highlights**
 
 ✅ **Modèle SaaS pure** avec revenus récurrents prévisibles
-✅ **Marché non adressé** avec barrières à l'entrée
+✅ **Marché validé 4 800 entreprises** avec barrières techniques
 ✅ **Métriques best-in-class** pour SaaS B2B
 ✅ **Path to profitability** clair et rapide
 ✅ **Multiple de sortie** attractif (5-8x ARR)

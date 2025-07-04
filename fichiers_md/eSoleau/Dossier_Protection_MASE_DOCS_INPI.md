@@ -42,7 +42,7 @@ La divulgation, reproduction ou utilisation de tout ou partie de ce document san
 
 MASE DOCS est une plateforme Software as a Service (SaaS) révolutionnaire qui automatise intégralement le processus de certification MASE (Manuel d'Amélioration Sécurité des Entreprises) grâce à l'intelligence artificielle et aux technologies d'automatisation avancées.
 
-La certification MASE, référentiel international de sécurité industrielle, requiert la production et la conformité de 41 documents obligatoires selon 270+ critères stricts répartis sur 5 axes organisés en 24 chapitres. Le processus traditionnel nécessite 15 jours d'accompagnement consultant et plusieurs jours de remédiation post-audit, représentant un investissement de 23 600€ en moyenne par certification.
+La certification MASE, référentiel international de sécurité industrielle, requiert la production et la conformité de 40+ documents obligatoires selon 270+ critères stricts répartis sur 5 axes organisés en 24 chapitres. Le processus traditionnel nécessite 15 jours d'accompagnement consultant et plusieurs jours de remédiation post-audit, représentant un investissement de 23 600€ en moyenne par certification.
 
 ### 1.2 Innovation apportée
 
@@ -81,7 +81,7 @@ Le référentiel MASE (Manuel d'Amélioration Sécurité des Entreprises) est de
 Le référentiel MASE présente une complexité technique importante :
 
 - **Structure hiérarchique** : 5 axes, 24 chapitres, 270+ critères d'évaluation
-- **Documents obligatoires** : 41 documents spécifiques requis
+- **Documents obligatoires** : 40+ documents spécifiques requis
 - **Système de scoring complexe** :
   - Environ 160+ critères binaires (B) : 0 ou maximum de points
   - Environ 80+ critères variables (V) : scoring de 0 à 100%
@@ -533,7 +533,7 @@ Le moteur d'IA constitue le cœur différenciant de MASE DOCS. Sans révéler le
 - Intégration des scores et recommandations d'audit
 
 **Mode "Ex-nihilo" (création complète)**
-- Sélection libre des 41 documents MASE disponibles
+- Sélection libre des 40+ documents MASE disponibles
 - Assistance intelligente selon le secteur et la taille
 - Recommandations contextuelles de priorisation
 - Estimation des délais et ressources nécessaires
@@ -1116,7 +1116,7 @@ MASE DOCS est conçu comme une plateforme évolutive permettant l'extension à l
 - Relation hiérarchique : axes → chapitres → critères
 - Contenu enrichi pour personnalisation documentaire
 
-### 12.2 Documents obligatoires MASE (41 documents)
+### 12.2 Documents obligatoires MASE (40+ documents)
 
 #### 12.2.1 Documents AXE 1 - ENGAGEMENT DE LA DIRECTION (15 documents)
 

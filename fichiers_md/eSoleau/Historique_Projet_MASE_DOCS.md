@@ -87,7 +87,7 @@
 **Application fonctionnelle avec :**
 - Architecture multi-tenant sécurisée
 - Algorithme de scoring propriétaire
-- Base de connaissances MASE complète (270+ critères, 24 chapitres, 5 axes, 41 documents)
+- Base de connaissances MASE complète (270+ critères, 24 chapitres, 5 axes, 40+ documents)
 - **Architecture hiérarchique avancée** : Table axes_mase avec contenus préambulaires enrichis
 - Interface utilisateur moderne et intuitive
 - Système de génération documentaire intelligent exploitant la structure complète

@@ -265,7 +265,7 @@ TOTAL : 5000 POINTS MAXIMUM ✅
 **Problème :** Les ratios conformité/requis n'intégraient pas les documents générés.
 
 **Améliorations :**
-- ✅ **Documents requis** : Correction 20 → **41 documents** (référentiel MASE 2024 complet)
+- ✅ **Documents requis** : Correction 20 → **40+ documents** (référentiel MASE 2024 complet)
 - ✅ **Calcul intelligent** : Documents conformes = audit ≥80% + documents générés
 - ✅ **Documents manquants** : 41 - (existants + générés)
 - ✅ **Score estimé** : Calcul automatique quand pas d'audit mais des générations
@@ -291,7 +291,7 @@ TOTAL : 5000 POINTS MAXIMUM ✅
 ### **Résultats**
 - ✅ **Synchronisation parfaite** entre MASE GENERATOR et Dashboard
 - ✅ **Métriques temps réel** : Documents générés comptabilisés instantanément
-- ✅ **Ratios précis** : Conformité calculée sur base 41 documents MASE
+- ✅ **Ratios précis** : Conformité calculée sur base 40+ documents MASE
 - ✅ **UX améliorée** : Plus de message "effectuer audit ou générer" quand documents générés
 
 ### **Tests Validés**

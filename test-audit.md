@@ -5,7 +5,7 @@ Tester que l'infrastructure de base de données fonctionne parfaitement avec les
 
 ## État Actuel de la Base de Données (via MCP)
 - ✅ **263 critères MASE** disponibles
-- ✅ **41 documents clés** de référence  
+- ✅ **40+ documents clés** de référence  
 - ✅ **24 chapitres MASE** structurés
 - ✅ **6 audit_sessions** existantes
 - ✅ **7 audit_documents** précédents

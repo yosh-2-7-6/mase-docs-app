@@ -41,7 +41,7 @@ CREATE TABLE criteres_mase (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Table des documents clés (41 documents MASE)
+-- Table des documents clés (40+ documents MASE)
 CREATE TABLE documents_cles (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     nom_document TEXT NOT NULL,
@@ -252,7 +252,7 @@ CREATE INDEX idx_generated_documents_session ON generated_documents(session_id);
 COMMENT ON TABLE axes_mase IS 'Référentiel des 5 axes MASE avec contenus préambulaires enrichis - TOTAL 5000 points';
 COMMENT ON TABLE chapitres_mase IS 'Référentiel des 24 chapitres MASE organisés en 5 axes';
 COMMENT ON TABLE criteres_mase IS 'Les 270+ critères d''évaluation MASE avec leur système de scoring';
-COMMENT ON TABLE documents_cles IS 'Les 41 documents clés du référentiel MASE';
+COMMENT ON TABLE documents_cles IS 'Les 40+ documents clés du référentiel MASE';
 COMMENT ON TABLE audit_sessions IS 'Sessions d''audit documentaire MASE';
 COMMENT ON TABLE audit_results IS 'Résultats détaillés d''audit par critère MASE';
 COMMENT ON COLUMN criteres_mase.type_scoring IS 'B=Binaire (0 ou max), V=Variable, VD=Variable Doublé';

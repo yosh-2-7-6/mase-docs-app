@@ -402,7 +402,7 @@ Vérification directe des tables via SQL :
 ```sql
 -- Données de référentiel parfaitement importées
 SELECT COUNT(*) FROM criteres_mase;     → 263 critères ✓
-SELECT COUNT(*) FROM documents_cles;    → 41 documents ✓  
+SELECT COUNT(*) FROM documents_cles;    → 40+ documents ✓  
 SELECT COUNT(*) FROM chapitres_mase;    → 24 chapitres ✓
 SELECT COUNT(*) FROM contenu_documents_cles; → 16 contenus ✓
 ```
@@ -543,7 +543,7 @@ const gapsPool = [
 
 #### **Base de Données Supabase - 100% Opérationnelle**
 - ✅ **263 critères MASE** accessibles aux users authentifiés
-- ✅ **41 documents clés** pour matching intelligent
+- ✅ **40+ documents clés** pour matching intelligent
 - ✅ **24 chapitres** structurés pour classification
 - ✅ **Tables d'audit** avec RLS complètes (INSERT/SELECT/UPDATE)
 - ✅ **6 audit_sessions** + **7 audit_documents** existants
@@ -956,7 +956,7 @@ npm run build
 #### **Infrastructure Complète ✅**
 - **Base de données** : Source unique de vérité avec RLS complet
 - **Politiques CRUD** : CREATE, READ, UPDATE, DELETE pour tous les utilisateurs
-- **Référentiel MASE** : 263 critères + 41 documents accessible
+- **Référentiel MASE** : 263 critères + 40+ documents accessible
 - **Cascade sécurisé** : Suppression propre sans orphelins
 
 #### **Fonctionnalités Validées ✅**

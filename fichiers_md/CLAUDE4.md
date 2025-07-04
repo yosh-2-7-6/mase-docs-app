@@ -317,7 +317,7 @@ const generateDocument = async (
 ##### Tables Principales du Référentiel MASE (Données Statiques)
 1. **`chapitres_mase`** - 19 chapitres répartis sur 5 axes principaux
 2. **`criteres_mase`** - ~250 critères d'évaluation avec types B/V/VD
-3. **`documents_cles`** - 41 documents obligatoires avec métadonnées
+3. **`documents_cles`** - 40+ documents obligatoires avec métadonnées
 4. **`contenu_documents_cles`** - Contenu détaillé par section de document
 
 ##### Tables Fonctionnelles (Données Utilisateur)
@@ -341,7 +341,7 @@ const generateDocument = async (
 
 #### Données Importées
 - ✅ **19 chapitres MASE 2024** avec descriptions et scores
-- ✅ **41 documents clés obligatoires** avec critères liés
+- ✅ **40+ documents clés obligatoires** avec critères liés
 - ✅ **20 sections de contenu détaillé** pour 3 documents (base pour extension)
 
 ### Status Final
@@ -374,7 +374,7 @@ Après configuration MCP et redémarrage Claude Code, import complet du référe
 #### 1. Import Automatisé via MCP
 **Fichiers traités avec succès :**
 - ✅ **chapitres_mase_rows.sql** : 24 chapitres importés
-- ✅ **documents_cles_rows.sql** : 41 documents importés  
+- ✅ **documents_cles_rows.sql** : 40+ documents importés  
 - ✅ **contenu_documents_cles_rows.sql** : 16 sections importées (sur 20 dans le fichier)
 
 #### 2. Import Manuel Requis

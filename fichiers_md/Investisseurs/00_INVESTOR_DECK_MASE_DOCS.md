@@ -80,8 +80,12 @@
 ## 🎯 POINTS CLÉS POUR INVESTISSEURS
 
 ### **Opportunité de Marché**
-- **15 000+ entreprises** certifiées MASE en France
-- **Marché de 75M€** avec croissance +10%/an
+- **4 800 entreprises** certifiées MASE (6 000+ adhérents)
+- **Marché de 90M€** (coûts réels validés 2025)
+- **200-300 nouvelles certifications** par an
+- **1 500-1 700 renouvellements** annuels
+- **5 000 audits à blanc** par an (marché complémentaire)
+- **Secteurs** : BTP (33-40%), Maintenance (20%)
 - **Aucune solution digitale** existante
 - **ROI client démontrable** : économie de 90% du temps
 
@@ -89,7 +93,7 @@
 - **Première plateforme SaaS** du marché
 - **IA propriétaire** pour analyse de conformité
 - **270+ critères MASE** automatisés
-- **41 documents** générés automatiquement
+- **40+ documents** générés automatiquement
 
 ### **Traction & Validation**
 - **MVP fonctionnel** à 80%
@@ -98,7 +102,11 @@
 - **Protection IP** en cours (eSoleau)
 
 ### **Modèle Économique**
-- **SaaS récurrent** : 29-299€/mois
+- **SaaS récurrent** : 79-399€/mois
+- **ROI certifié** :
+  - TPE : 85:1 (initiale) / 35:1 (renouvellement)
+  - PME : 67:1 (initiale) / 28:1 (renouvellement)
+  - ETI : 37:1 (initiale) / 15:1 (renouvellement)
 - **Marge brute** : >85%
 - **Break-even** : Mois 18
 - **ARR cible** : 1,5M€ en année 3

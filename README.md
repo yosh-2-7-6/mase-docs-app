@@ -18,12 +18,13 @@
 
 ### 🚀 Fonctionnalités principales
 
-- **Audit automatisé** de vos documents HSE existants
-- **Génération intelligente** de documents conformes MASE
-- **Scoring en temps réel** selon les 5 axes MASE
+- **Audit automatisé** de vos documents HSE existants (MASE CHECKER)
+- **Génération intelligente** de documents conformes MASE (MASE GENERATOR)
+- **Scoring en temps réel** selon les 5 axes MASE (270+ critères)
 - **Dashboard interactif** avec métriques et recommandations
 - **Export multi-formats** (Word, Excel, PDF)
 - **Conformité garantie** avec le référentiel MASE 2024
+- **ROI mesurable** : Économies de 13 400€ (initial) / 5 600€ (renouvellement) - ROI 85:1 à 37:1
 
 ## 📋 Modules
 
@@ -50,7 +51,7 @@ Analysez automatiquement vos documents HSE et identifiez les écarts par rapport
 Générez automatiquement tous vos documents MASE conformes et personnalisés.
 
 **Fonctionnalités :**
-- Génération de 41 documents MASE obligatoires
+- Génération de 40+ documents MASE obligatoires
 - Deux modes : Post-audit ou From scratch
 - Personnalisation avec vos données d'entreprise
 - Instructions SSE spécifiques intégrables
@@ -210,7 +211,7 @@ Les principales tables Supabase :
 - `axes_mase` - 5 axes MASE avec contenus préambulaires
 - `chapitres_mase` - 24 chapitres répartis sur les 5 axes
 - `criteres_mase` - 270+ critères d'évaluation (B/V/VD)
-- `documents_cles` - 41 documents obligatoires MASE
+- `documents_cles` - 40+ documents obligatoires MASE
 - `contenu_documents_cles` - Templates et structures documentaires
 
 **Tables Utilisateur (Données dynamiques) :**

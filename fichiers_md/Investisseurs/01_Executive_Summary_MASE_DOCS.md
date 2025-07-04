@@ -18,8 +18,9 @@ Transformer un processus manuel coûtant entre 6 820€ et 29 800€ en une solu
 ### **Complexité Administrative Écrasante (Données Validées 2025)**
 - **30-114 jours** de travail selon ressources mobilisées
 - **270+ critères** à analyser manuellement
-- **41 documents** obligatoires à produire
-- **6 820€ à 29 800€** de coûts réels par certification
+- **40+ documents** obligatoires à produire
+- **13 400€** coût moyen certification initiale (64 jours MASE)
+- **5 600€** coût moyen renouvellement (29 jours MASE)
 - **80-95% du budget** consacré à des tâches administratives
 
 ### **Conséquences pour les Entreprises**
@@ -44,7 +45,7 @@ Transformer un processus manuel coûtant entre 6 820€ et 29 800€ en une solu
 - **Économies** : 80-95% des coûts (6K€-30K€ → 1,2K€/an)
 
 #### **2. MASE GENERATOR - Module de Génération**
-- **41 documents** MASE générés automatiquement
+- **40+ documents** MASE générés automatiquement
 - **Personnalisation** selon le profil entreprise
 - **Conformité garantie** au référentiel 2024
 - **Export multi-formats** (Word, Excel, PDF)
@@ -69,15 +70,19 @@ Transformer un processus manuel coûtant entre 6 820€ et 29 800€ en une solu
 
 ### **Marché (Données Corrigées 2025)**
 - **TAM** : 90M€ (6 000 entreprises × 15K€ coût moyen réel)
-- **SAM** : 18M€ (20% early adopters du marché)
-- **SOM** : 3,6M€ ARR en année 3 (1 200 clients cibles)
-- **Renouvellement** : Obligatoire tous les 3 ans (marché récurrent)
+- **Nouvelles certifications** : 200-300 par an
+- **Renouvellements annuels** : 1 500-1 700 par an
+- **Audits à blanc** : 5 000 par an (audit interne obligatoire)
+- **Secteurs principaux** : BTP (33-40%), Maintenance (20%), Électricité (15%)
 - **ROI client démontrable** : 10:1 (12K€ économies vs 1,2K€ coût)
 
-### **Business Model**
+### **Business Model** 
 - **Modèle SaaS** : Abonnements mensuels récurrents
-- **Pricing optimisé** : 79€ (TPE) à 599€ (ETI) par mois
-- **Sweet spot** : 100-200€/mois (ROI 60:1 minimum)
+- **Pricing optimisé** : 79€ (TPE) à 399€ (ETI) par mois
+- **ROI par profil** :
+  - TPE : 85:1 (6 820€ économisés vs 948€/an)
+  - PME : 67:1 (12K€ économisés vs 1 788€/an) 
+  - ETI : 37:1 (18K€ économisés vs 4 788€/an)
 - **Marge brute** : >85% (coûts serveur minimes)
 - **LTV/CAC** : Ratio cible 3:1
 

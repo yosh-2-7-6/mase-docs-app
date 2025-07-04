@@ -4,7 +4,7 @@
 
 La certification MASE (Manuel d'Amélioration Sécurité des Entreprises) est devenue un prérequis incontournable pour les entreprises intervenant dans les secteurs industriels, BTP, énergie et services. Cette certification, reconnue internationalement, atteste de l'engagement d'une entreprise en matière de Santé, Sécurité et Environnement (SSE). Cependant, le processus de certification représente un défi majeur :
 
-- **Complexité documentaire** : 41 documents obligatoires à produire selon 263 critères stricts
+- **Complexité documentaire** : 40+ documents obligatoires à produire selon 263 critères stricts
 - **Investissement humain important** : 
   - 15 jours d'accompagnement consultant pour la mise en place du système documentaire, le conseil opérationnel et la formation
   - Un pilote MASE souvent dédié à temps plein au système de management
@@ -26,7 +26,7 @@ MASE DOCS est la première plateforme SaaS qui automatise et optimise le volet d
 - **Réduction du travail post-audit** : Moins d'écarts documentaires = moins de jours de remédiation
 
 ### 2. Génération Documentaire Assistée (MASE GENERATOR)
-- **Accélération de la mise en place** : Génération automatique des 41 documents obligatoires
+- **Accélération de la mise en place** : Génération automatique des 40+ documents obligatoires
 - **Personnalisation sectorielle** : Templates adaptés à votre activité et taille d'entreprise
 - **Mode "correction rapide"** : Mise à jour ciblée des documents non-conformes identifiés
 - **Ultra-personnalisation par instructions SSE** : 
@@ -70,58 +70,65 @@ MASE DOCS s'adresse à :
 
 ### ROI et Économies
 
-**Calcul du ROI pour une première certification :**
-- **Coût traditionnel** :
-  - Consulting documentaire : 8 jours × 1200€ = 9 600€
-  - Temps interne pilote MASE : 20 jours × 400€ = 8 000€
-  - Remédiation post-audit : 5 jours × 1200€ = 6 000€
-  - **Total : 23 600€**
+**Calcul du ROI pour une première certification (Données Réelles 2025) :**
 
-- **Coût avec MASE DOCS** :
-  - Abonnement annuel : 3 588€ (299€/mois)
-  - Consulting réduit : 3 jours × 1200€ = 3 600€
-  - Temps interne réduit : 5 jours × 400€ = 2 000€
-  - Remédiation minimale : 1 jour × 1200€ = 1 200€
-  - **Total : 10 388€**
+**Coûts traditionnels moyens mesurés :**
+- **Certification initiale** : 13 400€ (64 jours MASE)
+  - 1 ingénieur HSE intermédiaire 35% temps, 10 mois : 12 920€
+  - Coûts externes (audit, formations) : 480€
 
-**Économie moyenne par certification : 13 212€ (56% de réduction)**
-**ROI : 268% dès la première année**
+- **Renouvellement** : 5 600€ (29 jours MASE)
+  - 1 ingénieur HSE intermédiaire 35% temps, 4 mois : 5 100€
+  - Coûts externes : 500€
 
-**Pour un renouvellement (tous les 3 ans) :**
-- Économie moyenne : 8 000€
-- ROI sur 3 ans : 450%
+**Coût avec MASE DOCS :**
+- **Abonnement PME** : 1 788€/an (149€/mois)
+- **Temps interne réduit** : 5 jours × 170€ = 850€
+- **Total initiale avec MASE DOCS** : 2 638€
+- **Total renouvellement avec MASE DOCS** : 2 638€
+
+**Économies réelles calculées :**
+- **Certification initiale** : 10 762€ (80% de réduction)
+- **Renouvellement** : 2 962€ (53% de réduction)
+
+**ROI PME :**
+- **Initiale** : 67:1 (13 400€ économisés vs 1 788€/an)
+- **Renouvellement** : 28:1 (5 600€ économisés vs 1 788€/an)
 
 ## Modèle Économique Détaillé
 
-### 1. STARTER - PME (< 50 salariés)
-- **299€/mois** (engagement annuel) ou 349€/mois (mensuel)
+### 1. TPE (< 20 salariés)
+- **79€/mois** (948€/an)
+- ROI initiale : 85:1 (13 400€ économisés vs 948€/an)
+- ROI renouvellement : 35:1 (5 600€ économisés vs 948€/an)
 - Inclus :
-  - 1 audit MASE CHECKER/mois
-  - Génération illimitée de documents
-  - 1 utilisateur administrateur + 2 utilisateurs
-  - Support par email
-  - Mises à jour référentiel
+  - Analyses illimitées
+  - 3 utilisateurs
+  - Génération 10 documents/mois
+  - Support email 48h
 
-### 2. BUSINESS - ETI (50-250 salariés)
-- **599€/mois** (engagement annuel) ou 699€/mois (mensuel)
+### 2. PME (20-250 salariés)
+- **149€/mois** (1 788€/an)
+- ROI initiale : 67:1 (13 400€ économisés vs 1 788€/an)
+- ROI renouvellement : 28:1 (5 600€ économisés vs 1 788€/an)
 - Inclus :
-  - 3 audits MASE CHECKER/mois
-  - Génération illimitée + personnalisation avancée
-  - 1 administrateur + 5 utilisateurs
-  - Multi-sites (jusqu'à 3)
-  - Support prioritaire par téléphone
-  - Formation initiale (2h visio)
+  - Tout TPE +
+  - 15 utilisateurs
+  - Génération illimitée
+  - API access
+  - Support prioritaire 24h
 
-### 3. ENTERPRISE - Grandes entreprises (250+ salariés)
-- **999€/mois** (engagement annuel) - Tarif dégressif selon volume
+### 3. ETI (250+ salariés)
+- **399€/mois** (4 788€/an)
+- ROI initiale : 37:1 (13 400€ économisés vs 4 788€/an)
+- ROI renouvellement : 15:1 (5 600€ économisés vs 4 788€/an)
 - Inclus :
-  - Audits illimités
-  - Tous modules + API
+  - Tout PME +
   - Utilisateurs illimités
-  - Multi-sites illimités
+  - Multi-sites
   - Account manager dédié
-  - Formation sur site (1 jour)
-  - Personnalisation interface
+  - Formations incluses
+  - SLA garantis
 
 ### 4. CONSULTANT - Cabinets conseil
 - **799€/mois** + 99€/client actif
